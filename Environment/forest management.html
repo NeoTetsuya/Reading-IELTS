@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IELTS Academic Simulator - Forest Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --app-font-size: 17px;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            overscroll-behavior: none;
+            background-color: #f3f4f6;
+        }
+        .ielts-container {
+            display: grid;
+            grid-template-rows: auto 1fr;
+            height: 100vh;
+        }
+        .content-panes {
+            display: grid;
+            grid-template-columns: 1fr 5px 1fr;
+            overflow: hidden;
+        }
+        .pane {
+            overflow-y: auto;
+            padding: 2rem 3rem;
+            font-size: var(--app-font-size);
+            scroll-behavior: smooth;
+        }
+        #left-pane {
+            background-color: #fdfdfd;
+        }
+        #right-pane {
+            background-color: #f8fafc;
+        }
+        .splitter {
+            background-color: #cbd5e1;
+            cursor: col-resize;
+            z-index: 10;
+            transition: background-color 0.2s;
+        }
+        .splitter:hover, .splitter:active {
+            background-color: #94a3b8;
+        }
+        
+        /* Typography Improvements */
+        .reading-passage {
+            font-family: 'Merriweather', serif;
+            line-height: 1.9;
+            color: #334155;
+            text-align: justify;
+            margin-bottom: 2rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .reading-passage p {
+            margin-bottom: 1.5rem;
+            text-indent: 1.5rem; 
+        }
+        .reading-passage h3 {
+            font-family: 'Inter', sans-serif;
+            color: #0f172a;
+            margin-bottom: 1.5rem;
+            font-weight: 700;
+            font-size: 1.5em;
+            text-align: center;
+            text-indent: 0;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .paragraph-label {
+            float: left;
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+            font-size: 1.1em;
+            margin-right: 0.5rem;
+            color: #1e40af;
+            text-indent: 0;
+            background-color: #eff6ff;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            border: 1px solid #bfdbfe;
+            margin-top: 5px;
+        }
+
+        /* Question Styles */
+        .q-item {
+            padding: 1rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s;
+            background-color: white;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 0.75rem;
+        }
+        .text-input {
+            border: 2px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 4px 8px;
+            font-weight: 600;
+            color: #1e293b;
+            transition: all 0.2s;
+            text-align: center;
+            background-color: #f8fafc;
+        }
+        select.text-input {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 0.25rem center;
+            background-repeat: no-repeat;
+            background-size: 1.2em 1.2em;
+            padding-right: 1.5rem;
+            cursor: pointer;
+        }
+        .text-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            background-color: #ffffff;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+        
+        /* Answer Feedback Animations & Styles */
+        .correct-answer {
+            border-color: #22c55e !important;
+            background-color: #f0fdf4 !important;
+            color: #166534 !important;
+        }
+        .incorrect-answer {
+            border-color: #ef4444 !important;
+            background-color: #fef2f2 !important;
+            color: #991b1b !important;
+        }
+        
+        .explanation-box {
+            animation: fadeIn 0.4s ease-out forwards;
+            margin-top: 0.75rem;
+            padding: 1rem;
+            background-color: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            border-radius: 0.5rem;
+            font-size: 0.95rem;
+            color: #1e3a8a;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            text-align: left;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Vocabulary Styles */
+        .vocab-word {
+            color: #2563eb;
+            font-weight: 600;
+            cursor: pointer;
+            border-bottom: 2px dotted #93c5fd;
+            transition: all 0.2s ease-in-out;
+            padding: 0 2px;
+        }
+        .vocab-word:hover {
+            background-color: #dbeafe;
+            border-bottom-style: solid;
+            border-radius: 2px;
+        }
+
+        /* UI Elements */
+        .highlight-tooltip {
+            position: absolute;
+            background-color: #1e293b;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            z-index: 100;
+            cursor: pointer;
+            display: none;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        mark {
+            background-color: #fef08a;
+            border-radius: 3px;
+            padding: 2px 0;
+        }
+        
+        /* Responsive Design Overrides */
+        @media (max-width: 768px) {
+            .content-panes {
+                display: flex;
+                flex-direction: column;
+                overflow-y: auto;
+            }
+            .splitter {
+                display: none;
+            }
+            .pane {
+                padding: 1.25rem 1rem;
+                overflow-y: visible;
+                height: auto;
+            }
+            #left-pane {
+                border-bottom: 2px dashed #cbd5e1;
+                padding-bottom: 2rem;
+            }
+            .text-input {
+                max-width: 130px;
+                padding: 2px 6px;
+            }
+            select.text-input {
+                max-width: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div id="test-container" class="ielts-container">
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center z-20 shadow-sm">
+        <div class="flex items-center gap-2 sm:space-x-3">
+            <div class="bg-blue-600 text-white p-1.5 sm:p-2 rounded-lg shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+            </div>
+            <h1 class="text-xl font-bold text-gray-800 hidden sm:block">IELTS Simulator <span class="text-blue-600 font-medium">| Forest Management</span></h1>
+            <h1 class="text-base font-bold text-gray-800 sm:hidden">IELTS <span class="text-blue-600">Forest Mgmt.</span></h1>
+        </div>
+        <div class="flex items-center gap-2 sm:space-x-5">
+            <div class="flex items-center space-x-1 sm:space-x-2 bg-gray-50 p-1 rounded-lg border border-gray-200">
+                <button id="decrease-font-btn" class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded bg-white shadow-sm hover:bg-gray-100 text-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-400 font-bold text-sm sm:text-base" title="Decrease Font Size">A-</button>
+                <button id="increase-font-btn" class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded bg-white shadow-sm hover:bg-gray-100 text-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-400 font-bold text-sm sm:text-base" title="Increase Font Size">A+</button>
+            </div>
+            <div class="hidden xs:block text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wider bg-gray-100 px-2 sm:px-3 py-1 rounded-full">Reading Passage 2</div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main id="content-panes" class="content-panes">
+        <!-- Left Pane: Passages -->
+        <div id="left-pane" class="pane">
+            <div class="reading-passage">
+                <h3>Forest management in Pennsylvania, USA</h3>
+                <p class="italic text-center text-gray-500 mb-8 font-medium">How managing low-quality wood (also known as low-use wood) for bioenergy can encourage <span class="vocab-word" data-word="sustainable">sustainable</span> forest management.</p>
+                
+                <p><span class="paragraph-label">A</span> A tree’s ‘value’ depends on several factors including its species, size, form, condition, quality, function, and accessibility, and depends on the management goals for a given forest. The same tree can be valued very differently by each person who looks at it. A large, straight black cherry tree has high value as timber to be cut into logs or made into furniture, but for a landowner more interested in wildlife habitat, the real value of that stem (or trunk) may be the food it provides to animals. Likewise, if the tree suffers from black knot disease, its value for timber decreases, but to a woodworker interested in making bowls, it brings an opportunity for a unique and beautiful piece of art.</p>
+                
+                <p><span class="paragraph-label">B</span> In the past, Pennsylvania landowners were solely interested in the value of their trees as high-quality timber. The norm was to remove the stems of highest quality and leave behind poorly formed trees that were not as well suited to the site where they grew. This practice, called ‘high-grading’, has left a legacy of ‘low-use wood’ in the forests. Some people even call these ‘junk trees’, and they are abundant in Pennsylvania. These trees have lower economic value for traditional timber markets, compete for growth with higher-value trees, shade out desirable <span class="vocab-word" data-word="regeneration">regeneration</span> and decrease the health of a stand leaving it more <span class="vocab-word" data-word="vulnerable">vulnerable</span> to poor weather and disease. Management that specifically targets low-use wood can help landowners manage these forest health issues, and wood energy markets help promote this.</p>
+                
+                <p><span class="paragraph-label">C</span> Wood energy markets can accept less expensive wood material of lower quality than would be suitable for traditional timber markets. Most wood used for energy in Pennsylvania is used to produce heat or electricity through <span class="vocab-word" data-word="combustion">combustion</span>. Many schools and hospitals use wood boiler systems to heat and power their facilities, many homes are primarily heated with wood, and some coal plants incorporate wood into their coal streams to produce electricity. Wood can also be <span class="vocab-word" data-word="gasified">gasified</span> for electrical generation and can even be made into liquid fuels like ethanol and gasoline for lorries and cars. All these products are made primarily from low-use wood. Several tree- and plant-cutting approaches, which could greatly improve the long-term quality of a forest, focus strongly or solely on the use of wood for those markets.</p>
+                
+                <p><span class="paragraph-label">D</span> One such approach is called a Timber Stand Improvement (TSI) Cut. In a TSI Cut, really poor-quality tree and plant material is cut down to allow more space, light, and other resources to the highest-valued stems that remain. Removing <span class="vocab-word" data-word="invasive">invasive</span> plants might be another primary goal of a TSI Cut. The stems that are left behind might then grow in size and develop more foliage and larger crowns or tops that produce more coverage for wildlife; they have a better chance to regenerate in a less crowded environment. TSI Cuts can be tailored to one farmer’s specific management goals for his or her land.</p>
+
+                <p><span class="paragraph-label">E</span> Another approach that might yield a high amount of low-use wood is a Salvage Cut. With the many pests and <span class="vocab-word" data-word="pathogens">pathogens</span> visiting forests including hemlock wooly adelgid, Asian longhorned beetle, emerald ash borer, and gypsy moth, to name just a few, it is important to remember that those working in the forests can help ease these issues through cutting procedures. These types of cut reduce the number of sick trees and seek to manage the future spread of a pest problem. They leave vigorous trees that have stayed healthy enough to survive the outbreak.</p>
+                
+                <p><span class="paragraph-label">F</span> A Shelterwood Cut, which only takes place in a mature forest that has already been thinned several times, involves removing all the mature trees when other seedlings have become established. This then allows the forester to decide which tree species are regenerated. It leaves a young forest where all trees are at a similar point in their growth. It can also be used to develop a two-tier forest so that there are two harvests and the money that comes in is spread out over a decade or more.</p>
+
+                <p><span class="paragraph-label">G</span> Thinnings and dense and dead wood removal for fire prevention also center on the production of low-use wood. However, it is important to remember that some retention of what many would classify as low-use wood is very important. The tops of trees that have been cut down should be left on the site so that their nutrients cycle back into the soil. In addition, trees with many cavities are extremely important habitats for insect predators like woodpeckers, bats and small mammals. They help control problem insects and increase the health and <span class="vocab-word" data-word="resilience">resilience</span> of the forest. It is also important to remember that not all small trees are low-use. For example, many species like hawthorn provide food for wildlife. Finally, rare species of trees in a forest should also stay behind as they add to its structural diversity.</p>
+            </div>
+        </div>
+
+        <!-- Splitter -->
+        <div id="splitter" class="splitter relative flex items-center justify-center">
+            <div class="w-1 h-8 bg-gray-400 rounded-full opacity-50"></div>
+        </div>
+
+        <!-- Right Pane: Questions -->
+        <div id="right-pane" class="pane">
+            <div id="questions-section" class="max-w-3xl mx-auto space-y-8">
+                
+                <!-- Matching Information -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-blue-100 text-blue-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 14-18</span>
+                        <h4 class="font-bold text-gray-800">Matching Information</h4>
+                    </div>
+                    <p class="mb-5 text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100 text-sm">
+                        Reading Passage 2 has seven paragraphs, <strong>A-G</strong>.<br>
+                        Which paragraph contains the following information?<br><br>
+                        Select the correct letter, <strong>A-G</strong>, from the dropdowns below.<br>
+                        <em>NB You may use any letter more than once.</em>
+                    </p>
+                    
+                    <div class="space-y-3">
+                        <div class="q-item flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-0" id="container-q14">
+                            <span class="text-gray-800 pr-0 sm:pr-4 mt-1"><strong class="text-blue-600 mr-2">14</strong> bad outcomes for a forest when people focus only on its financial reward</span>
+                            <select name="q14" class="text-input w-full sm:w-20 text-center uppercase font-bold cursor-pointer bg-white shrink-0 self-start sm:self-auto">
+                                <option value="" disabled selected>-</option>
+                                <option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option>
+                                <option value="e">E</option><option value="f">F</option><option value="g">G</option>
+                            </select>
+                        </div>
+                        <div class="q-item flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-0" id="container-q15">
+                            <span class="text-gray-800 pr-0 sm:pr-4 mt-1"><strong class="text-blue-600 mr-2">15</strong> reference to the aspects of any tree that contribute to its worth</span>
+                            <select name="q15" class="text-input w-full sm:w-20 text-center uppercase font-bold cursor-pointer bg-white shrink-0 self-start sm:self-auto">
+                                <option value="" disabled selected>-</option>
+                                <option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option>
+                                <option value="e">E</option><option value="f">F</option><option value="g">G</option>
+                            </select>
+                        </div>
+                        <div class="q-item flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-0" id="container-q16">
+                            <span class="text-gray-800 pr-0 sm:pr-4 mt-1"><strong class="text-blue-600 mr-2">16</strong> mention of the potential use of wood to help run vehicles</span>
+                            <select name="q16" class="text-input w-full sm:w-20 text-center uppercase font-bold cursor-pointer bg-white shrink-0 self-start sm:self-auto">
+                                <option value="" disabled selected>-</option>
+                                <option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option>
+                                <option value="e">E</option><option value="f">F</option><option value="g">G</option>
+                            </select>
+                        </div>
+                        <div class="q-item flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-0" id="container-q17">
+                            <span class="text-gray-800 pr-0 sm:pr-4 mt-1"><strong class="text-blue-600 mr-2">17</strong> examples of insects that attack trees</span>
+                            <select name="q17" class="text-input w-full sm:w-20 text-center uppercase font-bold cursor-pointer bg-white shrink-0 self-start sm:self-auto">
+                                <option value="" disabled selected>-</option>
+                                <option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option>
+                                <option value="e">E</option><option value="f">F</option><option value="g">G</option>
+                            </select>
+                        </div>
+                        <div class="q-item flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-0" id="container-q18">
+                            <span class="text-gray-800 pr-0 sm:pr-4 mt-1"><strong class="text-blue-600 mr-2">18</strong> an alternative name for trees that produce low-use wood</span>
+                            <select name="q18" class="text-input w-full sm:w-20 text-center uppercase font-bold cursor-pointer bg-white shrink-0 self-start sm:self-auto">
+                                <option value="" disabled selected>-</option>
+                                <option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option>
+                                <option value="e">E</option><option value="f">F</option><option value="g">G</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="14-18">Check Answers</button>
+                    </div>
+                </div>
+
+                <!-- Matching Features -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-blue-100 text-blue-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 19-21</span>
+                        <h4 class="font-bold text-gray-800">Matching Features</h4>
+                    </div>
+                    <p class="mb-5 text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100 text-sm">
+                        Look at the following purposes (Questions 19-21) and the list of timber cuts below.<br>
+                        Match each purpose with the correct timber cut, <strong>A, B or C</strong>.<br>
+                        <em>NB You may use any letter more than once.</em>
+                    </p>
+
+                    <div class="mb-6 p-5 bg-blue-50/50 border border-blue-100 rounded-xl text-gray-800 text-[0.95em]">
+                        <h5 class="font-bold text-blue-800 mb-3 uppercase tracking-wider text-sm border-b border-blue-200 pb-2">List of Timber Cuts</h5>
+                        <ul class="flex flex-col gap-3">
+                            <li class="flex items-center"><strong class="text-blue-700 bg-blue-100 w-6 h-6 flex items-center justify-center rounded shrink-0 mr-3">A</strong> <span>a TSI Cut</span></li>
+                            <li class="flex items-center"><strong class="text-blue-700 bg-blue-100 w-6 h-6 flex items-center justify-center rounded shrink-0 mr-3">B</strong> <span>a Salvage Cut</span></li>
+                            <li class="flex items-center"><strong class="text-blue-700 bg-blue-100 w-6 h-6 flex items-center justify-center rounded shrink-0 mr-3">C</strong> <span>a Shelterwood Cut</span></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <div class="q-item flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-0" id="container-q19">
+                            <span class="text-gray-800 pr-0 sm:pr-4 mt-1"><strong class="text-blue-600 mr-2">19</strong> to remove trees that are diseased</span>
+                            <select name="q19" class="text-input w-full sm:w-20 text-center uppercase font-bold cursor-pointer bg-white shrink-0 self-start sm:self-auto">
+                                <option value="" disabled selected>-</option>
+                                <option value="a">A</option><option value="b">B</option><option value="c">C</option>
+                            </select>
+                        </div>
+                        <div class="q-item flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-0" id="container-q20">
+                            <span class="text-gray-800 pr-0 sm:pr-4 mt-1"><strong class="text-blue-600 mr-2">20</strong> to generate income across a number of years</span>
+                            <select name="q20" class="text-input w-full sm:w-20 text-center uppercase font-bold cursor-pointer bg-white shrink-0 self-start sm:self-auto">
+                                <option value="" disabled selected>-</option>
+                                <option value="a">A</option><option value="b">B</option><option value="c">C</option>
+                            </select>
+                        </div>
+                        <div class="q-item flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-0" id="container-q21">
+                            <span class="text-gray-800 pr-0 sm:pr-4 mt-1"><strong class="text-blue-600 mr-2">21</strong> to create a forest whose trees are close in age</span>
+                            <select name="q21" class="text-input w-full sm:w-20 text-center uppercase font-bold cursor-pointer bg-white shrink-0 self-start sm:self-auto">
+                                <option value="" disabled selected>-</option>
+                                <option value="a">A</option><option value="b">B</option><option value="c">C</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="19-21">Check Answers</button>
+                    </div>
+                </div>
+
+                <!-- Sentence Completion -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-blue-100 text-blue-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 22-26</span>
+                        <h4 class="font-bold text-gray-800">Sentence Completion</h4>
+                    </div>
+                    <p class="mb-5 text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100 text-sm">
+                        Complete the sentences below.<br>
+                        Choose <strong>ONE WORD ONLY</strong> from the passage for each answer.
+                    </p>
+                    
+                    <div class="leading-loose text-gray-800 text-[0.95em] space-y-6">
+                        <div id="container-q22" class="bg-gray-50 p-4 rounded-lg border border-gray-100">
+                            <strong class="text-blue-600 mr-2">22</strong>
+                            Some dead wood is removed to avoid the possibility of
+                            <span class="inline-block mx-1"><input type="text" name="q22" class="text-input w-36"></span>.
+                        </div>
+                        
+                        <div id="container-q23" class="bg-gray-50 p-4 rounded-lg border border-gray-100">
+                            <strong class="text-blue-600 mr-2">23</strong>
+                            The 
+                            <span class="inline-block mx-1"><input type="text" name="q23" class="text-input w-40"></span> 
+                            from the tops of cut trees can help improve soil quality.
+                        </div>
+                        
+                        <div id="container-q24" class="bg-gray-50 p-4 rounded-lg border border-gray-100">
+                            <strong class="text-blue-600 mr-2">24</strong>
+                            Some damaged trees should be left, as their
+                            <span class="inline-block mx-1"><input type="text" name="q24" class="text-input w-36"></span> 
+                            provide habitats for a range of creatures.
+                        </div>
+
+                        <div id="container-q25" class="bg-gray-50 p-4 rounded-lg border border-gray-100">
+                            <strong class="text-blue-600 mr-2">25</strong>
+                            Some trees that are small, such as
+                            <span class="inline-block mx-1"><input type="text" name="q25" class="text-input w-36"></span>, 
+                            are a source of food for animals and insects.
+                        </div>
+
+                        <div id="container-q26" class="bg-gray-50 p-4 rounded-lg border border-gray-100">
+                            <strong class="text-blue-600 mr-2">26</strong>
+                            Any trees that are
+                            <span class="inline-block mx-1"><input type="text" name="q26" class="text-input w-36"></span> 
+                            should be left to grow, as they add to the variety of species in the forest.
+                        </div>
+                    </div>
+                    <div class="mt-6 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="22-26">Check Answers</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Highlight Tooltip -->
+<div id="highlight-tooltip" class="highlight-tooltip">Highlight Text</div>
+
+<!-- Vocabulary Modal -->
+<div id="vocab-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50 transition-opacity">
+    <div class="bg-white rounded-2xl shadow-2xl p-5 sm:p-8 w-full max-w-md relative transform transition-all scale-95 opacity-0" id="vocab-modal-content">
+        <button id="close-vocab-modal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-full w-8 h-8 flex items-center justify-center transition-colors">&times;</button>
+        <div class="flex items-center mb-6 border-b pb-4 mt-2">
+            <h3 id="vocab-word" class="text-2xl sm:text-3xl font-extrabold text-gray-900 capitalize tracking-tight"></h3>
+        </div>
+        <div class="flex items-center mb-5">
+            <button id="play-audio-btn" class="flex items-center justify-center h-10 w-10 sm:h-12 sm:w-12 shrink-0 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white mr-4 transition-all shadow-sm border border-blue-100" title="Listen to pronunciation">
+                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>
+            </button>
+            <p id="vocab-pronunciation-text" class="text-gray-500 font-mono text-base sm:text-lg bg-gray-50 px-3 py-1 rounded-md border border-gray-100"></p>
+        </div>
+        <p id="vocab-meaning" class="text-gray-700 text-base sm:text-lg leading-relaxed"></p>
+    </div>
+</div>
+
+<!-- Alert Modal -->
+<div id="alert-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-[80] transition-opacity">
+    <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm relative transform transition-all scale-95 opacity-0 text-center" id="alert-modal-content">
+        <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+            <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+        </div>
+        <h3 id="alert-title" class="text-lg leading-6 font-medium text-gray-900 mb-2">Incomplete Answers</h3>
+        <p id="alert-message" class="text-sm text-gray-500 mb-6">Please fill in all the blanks before checking your answers.</p>
+        <button id="close-alert-btn" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm transition-colors">
+            Got it
+        </button>
+    </div>
+</div>
+
+<script>
+    // --- DATA ---
+    const vocabulary = {
+        'sustainable': { meaning: 'Able to be maintained at a certain rate or level; conserving an ecological balance.', phonetic: '/səˈsteɪ.nə.bəl/' },
+        'regeneration': { meaning: 'The action or process of regenerating or being regenerated, in particular the formation of new tissue or plant growth.', phonetic: '/rɪˌdʒɛn.əˈreɪ.ʃən/' },
+        'vulnerable': { meaning: 'Susceptible to physical or emotional attack or harm; easily damaged.', phonetic: '/ˈvʌl.nər.ə.bəl/' },
+        'combustion': { meaning: 'The process of burning something.', phonetic: '/kəmˈbʌs.tʃən/' },
+        'gasified': { meaning: 'Converted into a gas.', phonetic: '/ˈɡæs.ɪ.faɪd/' },
+        'invasive': { meaning: 'Tending to spread prolifically and undesirably or harmfully.', phonetic: '/ɪnˈveɪ.sɪv/' },
+        'pathogens': { meaning: 'A bacterium, virus, or other microorganism that can cause disease.', phonetic: '/ˈpæθ.ə.dʒənz/' },
+        'resilience': { meaning: 'The capacity to recover quickly from difficulties; toughness.', phonetic: '/rɪˈzɪl.i.əns/' }
+    };
+
+    const answers = {
+        q14: "b",
+        q15: "a",
+        q16: "c",
+        q17: "e",
+        q18: "b",
+        q19: "b",
+        q20: "c",
+        q21: "c",
+        q22: "fire",
+        q23: "nutrients",
+        q24: "cavities",
+        q25: "hawthorn",
+        q26: "rare"
+    };
+
+    const explanations = {
+        q14: "Paragraph B mentions that Pennsylvania landowners were solely interested in the value of their trees as high-quality timber (financial reward), leading to practices that 'decrease the health of a stand leaving it more vulnerable to poor weather and disease' (bad outcomes).",
+        q15: "Paragraph A states: 'A tree’s value depends on several factors including its species, size, form, condition, quality, function, and accessibility...', listing the aspects that contribute to a tree's worth.",
+        q16: "Paragraph C notes that 'Wood... can even be made into liquid fuels like ethanol and gasoline for lorries and cars', mentioning its use to run vehicles.",
+        q17: "Paragraph E lists examples of insects that attack forests: 'hemlock wooly adelgid, Asian longhorned beetle, emerald ash borer, and gypsy moth'.",
+        q18: "Paragraph B states that some people call trees that produce low-use wood 'junk trees'.",
+        q19: "Paragraph E explains that a Salvage Cut (B) reduces 'the number of sick trees', which means removing trees that are diseased.",
+        q20: "Paragraph F explains that a Shelterwood Cut (C) can be used to 'spread out over a decade or more' the money that comes in (generate income across a number of years).",
+        q21: "Paragraph F states that a Shelterwood Cut (C) 'leaves a young forest where all trees are at a similar point in their growth' (close in age).",
+        q22: "Paragraph G states: 'Thinnings and dense and dead wood removal for fire prevention also center on the production of low-use wood.'",
+        q23: "Paragraph G states: 'The tops of trees that have been cut down should be left on the site so that their nutrients cycle back into the soil.'",
+        q24: "Paragraph G mentions: '...trees with many cavities are extremely important habitats for insect predators like woodpeckers, bats and small mammals.'",
+        q25: "Paragraph G notes: 'For example, many species like hawthorn provide food for wildlife.'",
+        q26: "Paragraph G concludes: 'Finally, rare species of trees in a forest should also stay behind as they add to its structural diversity.'"
+    };
+
+    // --- APPLICATION LOGIC ---
+    document.addEventListener('DOMContentLoaded', () => {
+        const app = {
+            userAnswers: {},
+            answersChecked: {},
+            currentFontSize: 17,
+
+            // Elements
+            leftPane: document.getElementById('left-pane'),
+            rightPane: document.getElementById('right-pane'),
+            splitter: document.getElementById('splitter'),
+            highlightTooltip: document.getElementById('highlight-tooltip'),
+            vocabModal: document.getElementById('vocab-modal'),
+            vocabModalContent: document.getElementById('vocab-modal-content'),
+            closeVocabModalBtn: document.getElementById('close-vocab-modal'),
+            vocabWordEl: document.getElementById('vocab-word'),
+            vocabMeaningEl: document.getElementById('vocab-meaning'),
+            vocabPronunciationText: document.getElementById('vocab-pronunciation-text'),
+            playAudioBtn: document.getElementById('play-audio-btn'),
+
+            // Alert Elements
+            alertModal: document.getElementById('alert-modal'),
+            alertModalContent: document.getElementById('alert-modal-content'),
+            closeAlertBtn: document.getElementById('close-alert-btn'),
+            alertTitleEl: document.getElementById('alert-title'),
+            alertMessageEl: document.getElementById('alert-message'),
+
+            init() {
+                this.setupEventListeners();
+                this.initSplitter();
+                this.initHighlighter();
+                this.updateCheckButtonsState();
+            },
+
+            setupEventListeners() {
+                document.getElementById('increase-font-btn').addEventListener('click', () => this.changeFontSize(1));
+                document.getElementById('decrease-font-btn').addEventListener('click', () => this.changeFontSize(-1));
+
+                this.closeVocabModalBtn.addEventListener('click', () => this.closeModal());
+                this.vocabModal.addEventListener('click', (e) => {
+                   if (e.target === this.vocabModal) this.closeModal();
+                });
+
+                // Keyboard accessibility: Close modals with Escape key
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') {
+                        if (!this.vocabModal.classList.contains('hidden')) this.closeModal();
+                        if (!this.alertModal.classList.contains('hidden')) this.closeAlert();
+                    }
+                });
+
+                // Alert Modal Events
+                this.closeAlertBtn.addEventListener('click', () => this.closeAlert());
+                this.alertModal.addEventListener('click', (e) => {
+                   if (e.target === this.alertModal) this.closeAlert();
+                });
+
+                // Track text inputs & selects
+                document.body.addEventListener('input', (e) => {
+                    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') {
+                        if(e.target.type !== 'radio') {
+                            this.userAnswers[e.target.name] = e.target.value;
+                            e.target.classList.remove('correct-answer', 'incorrect-answer');
+                            const container = document.getElementById(`container-${e.target.name}`);
+                            if(container) container.classList.remove('bg-red-50', 'bg-green-50');
+                            
+                            this.updateCheckButtonsState();
+                        }
+                    }
+                });
+
+                // Vocab Words Event Delegation
+                this.leftPane.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('vocab-word')) {
+                        const wordKey = e.target.dataset.word;
+                        this.openVocabModal(wordKey);
+                    }
+                });
+
+                // Check Buttons Event Delegation
+                document.querySelectorAll('.check-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const range = e.target.dataset.range;
+                        this.checkAnswers(range, e.target);
+                    });
+                });
+                
+                // Real Audio Pronunciation Event
+                this.playAudioBtn.addEventListener('click', () => {
+                   const word = this.vocabWordEl.textContent;
+                   if (!word) return;
+                   if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+                   
+                   this.playAudioBtn.classList.remove('text-blue-600', 'bg-blue-50');
+                   this.playAudioBtn.classList.add('bg-green-500', 'text-white');
+                   
+                   if ('speechSynthesis' in window) {
+                       const utterance = new SpeechSynthesisUtterance(word);
+                       utterance.lang = 'en-GB'; 
+                       utterance.rate = 0.9; 
+                       utterance.onend = () => this.resetAudioBtn();
+                       utterance.onerror = () => this.resetAudioBtn();
+                       window.speechSynthesis.speak(utterance);
+                   } else {
+                       alert("Sorry, your browser doesn't support text-to-speech audio.");
+                       setTimeout(() => this.resetAudioBtn(), 500);
+                   }
+                });
+            },
+
+            resetAudioBtn() {
+                this.playAudioBtn.classList.add('text-blue-600', 'bg-blue-50');
+                this.playAudioBtn.classList.remove('bg-green-500', 'text-white');
+            },
+            
+            changeFontSize(delta) {
+                this.currentFontSize += delta;
+                if (this.currentFontSize < 14) this.currentFontSize = 14;
+                if (this.currentFontSize > 26) this.currentFontSize = 26;
+                document.documentElement.style.setProperty('--app-font-size', `${this.currentFontSize}px`);
+            },
+
+            openVocabModal(wordKey) {
+                const data = vocabulary[wordKey];
+                if (data) {
+                    this.vocabWordEl.textContent = wordKey;
+                    this.vocabMeaningEl.textContent = data.meaning;
+                    this.vocabPronunciationText.textContent = data.phonetic || '';
+                    this.vocabModal.classList.remove('hidden');
+                    setTimeout(() => {
+                        this.vocabModalContent.classList.remove('scale-95', 'opacity-0');
+                        this.vocabModalContent.classList.add('scale-100', 'opacity-100');
+                    }, 10);
+                }
+            },
+
+            closeModal() {
+                if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+                this.vocabModalContent.classList.remove('scale-100', 'opacity-100');
+                this.vocabModalContent.classList.add('scale-95', 'opacity-0');
+                this.resetAudioBtn();
+                setTimeout(() => this.vocabModal.classList.add('hidden'), 200);
+            },
+
+            showAlert(title, message) {
+                if (title) this.alertTitleEl.textContent = title;
+                if (message) this.alertMessageEl.textContent = message;
+                
+                this.alertModal.classList.remove('hidden');
+                setTimeout(() => {
+                    this.alertModalContent.classList.remove('scale-95', 'opacity-0');
+                    this.alertModalContent.classList.add('scale-100', 'opacity-100');
+                }, 10);
+            },
+
+            closeAlert() {
+                this.alertModalContent.classList.remove('scale-100', 'opacity-100');
+                this.alertModalContent.classList.add('scale-95', 'opacity-0');
+                setTimeout(() => {
+                    this.alertModal.classList.add('hidden');
+                }, 200);
+            },
+            
+            updateCheckButtonsState() {
+                document.querySelectorAll('.check-btn').forEach(btn => {
+                    const range = btn.dataset.range;
+                    if (this.answersChecked[range]) {
+                        btn.className = 'check-btn bg-gray-800 hover:bg-gray-900 text-white font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-pointer transform hover:-translate-y-0.5 hover:shadow-md active:scale-95';
+                        btn.textContent = 'Reset Answers';
+                        return;
+                    }
+
+                    const [start, end] = range.split('-').map(Number);
+                    let allAnswered = true;
+                    for (let i = start; i <= end; i++) {
+                        const qId = `q${i}`;
+                        const answer = (this.userAnswers[qId] || "").trim();
+                        if (!answer) {
+                            allAnswered = false;
+                            break;
+                        }
+                    }
+
+                    if (allAnswered) {
+                        btn.className = 'check-btn bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-pointer transform hover:-translate-y-0.5 hover:shadow-md active:scale-95';
+                    } else {
+                        btn.className = 'check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80';
+                    }
+                });
+            },
+
+            checkAnswers(range, btn) {
+                if (this.answersChecked[range]) {
+                    // Reset mode
+                    this.answersChecked[range] = false;
+                    
+                    const [start, end] = range.split('-').map(Number);
+                    for (let i = start; i <= end; i++) {
+                        const qId = `q${i}`;
+                        this.userAnswers[qId] = '';
+                        
+                        // Handle Selects/Inputs
+                        const input = document.querySelector(`[name="${qId}"]`);
+                        if (input) {
+                            input.value = '';
+                            input.classList.remove('correct-answer', 'incorrect-answer');
+                            
+                            if (input.tagName === 'SELECT') {
+                                // Remove dynamically added 'correct answer' options from select elements
+                                Array.from(input.options).forEach(opt => {
+                                    if (opt.disabled && opt.hidden && opt.value === "") opt.remove();
+                                });
+                                input.selectedIndex = 0;
+                            }
+                        }
+
+                        const expl = document.getElementById(`expl-${qId}`);
+                        if (expl) expl.remove();
+                    }
+                    this.updateCheckButtonsState();
+                    return;
+                }
+
+                const [start, end] = range.split('-').map(Number);
+
+                // --- Validation: Ensure all questions are answered ---
+                let allAnswered = true;
+                for (let i = start; i <= end; i++) {
+                    const qId = `q${i}`;
+                    const answer = (this.userAnswers[qId] || "").trim();
+                    if (!answer) {
+                        allAnswered = false;
+                        break;
+                    }
+                }
+
+                if (!allAnswered) {
+                    this.showAlert("Incomplete Answers", "Please select an answer for all questions before checking.");
+                    return;
+                }
+                // -----------------------------------------------------
+
+                // Check mode
+                this.answersChecked[range] = true;
+                this.updateCheckButtonsState();
+
+                for (let i = start; i <= end; i++) {
+                    const qId = `q${i}`;
+                    let userAnswer = (this.userAnswers[qId] || "").toLowerCase().trim();
+                    
+                    // Support multiple correct variations separated by |
+                    let correctAnswersList = answers[qId].toLowerCase().split('|');
+                    let isCorrect = correctAnswersList.includes(userAnswer);
+
+                    // Check Selects/Inputs
+                    const input = document.querySelector(`[name="${qId}"]`);
+                    if (input) {
+                        input.classList.remove('correct-answer', 'incorrect-answer');
+                        
+                        if (isCorrect) {
+                            input.classList.add('correct-answer');
+                        } else {
+                            input.classList.add('incorrect-answer');
+                            if (input.tagName === 'INPUT') {
+                                input.value = '';
+                                input.placeholder = correctAnswersList[0].toUpperCase();
+                            } else if (input.tagName === 'SELECT') {
+                                // For select elements, dynamically insert the correct answer briefly
+                                const opt = document.createElement('option');
+                                opt.value = "";
+                                opt.text = correctAnswersList[0].toUpperCase();
+                                opt.selected = true;
+                                opt.disabled = true;
+                                opt.hidden = true;
+                                input.add(opt, input.options[0]);
+                            }
+                        }
+                    }
+
+                    // Add Explanation Box
+                    if (explanations[qId]) {
+                        const existingExpl = document.getElementById(`expl-${qId}`);
+                        if (!existingExpl) {
+                            const explDiv = document.createElement('div');
+                            explDiv.id = `expl-${qId}`;
+                            explDiv.className = 'explanation-box';
+                            explDiv.innerHTML = `<strong>Explanation:</strong> ${explanations[qId]}`;
+                            
+                            const container = document.getElementById(`container-${qId}`);
+                            if (container) {
+                                container.insertAdjacentElement('afterend', explDiv);
+                            }
+                        }
+                    }
+                }
+            },
+
+            initSplitter() {
+                let isDragging = false;
+                const contentPanes = document.getElementById('content-panes');
+
+                this.splitter.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    isDragging = true;
+                    document.body.style.cursor = 'col-resize';
+                });
+
+                document.addEventListener('mousemove', (e) => {
+                    if (!isDragging) return;
+                    e.preventDefault();
+                    if (window.innerWidth <= 768) return; 
+                    
+                    const containerRect = contentPanes.getBoundingClientRect();
+                    const newLeftWidth = e.clientX - containerRect.left;
+                    if (newLeftWidth > 200 && newLeftWidth < containerRect.width - 200) {
+                        const newLeftPercent = (newLeftWidth / containerRect.width) * 100;
+                        contentPanes.style.gridTemplateColumns = `${newLeftPercent}% 5px 1fr`;
+                    }
+                });
+
+                document.addEventListener('mouseup', () => {
+                    if (isDragging) {
+                        isDragging = false;
+                        document.body.style.cursor = 'default';
+                    }
+                });
+            },
+
+            initHighlighter() {
+                document.body.addEventListener('mouseup', (e) => {
+                    const selection = window.getSelection();
+                    const selectedText = selection.toString().trim();
+
+                    if (selectedText.length > 0) {
+                        const range = selection.getRangeAt(0);
+                        if (!this.leftPane.contains(range.commonAncestorContainer) && !this.rightPane.contains(range.commonAncestorContainer)) {
+                           this.highlightTooltip.style.display = 'none';
+                           return;
+                        }
+
+                        this.highlightTooltip.style.left = `${e.pageX - 30}px`;
+                        this.highlightTooltip.style.top = `${e.pageY - 40}px`;
+                        this.highlightTooltip.style.display = 'block';
+
+                        this.highlightTooltip.onclick = () => {
+                            const container = range.commonAncestorContainer;
+                            if (container.nodeType === 3) { 
+                                if (range.startContainer.parentElement !== range.endContainer.parentElement) {
+                                    this.highlightTooltip.style.display = 'none';
+                                    return;
+                                }
+                            }
+                            
+                            const mark = document.createElement('mark');
+                            try {
+                                range.surroundContents(mark);
+                            } catch (ex) {} 
+                            finally {
+                                selection.removeAllRanges();
+                                this.highlightTooltip.style.display = 'none';
+                            }
+                        };
+                    } else {
+                        this.highlightTooltip.style.display = 'none';
+                    }
+                });
+
+                document.body.addEventListener('mousedown', (e) => {
+                   if (e.target !== this.highlightTooltip && window.getSelection().toString().length === 0) {
+                        this.highlightTooltip.style.display = 'none';
+                   }
+                });
+            }
+        };
+
+        app.init();
+    });
+</script>
+
+</body>
+</html>

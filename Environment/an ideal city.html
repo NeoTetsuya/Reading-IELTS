@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IELTS Academic Simulator - An Ideal City</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --app-font-size: 17px;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            overscroll-behavior: none;
+            background-color: #f3f4f6;
+        }
+        .ielts-container {
+            display: grid;
+            grid-template-rows: auto 1fr;
+            height: 100vh;
+        }
+        .content-panes {
+            display: grid;
+            grid-template-columns: 1fr 5px 1fr;
+            overflow: hidden;
+        }
+        .pane {
+            overflow-y: auto;
+            padding: 2rem 3rem;
+            font-size: var(--app-font-size);
+            scroll-behavior: smooth;
+        }
+        #left-pane {
+            background-color: #fdfdfd;
+        }
+        #right-pane {
+            background-color: #f8fafc;
+        }
+        .splitter {
+            background-color: #cbd5e1;
+            cursor: col-resize;
+            z-index: 10;
+            transition: background-color 0.2s;
+        }
+        .splitter:hover, .splitter:active {
+            background-color: #94a3b8;
+        }
+        
+        /* Typography Improvements */
+        .reading-passage {
+            font-family: 'Merriweather', serif;
+            line-height: 1.9;
+            color: #334155;
+            text-align: justify;
+            margin-bottom: 2rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .reading-passage p {
+            margin-bottom: 1.5rem;
+            text-indent: 1.5rem; 
+        }
+        .reading-passage h3 {
+            font-family: 'Inter', sans-serif;
+            color: #0f172a;
+            margin-bottom: 1.5rem;
+            font-weight: 700;
+            font-size: 1.5em;
+            text-align: center;
+            text-indent: 0;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .paragraph-label {
+            float: left;
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+            font-size: 1.1em;
+            margin-right: 0.5rem;
+            color: #1e40af;
+            text-indent: 0;
+            background-color: #eff6ff;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            border: 1px solid #bfdbfe;
+            margin-top: 5px;
+        }
+
+        /* Question Styles */
+        .q-item {
+            padding: 1rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s;
+            background-color: white;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 0.75rem;
+        }
+        
+        .text-input {
+            border: 2px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 4px 8px;
+            font-weight: 600;
+            color: #1e293b;
+            transition: all 0.2s;
+            text-align: center;
+            background-color: #f8fafc;
+        }
+        .text-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            background-color: #ffffff;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+
+        /* Custom Radio Button Styles */
+        .custom-radio-label {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            background-color: white;
+            flex: 1;
+            justify-content: center;
+        }
+        .custom-radio-label:hover {
+            background-color: #f8fafc;
+            border-color: #cbd5e1;
+        }
+        .custom-radio-label input:checked + span {
+            color: #1e40af;
+        }
+        
+        /* Answer Feedback Animations & Styles */
+        .correct-answer {
+            border-color: #22c55e !important;
+            background-color: #f0fdf4 !important;
+            color: #166534 !important;
+        }
+        label.correct-answer {
+            box-shadow: 0 0 0 1px #22c55e;
+            color: #166534 !important;
+        }
+        label.correct-answer span { color: #166534 !important; }
+        
+        .incorrect-answer {
+            border-color: #ef4444 !important;
+            background-color: #fef2f2 !important;
+            color: #991b1b !important;
+        }
+        label.incorrect-answer {
+            box-shadow: 0 0 0 1px #ef4444;
+            color: #991b1b !important;
+        }
+        label.incorrect-answer span { color: #991b1b !important; }
+
+        .explanation-box {
+            animation: fadeIn 0.4s ease-out forwards;
+            margin-top: 0.75rem;
+            padding: 1rem;
+            background-color: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            border-radius: 0.5rem;
+            font-size: 0.95rem;
+            color: #1e3a8a;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            text-align: left;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Vocabulary Styles */
+        .vocab-word {
+            color: #2563eb;
+            font-weight: 600;
+            cursor: pointer;
+            border-bottom: 2px dotted #93c5fd;
+            transition: all 0.2s ease-in-out;
+            padding: 0 2px;
+        }
+        .vocab-word:hover {
+            background-color: #dbeafe;
+            border-bottom-style: solid;
+            border-radius: 2px;
+        }
+
+        /* UI Elements */
+        .highlight-tooltip {
+            position: absolute;
+            background-color: #1e293b;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            z-index: 100;
+            cursor: pointer;
+            display: none;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        mark {
+            background-color: #fef08a;
+            border-radius: 3px;
+            padding: 2px 0;
+        }
+        
+        /* Responsive Design Overrides */
+        @media (max-width: 768px) {
+            .content-panes {
+                display: flex;
+                flex-direction: column;
+                overflow-y: auto;
+            }
+            .splitter {
+                display: none;
+            }
+            .pane {
+                padding: 1.25rem 1rem;
+                overflow-y: visible;
+                height: auto;
+            }
+            #left-pane {
+                border-bottom: 2px dashed #cbd5e1;
+                padding-bottom: 2rem;
+            }
+            .text-input {
+                max-width: 130px;
+                padding: 2px 6px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div id="test-container" class="ielts-container">
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center z-20 shadow-sm">
+        <div class="flex items-center gap-2 sm:space-x-3">
+            <div class="bg-blue-600 text-white p-1.5 sm:p-2 rounded-lg shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+            </div>
+            <h1 class="text-xl font-bold text-gray-800 hidden sm:block">IELTS Simulator <span class="text-blue-600 font-medium">| An Ideal City</span></h1>
+            <h1 class="text-base font-bold text-gray-800 sm:hidden">IELTS <span class="text-blue-600">Ideal City</span></h1>
+        </div>
+        <div class="flex items-center gap-2 sm:space-x-5">
+            <div class="flex items-center space-x-1 sm:space-x-2 bg-gray-50 p-1 rounded-lg border border-gray-200">
+                <button id="decrease-font-btn" class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded bg-white shadow-sm hover:bg-gray-100 text-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-400 font-bold text-sm sm:text-base" title="Decrease Font Size">A-</button>
+                <button id="increase-font-btn" class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded bg-white shadow-sm hover:bg-gray-100 text-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-400 font-bold text-sm sm:text-base" title="Increase Font Size">A+</button>
+            </div>
+            <div class="hidden xs:block text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wider bg-gray-100 px-2 sm:px-3 py-1 rounded-full">Reading Passage 3</div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main id="content-panes" class="content-panes">
+        <!-- Left Pane: Passages -->
+        <div id="left-pane" class="pane">
+            <div class="reading-passage">
+                <h3>An ideal city</h3>
+                <p class="italic text-center text-gray-500 mb-8 font-medium">Leonardo da Vinci’s ideal city was centuries ahead of its time.</p>
+                
+                <p><span class="paragraph-label">A</span> The word ‘genius’ is <span class="vocab-word" data-word="universally associated with">universally associated with</span> the name of Leonardo da Vinci. A true Renaissance man, he embodied <span class="vocab-word" data-word="scientific spirit">scientific spirit</span>, <span class="vocab-word" data-word="artistic talent">artistic talent</span> and humanist sensibilities. Five hundred years have passed since Leonardo died in his home at Chateau du Clos Luce, outside Tours, France. Yet far from fading into insignificance, his thinking has carried down the centuries and still surprises today.</p>
+                
+                <p><span class="paragraph-label">B</span> The Renaissance marked the transition from the 15th century to modernity and took place after the spread of the plague in the 14th century, which caused a <span class="vocab-word" data-word="global crisis">global crisis</span> resulting in some 200 million deaths across Europe and Asia. Today, the world is on the cusp of a climate crisis, which is predicted to cause widespread displacement, extinctions and death, if left unaddressed. Then, as now, radical solutions were called for to revolutionise the way people lived and safeguard humanity against catastrophe.</p>
+                
+                <p><span class="paragraph-label">C</span> Around 1486 - after a pestilence that killed half the population in Milan, Italy - Leonardo turned his thoughts to urban planning problems. Following a typical Renaissance trend, he began to work on an ‘ideal city’ project, which - due to its excessive costs - would <span class="vocab-word" data-word="remain unfulfilled">remain unfulfilled</span>. Yet given that unsustainable urban models are a key cause of global climate change today, it’s only natural to wonder how Leonardo might have changed the shape of modern cities.</p>
+                
+                <p><span class="paragraph-label">D</span> Although the Renaissance is renowned as an era of incredible progress in art and architecture, it is rarely noted that the 15th century also <span class="vocab-word" data-word="marked the birth of">marked the birth of</span> urbanism as a true academic discipline. The rigour and method behind the conscious conception of a city had been largely missing in Western thought until the moment when prominent Renaissance men <span class="vocab-word" data-word="pushed forward">pushed forward</span> large-scale urban projects in Italy, such as the reconfiguration of the town of Pienza and the expansion of the city of Ferrara. These works surely inspired Leonardo’s decision to rethink the design of medieval cities, with their winding and overcrowded streets and with houses piled against one another.</p>
+                
+                <p><span class="paragraph-label">E</span> It is not easy to identify a coordinated vision of Leonardo’s ideal city because of his disordered way of working with notes and sketches. But from the largest collection of Leonardo’s papers ever assembled, a series of innovative thoughts can be reconstructed regarding the foundation of a new city along the Ticino River, which runs from Switzerland into Italy and is 248 kilometers long. He designed the city for the easy transport of goods and clean <span class="vocab-word" data-word="urban spaces">urban spaces</span>, and he wanted a comfortable and spacious city, with <span class="vocab-word" data-word="well-ordered">well-ordered</span> streets and architecture. He recommended ‘high, strong walls’, with ‘towers and battlements of all necessary and pleasant beauty’.</p>
+
+                <p><span class="paragraph-label">F</span> His plans for a modern and ‘rational’ city were consistent with Renaissance ideals. But, in keeping with his personality, Leonardo included several innovations in his urban design. Leonardo wanted the city to be built on several levels, linked with vertical outdoor staircases. This design can be seen in some of today’s <span class="vocab-word" data-word="high-rise buildings">high-rise buildings</span> but was unconventional at the time. Indeed, this idea of <span class="vocab-word" data-word="taking full advantage of">taking full advantage of</span> the interior spaces wasn’t implemented until the 1920s and 1930s, with the birth of the Modernist movement.</p>
+                
+                <p><span class="paragraph-label">G</span> While in the upper layers of the city, people could walk undisturbed between elegant palaces and streets, the lower layer was the place for services, trade, transport, and industry. But the true originality of Leonardo’s vision was its fusion of architecture and engineering. Leonardo designed extensive hydraulic plants to create artificial canals throughout the city. The canals, regulated by clocks and basins, were supposed to make it easier for boats to navigate inland. Leonardo also thought that the width of the streets ought to match the average height of the adjacent houses: a rule still followed in many contemporary cities across Italy, to allow access to sun and reduce the risk of damage from earthquakes.</p>
+
+                <p><span class="paragraph-label">H</span> Although some of these features existed in Roman cities, before Leonardo’s drawings there had never been a multi-level, compact modern city which was thoroughly technically conceived. Indeed, it wasn’t until the 19th century that some of his ideas were applied. For example, the subdivision of the city by function - with services and infrastructures located in the lower levels and wide and <span class="vocab-word" data-word="well-ventilated">well-ventilated</span> boulevards and walkways above for residents - is an idea that can be found in Georges-Eugene Haussmann’s renovation of Paris under Emperor Napoleon III between 1853 and 1870.</p>
+
+                <p><span class="paragraph-label">I</span> Today, Leonardo’s ideas are not simply valid, they actually suggest a way forward for urban planning. Many scholars think that the compact city, built upwards instead of outwards, <span class="vocab-word" data-word="integrated with">integrated with</span> nature (especially water systems), with efficient <span class="vocab-word" data-word="transport infrastructure">transport infrastructure</span>, could help modern cities become more efficient and sustainable. This is yet another reason why Leonardo was <span class="vocab-word" data-word="aligned so closely with">aligned so closely with</span> modern urban planning and centuries ahead of his time.</p>
+            </div>
+        </div>
+
+        <!-- Splitter -->
+        <div id="splitter" class="splitter relative flex items-center justify-center">
+            <div class="w-1 h-8 bg-gray-400 rounded-full opacity-50"></div>
+        </div>
+
+        <!-- Right Pane: Questions -->
+        <div id="right-pane" class="pane">
+            <div id="questions-section" class="max-w-3xl mx-auto space-y-8">
+                
+                <!-- True / False / Not Given -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-blue-100 text-blue-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 27-33</span>
+                        <h4 class="font-bold text-gray-800">TRUE / FALSE / NOT GIVEN</h4>
+                    </div>
+                    <p class="mb-5 text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100 text-sm">
+                        Do the following statements agree with the information given in Reading Passage 3?<br><br>
+                        Select the correct option below:<br>
+                        <strong class="text-blue-700">TRUE</strong> if the statement agrees with the information<br>
+                        <strong class="text-blue-700">FALSE</strong> if the statement contradicts the information<br>
+                        <strong class="text-blue-700">NOT GIVEN</strong> if there is no information on this
+                    </p>
+                    
+                    <div class="space-y-6">
+                        <div class="q-item border border-gray-100 p-4" id="container-q27">
+                            <p class="mb-3 text-gray-800 font-medium leading-snug"><span class="font-bold text-blue-600 mr-2">27</span> People first referred to Leonardo da Vinci as a genius 500 years ago.</p>
+                            <div class="flex flex-wrap gap-3">
+                                <label class="custom-radio-label"><input type="radio" name="q27" value="true" class="mr-2 hidden"><span class="font-semibold text-gray-600">True</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q27" value="false" class="mr-2 hidden"><span class="font-semibold text-gray-600">False</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q27" value="not given" class="mr-2 hidden"><span class="font-semibold text-gray-600">Not Given</span></label>
+                            </div>
+                        </div>
+
+                        <div class="q-item border border-gray-100 p-4" id="container-q28">
+                            <p class="mb-3 text-gray-800 font-medium leading-snug"><span class="font-bold text-blue-600 mr-2">28</span> The current climate crisis is predicted to cause more deaths than the plague.</p>
+                            <div class="flex flex-wrap gap-3">
+                                <label class="custom-radio-label"><input type="radio" name="q28" value="true" class="mr-2 hidden"><span class="font-semibold text-gray-600">True</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q28" value="false" class="mr-2 hidden"><span class="font-semibold text-gray-600">False</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q28" value="not given" class="mr-2 hidden"><span class="font-semibold text-gray-600">Not Given</span></label>
+                            </div>
+                        </div>
+
+                        <div class="q-item border border-gray-100 p-4" id="container-q29">
+                            <p class="mb-3 text-gray-800 font-medium leading-snug"><span class="font-bold text-blue-600 mr-2">29</span> Some of the challenges we face today can be compared to those of earlier times.</p>
+                            <div class="flex flex-wrap gap-3">
+                                <label class="custom-radio-label"><input type="radio" name="q29" value="true" class="mr-2 hidden"><span class="font-semibold text-gray-600">True</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q29" value="false" class="mr-2 hidden"><span class="font-semibold text-gray-600">False</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q29" value="not given" class="mr-2 hidden"><span class="font-semibold text-gray-600">Not Given</span></label>
+                            </div>
+                        </div>
+
+                        <div class="q-item border border-gray-100 p-4" id="container-q30">
+                            <p class="mb-3 text-gray-800 font-medium leading-snug"><span class="font-bold text-blue-600 mr-2">30</span> Leonardo da Vinci’s ‘ideal city’ was constructed in the 15th century.</p>
+                            <div class="flex flex-wrap gap-3">
+                                <label class="custom-radio-label"><input type="radio" name="q30" value="true" class="mr-2 hidden"><span class="font-semibold text-gray-600">True</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q30" value="false" class="mr-2 hidden"><span class="font-semibold text-gray-600">False</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q30" value="not given" class="mr-2 hidden"><span class="font-semibold text-gray-600">Not Given</span></label>
+                            </div>
+                        </div>
+
+                        <div class="q-item border border-gray-100 p-4" id="container-q31">
+                            <p class="mb-3 text-gray-800 font-medium leading-snug"><span class="font-bold text-blue-600 mr-2">31</span> Poor town planning is a major contributor to climate change.</p>
+                            <div class="flex flex-wrap gap-3">
+                                <label class="custom-radio-label"><input type="radio" name="q31" value="true" class="mr-2 hidden"><span class="font-semibold text-gray-600">True</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q31" value="false" class="mr-2 hidden"><span class="font-semibold text-gray-600">False</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q31" value="not given" class="mr-2 hidden"><span class="font-semibold text-gray-600">Not Given</span></label>
+                            </div>
+                        </div>
+
+                        <div class="q-item border border-gray-100 p-4" id="container-q32">
+                            <p class="mb-3 text-gray-800 font-medium leading-snug"><span class="font-bold text-blue-600 mr-2">32</span> In Renaissance times, local people fought against the changes to Pienza and Ferrara.</p>
+                            <div class="flex flex-wrap gap-3">
+                                <label class="custom-radio-label"><input type="radio" name="q32" value="true" class="mr-2 hidden"><span class="font-semibold text-gray-600">True</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q32" value="false" class="mr-2 hidden"><span class="font-semibold text-gray-600">False</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q32" value="not given" class="mr-2 hidden"><span class="font-semibold text-gray-600">Not Given</span></label>
+                            </div>
+                        </div>
+                        
+                        <div class="q-item border border-gray-100 p-4" id="container-q33">
+                            <p class="mb-3 text-gray-800 font-medium leading-snug"><span class="font-bold text-blue-600 mr-2">33</span> Leonardo da Vinci kept a neat, organised record of his designs.</p>
+                            <div class="flex flex-wrap gap-3">
+                                <label class="custom-radio-label"><input type="radio" name="q33" value="true" class="mr-2 hidden"><span class="font-semibold text-gray-600">True</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q33" value="false" class="mr-2 hidden"><span class="font-semibold text-gray-600">False</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q33" value="not given" class="mr-2 hidden"><span class="font-semibold text-gray-600">Not Given</span></label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="27-33">Check Answers</button>
+                    </div>
+                </div>
+
+                <!-- Summary Completion -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-blue-100 text-blue-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 34-40</span>
+                        <h4 class="font-bold text-gray-800">Summary Completion</h4>
+                    </div>
+                    <p class="mb-5 text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100 text-sm">
+                        Complete the summary below.<br>
+                        Choose <strong>ONE WORD ONLY</strong> from the passage for each answer.
+                    </p>
+                    
+                    <div class="leading-loose text-gray-800 text-[0.95em] bg-gray-50 p-5 rounded-lg border border-gray-100">
+                        <h5 class="font-bold text-gray-900 text-center mb-4 text-lg">Leonardo da Vinci’s ideal city</h5>
+                        
+                        <p class="mb-4">
+                            A collection of Leonardo da Vinci’s paperwork reveals his design of a new city beside the Ticino River. This was to provide better 
+                            <span id="container-q34" class="inline-block mx-1"><strong class="text-blue-600 mx-1">34</strong><input type="text" name="q34" class="text-input w-32"></span> 
+                            for trade and a less polluted environment. Although Leonardo da Vinci’s city shared many of the ideals of his time, some of his innovations were considered unconventional in their design. They included features that can be seen in some tower blocks today, such as 
+                            <span id="container-q35" class="inline-block mx-1"><strong class="text-blue-600 mx-1">35</strong><input type="text" name="q35" class="text-input w-36"></span> 
+                            on the exterior of a building.
+                        </p>
+                        
+                        <p class="mb-4">
+                            Leonardo da Vinci wasn’t only an architect. His expertise in 
+                            <span id="container-q36" class="inline-block mx-1"><strong class="text-blue-600 mx-1">36</strong><input type="text" name="q36" class="text-input w-36"></span> 
+                            was evident in his plans for artificial canals within his ideal city. He also believed that the height of houses should relate to the width of streets in case earthquakes occurred. The design of many cities in Italy today follows this 
+                            <span id="container-q37" class="inline-block mx-1"><strong class="text-blue-600 mx-1">37</strong><input type="text" name="q37" class="text-input w-28"></span>.
+                        </p>
+                        
+                        <p>
+                            While some cities from 
+                            <span id="container-q38" class="inline-block mx-1"><strong class="text-blue-600 mx-1">38</strong><input type="text" name="q38" class="text-input w-28"></span> 
+                            times have aspects that can also be found in Leonardo’s designs, his ideas weren’t put into practice until long after his death. 
+                            <span id="container-q39" class="inline-block mx-1"><strong class="text-blue-600 mx-1">39</strong><input type="text" name="q39" class="text-input w-32"></span> 
+                            is one example of a city that was redesigned in the 19th century in the way that Leonardo had envisaged. His ideas are also relevant to today’s world, where building 
+                            <span id="container-q40" class="inline-block mx-1"><strong class="text-blue-600 mx-1">40</strong><input type="text" name="q40" class="text-input w-32"></span> 
+                            no longer seems to be the best approach.
+                        </p>
+                    </div>
+                    <div class="mt-6 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="34-40">Check Answers</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Highlight Tooltip -->
+<div id="highlight-tooltip" class="highlight-tooltip">Highlight Text</div>
+
+<!-- Vocabulary Modal -->
+<div id="vocab-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50 transition-opacity">
+    <div class="bg-white rounded-2xl shadow-2xl p-5 sm:p-8 w-full max-w-md relative transform transition-all scale-95 opacity-0" id="vocab-modal-content">
+        <button id="close-vocab-modal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-full w-8 h-8 flex items-center justify-center transition-colors">&times;</button>
+        <div class="flex items-center mb-6 border-b pb-4 mt-2">
+            <h3 id="vocab-word" class="text-2xl sm:text-3xl font-extrabold text-gray-900 capitalize tracking-tight"></h3>
+        </div>
+        <div class="flex items-center mb-5">
+            <button id="play-audio-btn" class="flex items-center justify-center h-10 w-10 sm:h-12 sm:w-12 shrink-0 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white mr-4 transition-all shadow-sm border border-blue-100" title="Listen to pronunciation">
+                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>
+            </button>
+            <p id="vocab-pronunciation-text" class="text-gray-500 font-mono text-base sm:text-lg bg-gray-50 px-3 py-1 rounded-md border border-gray-100"></p>
+        </div>
+        <p id="vocab-meaning" class="text-gray-700 text-base sm:text-lg leading-relaxed"></p>
+    </div>
+</div>
+
+<!-- Alert Modal -->
+<div id="alert-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-[80] transition-opacity">
+    <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm relative transform transition-all scale-95 opacity-0 text-center" id="alert-modal-content">
+        <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+            <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+        </div>
+        <h3 id="alert-title" class="text-lg leading-6 font-medium text-gray-900 mb-2">Incomplete Answers</h3>
+        <p id="alert-message" class="text-sm text-gray-500 mb-6">Please fill in all the blanks before checking your answers.</p>
+        <button id="close-alert-btn" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm transition-colors">
+            Got it
+        </button>
+    </div>
+</div>
+
+<script>
+    // --- DATA ---
+    const vocabulary = {
+        'universally associated with': { meaning: 'Connected with something else all over the world.', phonetic: '/ˌjuː.nɪˈvɜː.səl.i əˈsəʊ.si.eɪ.tɪd wɪð/' },
+        'scientific spirit': { meaning: 'An attitude of rational inquiry and objective investigation.', phonetic: '/ˌsaɪənˈtɪf.ɪk ˈspɪr.ɪt/' },
+        'artistic talent': { meaning: 'A natural ability or aptitude in creating art.', phonetic: '/ɑːˈtɪs.tɪk ˈtæl.ənt/' },
+        'global crisis': { meaning: 'A difficult or dangerous situation that affects the whole world.', phonetic: '/ˈɡləʊ.bəl ˈkraɪ.sɪs/' },
+        'marked the birth of': { meaning: 'Signified the beginning or origin of something.', phonetic: '/mɑːkt ðə bɜːθ əv/' },
+        'pushed forward': { meaning: 'To advance or proceed with a plan or project.', phonetic: '/pʊʃt ˈfɔː.wəd/' },
+        'remain unfulfilled': { meaning: 'Not carried out or completed.', phonetic: '/rɪˈmeɪn ˌʌn.fʊlˈfɪld/' },
+        'urban spaces': { meaning: 'Areas within a town or city.', phonetic: '/ˈɜː.bən speɪsɪz/' },
+        'well-ordered': { meaning: 'Arranged systematically and logically.', phonetic: '/ˌwel ˈɔː.dəd/' },
+        'high-rise buildings': { meaning: 'Buildings with many stories.', phonetic: '/ˌhaɪˈraɪz ˈbɪl.dɪŋz/' },
+        'taking full advantage of': { meaning: 'Making the best use of something.', phonetic: '/ˈteɪ.kɪŋ fʊl ədˈvɑːn.tɪdʒ əv/' },
+        'well-ventilated': { meaning: 'Allowing fresh air to circulate freely.', phonetic: '/ˌwel ˈven.tɪ.leɪ.tɪd/' },
+        'integrated with': { meaning: 'Combined with or incorporated into something else.', phonetic: '/ˈɪn.tɪ.ɡreɪ.tɪd wɪð/' },
+        'transport infrastructure': { meaning: 'The basic physical facilities needed for transportation (e.g., roads, railways).', phonetic: '/ˈtræn.spɔːt ˈɪn.frəˌstrʌk.tʃər/' },
+        'aligned so closely with': { meaning: 'In matching or corresponding exactly with something.', phonetic: '/əˈlaɪnd səʊ ˈkləʊs.li wɪð/' }
+    };
+
+    const answers = {
+        q27: "not given",
+        q28: "not given",
+        q29: "true",
+        q30: "false",
+        q31: "true",
+        q32: "not given",
+        q33: "false",
+        q34: "transport",
+        q35: "staircases",
+        q36: "engineering",
+        q37: "rule",
+        q38: "roman",
+        q39: "paris",
+        q40: "outwards"
+    };
+
+    const explanations = {
+        q27: "Paragraph A states that Leonardo is associated with the word 'genius', but it does not mention whether people *first* referred to him as such 500 years ago.",
+        q28: "Paragraph B mentions both the plague in the 14th century and the current climate crisis, but makes no comparison regarding which causes or will cause more deaths.",
+        q29: "Paragraph B draws a clear parallel between the 14th-century plague and today's climate crisis, stating 'Then, as now, radical solutions were called for...'. This compares the challenges.",
+        q30: "Paragraph C states that his 'ideal city' project 'due to its excessive costs - would remain unfulfilled'. It was designed in the 15th century but never constructed.",
+        q31: "Paragraph C notes: 'unsustainable urban models are a key cause of global climate change today', meaning poor town planning strongly contributes to climate change.",
+        q32: "Paragraph D mentions prominent Renaissance men pushing forward urban projects in Pienza and Ferrara, but nothing is mentioned about local people fighting against these changes.",
+        q33: "Paragraph E explicitly states: 'It is not easy to identify a coordinated vision of Leonardo’s ideal city because of his disordered way of working with notes and sketches.'",
+        q34: "Paragraph E states: 'He designed the city for the easy transport of goods...'",
+        q35: "Paragraph F mentions: '...linked with vertical outdoor staircases. This design can be seen in some of today’s high-rise buildings...'",
+        q36: "Paragraph G states: 'But the true originality of Leonardo’s vision was its fusion of architecture and engineering.'",
+        q37: "Paragraph G says: 'Leonardo also thought that the width of the streets ought to match the average height... a rule still followed in many contemporary cities across Italy...'",
+        q38: "Paragraph H points out: 'Although some of these features existed in Roman cities...'",
+        q39: "Paragraph H explains that subdividing a city by function 'is an idea that can be found in Georges-Eugene Haussmann’s renovation of Paris...'",
+        q40: "Paragraph I highlights: '...the compact city, built upwards instead of outwards...'"
+    };
+
+    // --- APPLICATION LOGIC ---
+    document.addEventListener('DOMContentLoaded', () => {
+        const app = {
+            userAnswers: {},
+            answersChecked: {},
+            currentFontSize: 17,
+
+            // Elements
+            leftPane: document.getElementById('left-pane'),
+            rightPane: document.getElementById('right-pane'),
+            splitter: document.getElementById('splitter'),
+            highlightTooltip: document.getElementById('highlight-tooltip'),
+            vocabModal: document.getElementById('vocab-modal'),
+            vocabModalContent: document.getElementById('vocab-modal-content'),
+            closeVocabModalBtn: document.getElementById('close-vocab-modal'),
+            vocabWordEl: document.getElementById('vocab-word'),
+            vocabMeaningEl: document.getElementById('vocab-meaning'),
+            vocabPronunciationText: document.getElementById('vocab-pronunciation-text'),
+            playAudioBtn: document.getElementById('play-audio-btn'),
+
+            // Alert Elements
+            alertModal: document.getElementById('alert-modal'),
+            alertModalContent: document.getElementById('alert-modal-content'),
+            closeAlertBtn: document.getElementById('close-alert-btn'),
+            alertTitleEl: document.getElementById('alert-title'),
+            alertMessageEl: document.getElementById('alert-message'),
+
+            init() {
+                this.setupEventListeners();
+                this.initSplitter();
+                this.initHighlighter();
+                this.updateCheckButtonsState();
+            },
+
+            setupEventListeners() {
+                document.getElementById('increase-font-btn').addEventListener('click', () => this.changeFontSize(1));
+                document.getElementById('decrease-font-btn').addEventListener('click', () => this.changeFontSize(-1));
+
+                this.closeVocabModalBtn.addEventListener('click', () => this.closeModal());
+                this.vocabModal.addEventListener('click', (e) => {
+                   if (e.target === this.vocabModal) this.closeModal();
+                });
+
+                // Keyboard accessibility: Close modals with Escape key
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') {
+                        if (!this.vocabModal.classList.contains('hidden')) this.closeModal();
+                        if (!this.alertModal.classList.contains('hidden')) this.closeAlert();
+                    }
+                });
+
+                // Alert Modal Events
+                this.closeAlertBtn.addEventListener('click', () => this.closeAlert());
+                this.alertModal.addEventListener('click', (e) => {
+                   if (e.target === this.alertModal) this.closeAlert();
+                });
+
+                // Track text inputs
+                document.body.addEventListener('input', (e) => {
+                    if (e.target.tagName === 'INPUT' && e.target.type === 'text') {
+                        this.userAnswers[e.target.name] = e.target.value;
+                        e.target.classList.remove('correct-answer', 'incorrect-answer');
+                        const container = document.getElementById(`container-${e.target.name}`);
+                        if(container) container.classList.remove('bg-red-50', 'bg-green-50');
+                        
+                        this.updateCheckButtonsState();
+                    }
+                });
+
+                // Track Radio button changes
+                document.body.addEventListener('change', (e) => {
+                    if (e.target.type === 'radio') {
+                        this.userAnswers[e.target.name] = e.target.value;
+                        const groupRadios = document.querySelectorAll(`input[name="${e.target.name}"]`);
+                        groupRadios.forEach(radio => {
+                            const label = radio.closest('label');
+                            label.classList.remove('correct-answer', 'incorrect-answer');
+                        });
+                        this.updateCheckButtonsState();
+                    }
+                });
+
+                // Vocab Words Event Delegation
+                this.leftPane.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('vocab-word')) {
+                        const wordKey = e.target.dataset.word;
+                        this.openVocabModal(wordKey);
+                    }
+                });
+
+                // Check Buttons Event Delegation
+                document.querySelectorAll('.check-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const range = e.target.dataset.range;
+                        this.checkAnswers(range, e.target);
+                    });
+                });
+                
+                // Real Audio Pronunciation Event
+                this.playAudioBtn.addEventListener('click', () => {
+                   const word = this.vocabWordEl.textContent;
+                   if (!word) return;
+                   if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+                   
+                   this.playAudioBtn.classList.remove('text-blue-600', 'bg-blue-50');
+                   this.playAudioBtn.classList.add('bg-green-500', 'text-white');
+                   
+                   if ('speechSynthesis' in window) {
+                       const utterance = new SpeechSynthesisUtterance(word);
+                       utterance.lang = 'en-GB'; 
+                       utterance.rate = 0.9; 
+                       utterance.onend = () => this.resetAudioBtn();
+                       utterance.onerror = () => this.resetAudioBtn();
+                       window.speechSynthesis.speak(utterance);
+                   } else {
+                       alert("Sorry, your browser doesn't support text-to-speech audio.");
+                       setTimeout(() => this.resetAudioBtn(), 500);
+                   }
+                });
+            },
+
+            resetAudioBtn() {
+                this.playAudioBtn.classList.add('text-blue-600', 'bg-blue-50');
+                this.playAudioBtn.classList.remove('bg-green-500', 'text-white');
+            },
+            
+            changeFontSize(delta) {
+                this.currentFontSize += delta;
+                if (this.currentFontSize < 14) this.currentFontSize = 14;
+                if (this.currentFontSize > 26) this.currentFontSize = 26;
+                document.documentElement.style.setProperty('--app-font-size', `${this.currentFontSize}px`);
+            },
+
+            openVocabModal(wordKey) {
+                const data = vocabulary[wordKey];
+                if (data) {
+                    this.vocabWordEl.textContent = wordKey;
+                    this.vocabMeaningEl.textContent = data.meaning;
+                    this.vocabPronunciationText.textContent = data.phonetic || '';
+                    this.vocabModal.classList.remove('hidden');
+                    setTimeout(() => {
+                        this.vocabModalContent.classList.remove('scale-95', 'opacity-0');
+                        this.vocabModalContent.classList.add('scale-100', 'opacity-100');
+                    }, 10);
+                }
+            },
+
+            closeModal() {
+                if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+                this.vocabModalContent.classList.remove('scale-100', 'opacity-100');
+                this.vocabModalContent.classList.add('scale-95', 'opacity-0');
+                this.resetAudioBtn();
+                setTimeout(() => this.vocabModal.classList.add('hidden'), 200);
+            },
+
+            showAlert(title, message) {
+                if (title) this.alertTitleEl.textContent = title;
+                if (message) this.alertMessageEl.textContent = message;
+                
+                this.alertModal.classList.remove('hidden');
+                setTimeout(() => {
+                    this.alertModalContent.classList.remove('scale-95', 'opacity-0');
+                    this.alertModalContent.classList.add('scale-100', 'opacity-100');
+                }, 10);
+            },
+
+            closeAlert() {
+                this.alertModalContent.classList.remove('scale-100', 'opacity-100');
+                this.alertModalContent.classList.add('scale-95', 'opacity-0');
+                setTimeout(() => {
+                    this.alertModal.classList.add('hidden');
+                }, 200);
+            },
+            
+            updateCheckButtonsState() {
+                document.querySelectorAll('.check-btn').forEach(btn => {
+                    const range = btn.dataset.range;
+                    if (this.answersChecked[range]) {
+                        btn.className = 'check-btn bg-gray-800 hover:bg-gray-900 text-white font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-pointer transform hover:-translate-y-0.5 hover:shadow-md active:scale-95';
+                        btn.textContent = 'Reset Answers';
+                        return;
+                    }
+
+                    const [start, end] = range.split('-').map(Number);
+                    let allAnswered = true;
+                    for (let i = start; i <= end; i++) {
+                        const qId = `q${i}`;
+                        const answer = (this.userAnswers[qId] || "").trim();
+                        if (!answer) {
+                            allAnswered = false;
+                            break;
+                        }
+                    }
+
+                    if (allAnswered) {
+                        btn.className = 'check-btn bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-pointer transform hover:-translate-y-0.5 hover:shadow-md active:scale-95';
+                    } else {
+                        btn.className = 'check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80';
+                    }
+                });
+            },
+
+            checkAnswers(range, btn) {
+                if (this.answersChecked[range]) {
+                    // Reset mode
+                    this.answersChecked[range] = false;
+                    
+                    const [start, end] = range.split('-').map(Number);
+                    for (let i = start; i <= end; i++) {
+                        const qId = `q${i}`;
+                        this.userAnswers[qId] = '';
+                        
+                        // Handle Radios
+                        const radios = document.querySelectorAll(`input[name="${qId}"][type="radio"]`);
+                        if (radios.length > 0) {
+                            radios.forEach(radio => {
+                                radio.checked = false;
+                                const label = radio.closest('label');
+                                label.classList.remove('correct-answer', 'incorrect-answer');
+                            });
+                        }
+
+                        // Handle Inputs
+                        const input = document.querySelector(`input[name="${qId}"][type="text"]`);
+                        if (input) {
+                            input.value = '';
+                            input.classList.remove('correct-answer', 'incorrect-answer');
+                        }
+
+                        const expl = document.getElementById(`expl-${qId}`);
+                        if (expl) expl.remove();
+                    }
+                    this.updateCheckButtonsState();
+                    return;
+                }
+
+                const [start, end] = range.split('-').map(Number);
+
+                // --- Validation: Ensure all questions are answered ---
+                let allAnswered = true;
+                for (let i = start; i <= end; i++) {
+                    const qId = `q${i}`;
+                    const answer = (this.userAnswers[qId] || "").trim();
+                    if (!answer) {
+                        allAnswered = false;
+                        break;
+                    }
+                }
+
+                if (!allAnswered) {
+                    this.showAlert("Incomplete Answers", "Please fill in all the blanks before checking your answers.");
+                    return;
+                }
+                // -----------------------------------------------------
+
+                // Check mode
+                this.answersChecked[range] = true;
+                this.updateCheckButtonsState();
+
+                for (let i = start; i <= end; i++) {
+                    const qId = `q${i}`;
+                    let userAnswer = (this.userAnswers[qId] || "").toLowerCase().trim();
+                    
+                    let correctAnswersList = answers[qId].toLowerCase().split('|');
+                    let isCorrect = correctAnswersList.includes(userAnswer);
+
+                    // Check Radios
+                    const radios = document.querySelectorAll(`input[name="${qId}"][type="radio"]`);
+                    if (radios.length > 0) {
+                        radios.forEach(radio => {
+                            const label = radio.closest('label');
+                            label.classList.remove('correct-answer', 'incorrect-answer');
+                            
+                            if (correctAnswersList.includes(radio.value)) {
+                                label.classList.add('correct-answer');
+                            } else if (radio.value === userAnswer) {
+                                label.classList.add('incorrect-answer');
+                            }
+                        });
+                    }
+
+                    // Check Inputs
+                    const input = document.querySelector(`input[name="${qId}"][type="text"]`);
+                    if (input) {
+                        input.classList.remove('correct-answer', 'incorrect-answer');
+                        
+                        if (isCorrect) {
+                            input.classList.add('correct-answer');
+                        } else {
+                            input.classList.add('incorrect-answer');
+                            input.value = '';
+                            input.placeholder = correctAnswersList[0].toUpperCase();
+                        }
+                    }
+
+                    // Add Explanation Box
+                    if (explanations[qId]) {
+                        const existingExpl = document.getElementById(`expl-${qId}`);
+                        if (!existingExpl) {
+                            const explDiv = document.createElement('div');
+                            explDiv.id = `expl-${qId}`;
+                            explDiv.className = 'explanation-box';
+                            explDiv.innerHTML = `<strong>Explanation:</strong> ${explanations[qId]}`;
+                            
+                            const container = document.getElementById(`container-${qId}`);
+                            if (container) {
+                                container.insertAdjacentElement('afterend', explDiv);
+                            }
+                        }
+                    }
+                }
+            },
+
+            initSplitter() {
+                let isDragging = false;
+                const contentPanes = document.getElementById('content-panes');
+
+                this.splitter.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    isDragging = true;
+                    document.body.style.cursor = 'col-resize';
+                });
+
+                document.addEventListener('mousemove', (e) => {
+                    if (!isDragging) return;
+                    e.preventDefault();
+                    if (window.innerWidth <= 768) return; 
+                    
+                    const containerRect = contentPanes.getBoundingClientRect();
+                    const newLeftWidth = e.clientX - containerRect.left;
+                    if (newLeftWidth > 200 && newLeftWidth < containerRect.width - 200) {
+                        const newLeftPercent = (newLeftWidth / containerRect.width) * 100;
+                        contentPanes.style.gridTemplateColumns = `${newLeftPercent}% 5px 1fr`;
+                    }
+                });
+
+                document.addEventListener('mouseup', () => {
+                    if (isDragging) {
+                        isDragging = false;
+                        document.body.style.cursor = 'default';
+                    }
+                });
+            },
+
+            initHighlighter() {
+                document.body.addEventListener('mouseup', (e) => {
+                    const selection = window.getSelection();
+                    const selectedText = selection.toString().trim();
+
+                    if (selectedText.length > 0) {
+                        const range = selection.getRangeAt(0);
+                        if (!this.leftPane.contains(range.commonAncestorContainer) && !this.rightPane.contains(range.commonAncestorContainer)) {
+                           this.highlightTooltip.style.display = 'none';
+                           return;
+                        }
+
+                        this.highlightTooltip.style.left = `${e.pageX - 30}px`;
+                        this.highlightTooltip.style.top = `${e.pageY - 40}px`;
+                        this.highlightTooltip.style.display = 'block';
+
+                        this.highlightTooltip.onclick = () => {
+                            const container = range.commonAncestorContainer;
+                            if (container.nodeType === 3) { 
+                                if (range.startContainer.parentElement !== range.endContainer.parentElement) {
+                                    this.highlightTooltip.style.display = 'none';
+                                    return;
+                                }
+                            }
+                            
+                            const mark = document.createElement('mark');
+                            try {
+                                range.surroundContents(mark);
+                            } catch (ex) {} 
+                            finally {
+                                selection.removeAllRanges();
+                                this.highlightTooltip.style.display = 'none';
+                            }
+                        };
+                    } else {
+                        this.highlightTooltip.style.display = 'none';
+                    }
+                });
+
+                document.body.addEventListener('mousedown', (e) => {
+                   if (e.target !== this.highlightTooltip && window.getSelection().toString().length === 0) {
+                        this.highlightTooltip.style.display = 'none';
+                   }
+                });
+            }
+        };
+
+        app.init();
+    });
+</script>
+
+</body>
+</html>
