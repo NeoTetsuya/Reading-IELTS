@@ -80,6 +80,15 @@
             margin-right: 0.5rem;
             color: #1e40af;
             text-indent: 0;
+            background-color: #eff6ff;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            border: 1px solid #bfdbfe;
+            margin-top: 5px;
         }
 
         /* Question Styles */
@@ -140,6 +149,17 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
             text-align: left;
         }
+        .explanation-box .correct-badge {
+            display: inline-block;
+            background: #22c55e;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.85em;
+            margin-bottom: 0.5rem;
+            letter-spacing: 0.05em;
+        }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(-8px); }
             to { opacity: 1; transform: translateY(0); }
@@ -178,6 +198,19 @@
             background-color: #fef08a;
             border-radius: 3px;
             padding: 2px 0;
+            cursor: pointer;
+            transition: background-color 0.2s, color 0.2s;
+            position: relative;
+        }
+        mark:hover {
+            background-color: #fca5a5;
+            color: #7f1d1d;
+        }
+        mark:hover::after {
+            content: ' ×';
+            font-weight: bold;
+            font-size: 0.8em;
+            opacity: 0.7;
         }
         
         /* Responsive Design Overrides */
@@ -185,14 +218,14 @@
             .content-panes {
                 display: flex;
                 flex-direction: column;
-                overflow-y: auto; /* Allow entire container to scroll naturally */
+                overflow-y: auto; 
             }
             .splitter {
-                display: none; /* Hide splitter on mobile */
+                display: none; 
             }
             .pane {
                 padding: 1.25rem 1rem;
-                overflow-y: visible; /* Disable individual scrolling */
+                overflow-y: visible; 
                 height: auto;
             }
             #left-pane {
@@ -200,7 +233,7 @@
                 padding-bottom: 2rem;
             }
             .text-input {
-                max-width: 130px; /* Prevent long text inputs from overflowing */
+                max-width: 130px; 
                 padding: 2px 6px;
             }
             select.text-input {
@@ -213,7 +246,7 @@
 
 <div id="test-container" class="ielts-container">
     <!-- Header -->
-    <header class="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center z-20 shadow-sm">
+    <header class="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 flex justify-between items-center z-20 shadow-sm flex-wrap gap-3">
         <div class="flex items-center gap-2 sm:space-x-3">
             <div class="bg-blue-600 text-white p-1.5 sm:p-2 rounded-lg shrink-0">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -225,19 +258,37 @@
             <!-- Short title for mobile -->
             <h1 class="text-base font-bold text-gray-800 sm:hidden">IELTS <span class="text-blue-600">Env. Med</span></h1>
         </div>
-        <div class="flex items-center gap-2 sm:space-x-5">
+        
+        <!-- Timer & Progress -->
+        <div class="flex items-center space-x-4">
+            <div class="hidden sm:flex flex-col items-end">
+                <span class="text-xs text-gray-500 font-bold uppercase tracking-wide">Progress</span>
+                <span id="progress-text" class="text-sm font-semibold text-blue-600">0 / 13 Answered</span>
+            </div>
+            <div class="flex items-center bg-gray-100 rounded-lg px-3 py-1.5 border border-gray-200">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span id="timer" class="font-mono font-bold text-gray-700 text-lg">20:00</span>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2 sm:space-x-3">
+            <button id="clear-highlights-btn" class="hidden sm:flex items-center justify-center px-3 py-1.5 rounded bg-amber-50 hover:bg-amber-100 text-amber-700 transition-colors focus:outline-none border border-amber-200 text-sm font-medium" title="Clear Highlights">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                Clear Highlights
+            </button>
             <div class="flex items-center space-x-1 sm:space-x-2 bg-gray-50 p-1 rounded-lg border border-gray-200">
                 <button id="decrease-font-btn" class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded bg-white shadow-sm hover:bg-gray-100 text-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-400 font-bold text-sm sm:text-base" title="Decrease Font Size">A-</button>
                 <button id="increase-font-btn" class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded bg-white shadow-sm hover:bg-gray-100 text-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-400 font-bold text-sm sm:text-base" title="Increase Font Size">A+</button>
             </div>
-            <div class="hidden xs:block text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wider bg-gray-100 px-2 sm:px-3 py-1 rounded-full">Reading Passage 2</div>
         </div>
     </header>
 
     <!-- Main Content -->
     <main id="content-panes" class="content-panes">
         <!-- Left Pane: Passages -->
-        <div id="left-pane" class="pane">
+        <div id="left-pane" class="pane relative">
             <div class="reading-passage">
                 <h3>Environmental Medicine</h3>
                 
@@ -260,13 +311,13 @@
         </div>
 
         <!-- Splitter -->
-        <div id="splitter" class="splitter relative flex items-center justify-center">
-            <div class="w-1 h-8 bg-gray-400 rounded-full opacity-50"></div>
+        <div id="splitter" class="splitter relative flex items-center justify-center group">
+            <div class="w-1 h-8 bg-gray-400 rounded-full opacity-50 group-hover:bg-gray-600 transition-colors"></div>
         </div>
 
         <!-- Right Pane: Questions -->
         <div id="right-pane" class="pane">
-            <div id="questions-section" class="max-w-3xl mx-auto space-y-8">
+            <div id="questions-section" class="max-w-3xl mx-auto space-y-8 pb-10">
                 
                 <!-- Matching Information -->
                 <div class="p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
@@ -332,7 +383,7 @@
                     </div>
                     
                     <div class="mt-6 flex justify-end">
-                        <button class="check-btn bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg shadow-sm transition-colors" data-range="14-19">Check Answers</button>
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="14-19">Check Answers</button>
                     </div>
                 </div>
 
@@ -395,7 +446,7 @@
                         </div>
                     </div>
                     <div class="mt-6 flex justify-end">
-                        <button class="check-btn bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg shadow-sm transition-colors" data-range="20-26">Check Answers</button>
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="20-26">Check Answers</button>
                     </div>
                 </div>
 
@@ -427,13 +478,13 @@
 <!-- Alert Modal -->
 <div id="alert-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-[80] transition-opacity">
     <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm relative transform transition-all scale-95 opacity-0 text-center" id="alert-modal-content">
-        <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
-            <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div id="alert-icon-container" class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+            <svg id="alert-icon" class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
         </div>
-        <h3 id="alert-title" class="text-lg leading-6 font-medium text-gray-900 mb-2">Incomplete Answers</h3>
-        <p id="alert-message" class="text-sm text-gray-500 mb-6">Please fill in all the blanks before checking your answers.</p>
+        <h3 id="alert-title" class="text-lg leading-6 font-medium text-gray-900 mb-2">Notice</h3>
+        <p id="alert-message" class="text-sm text-gray-500 mb-6">Message goes here.</p>
         <button id="close-alert-btn" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm transition-colors">
             Got it
         </button>
@@ -491,6 +542,8 @@
             userAnswers: {},
             answersChecked: {},
             currentFontSize: 17,
+            totalQuestions: Object.keys(answers).length,
+            timeRemaining: 20 * 60, // 20 minutes
 
             // Elements
             leftPane: document.getElementById('left-pane'),
@@ -504,6 +557,9 @@
             vocabMeaningEl: document.getElementById('vocab-meaning'),
             vocabPronunciationText: document.getElementById('vocab-pronunciation-text'),
             playAudioBtn: document.getElementById('play-audio-btn'),
+            clearHighlightsBtn: document.getElementById('clear-highlights-btn'),
+            progressText: document.getElementById('progress-text'),
+            timerEl: document.getElementById('timer'),
 
             // Alert Elements
             alertModal: document.getElementById('alert-modal'),
@@ -511,17 +567,47 @@
             closeAlertBtn: document.getElementById('close-alert-btn'),
             alertTitleEl: document.getElementById('alert-title'),
             alertMessageEl: document.getElementById('alert-message'),
+            alertIconContainer: document.getElementById('alert-icon-container'),
 
             init() {
                 this.setupEventListeners();
                 this.initSplitter();
                 this.initHighlighter();
                 this.updateCheckButtonsState();
+                this.startTimer();
+            },
+
+            startTimer() {
+                const interval = setInterval(() => {
+                    if (this.timeRemaining <= 0) {
+                        clearInterval(interval);
+                        this.timerEl.textContent = "00:00";
+                        this.timerEl.classList.add('text-red-600');
+                        this.showAlert("Time's Up!", "Your 20 minutes for this reading passage have expired.", "warning");
+                        return;
+                    }
+                    this.timeRemaining--;
+                    const m = Math.floor(this.timeRemaining / 60).toString().padStart(2, '0');
+                    const s = (this.timeRemaining % 60).toString().padStart(2, '0');
+                    this.timerEl.textContent = `${m}:${s}`;
+                    
+                    if (this.timeRemaining <= 300) { // last 5 minutes
+                        this.timerEl.classList.add('text-red-500');
+                    }
+                }, 1000);
             },
 
             setupEventListeners() {
                 document.getElementById('increase-font-btn').addEventListener('click', () => this.changeFontSize(1));
                 document.getElementById('decrease-font-btn').addEventListener('click', () => this.changeFontSize(-1));
+
+                this.clearHighlightsBtn.addEventListener('click', () => {
+                    const marks = this.leftPane.querySelectorAll('mark');
+                    marks.forEach(mark => {
+                        const text = document.createTextNode(mark.textContent);
+                        mark.replaceWith(text);
+                    });
+                });
 
                 this.closeVocabModalBtn.addEventListener('click', () => this.closeModal());
                 this.vocabModal.addEventListener('click', (e) => {
@@ -542,25 +628,53 @@
                    if (e.target === this.alertModal) this.closeAlert();
                 });
 
-                // Track text inputs & selects
+                // Track text inputs
                 document.body.addEventListener('input', (e) => {
-                    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') {
-                        if(e.target.type !== 'radio') {
-                            this.userAnswers[e.target.name] = e.target.value;
-                            e.target.classList.remove('correct-answer', 'incorrect-answer');
-                            const container = document.getElementById(`container-${e.target.name}`);
-                            if(container) container.classList.remove('bg-red-50', 'bg-green-50');
-                            
-                            this.updateCheckButtonsState();
-                        }
+                    if (e.target.tagName === 'INPUT' && e.target.type === 'text') {
+                        this.userAnswers[e.target.name] = e.target.value;
+                        e.target.classList.remove('correct-answer', 'incorrect-answer');
+                        e.target.placeholder = '';
+                        const container = document.getElementById(`container-${e.target.name}`);
+                        if(container) container.classList.remove('bg-red-50', 'bg-green-50');
+                        
+                        this.updateCheckButtonsState();
+                        this.updateProgress();
                     }
                 });
 
-                // Vocab Words Event Delegation
+                // Track Radio/Select changes
+                document.body.addEventListener('change', (e) => {
+                    if (e.target.tagName === 'SELECT' || e.target.type === 'radio') {
+                        this.userAnswers[e.target.name] = e.target.value;
+                        
+                        if (e.target.type === 'radio') {
+                            const groupRadios = document.querySelectorAll(`input[name="${e.target.name}"]`);
+                            groupRadios.forEach(radio => {
+                                const label = radio.closest('label');
+                                label.classList.remove('correct-answer', 'incorrect-answer');
+                            });
+                        } else if (e.target.tagName === 'SELECT') {
+                            e.target.classList.remove('correct-answer', 'incorrect-answer');
+                            const container = document.getElementById(`container-${e.target.name}`);
+                            if(container) container.classList.remove('bg-red-50', 'bg-green-50');
+                        }
+                        
+                        this.updateCheckButtonsState();
+                        this.updateProgress();
+                    }
+                });
+
+                // Vocab Words & Removable Highlights Event Delegation
                 this.leftPane.addEventListener('click', (e) => {
                     if (e.target.classList.contains('vocab-word')) {
                         const wordKey = e.target.dataset.word;
                         this.openVocabModal(wordKey);
+                    }
+                    
+                    // Allow clicking to remove highlight
+                    if (e.target.tagName === 'MARK') {
+                        const textNode = document.createTextNode(e.target.textContent);
+                        e.target.replaceWith(textNode);
                     }
                 });
 
@@ -583,16 +697,27 @@
                    
                    if ('speechSynthesis' in window) {
                        const utterance = new SpeechSynthesisUtterance(word);
-                       utterance.lang = 'en-US'; 
+                       // Updated to en-GB as requested
+                       utterance.lang = 'en-GB'; 
                        utterance.rate = 0.9; 
                        utterance.onend = () => this.resetAudioBtn();
                        utterance.onerror = () => this.resetAudioBtn();
                        window.speechSynthesis.speak(utterance);
                    } else {
-                       alert("Sorry, your browser doesn't support text-to-speech audio.");
+                       this.showAlert("Audio Error", "Sorry, your browser doesn't support text-to-speech audio.", "warning");
                        setTimeout(() => this.resetAudioBtn(), 500);
                    }
                 });
+            },
+
+            updateProgress() {
+                let answeredCount = 0;
+                for(let key in answers) {
+                    if(this.userAnswers[key] && this.userAnswers[key].trim() !== '') {
+                        answeredCount++;
+                    }
+                }
+                this.progressText.textContent = `${answeredCount} / ${this.totalQuestions} Answered`;
             },
 
             resetAudioBtn() {
@@ -629,9 +754,17 @@
                 setTimeout(() => this.vocabModal.classList.add('hidden'), 200);
             },
 
-            showAlert(title, message) {
-                if (title) this.alertTitleEl.textContent = title;
-                if (message) this.alertMessageEl.textContent = message;
+            showAlert(title, message, type = 'error') {
+                this.alertTitleEl.textContent = title;
+                this.alertMessageEl.textContent = message;
+                
+                if (type === 'warning') {
+                    this.alertIconContainer.className = 'mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 mb-4';
+                    this.alertIconContainer.innerHTML = '<svg class="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>';
+                } else {
+                    this.alertIconContainer.className = 'mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4';
+                    this.alertIconContainer.innerHTML = '<svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>';
+                }
                 
                 this.alertModal.classList.remove('hidden');
                 setTimeout(() => {
@@ -686,7 +819,18 @@
                         const qId = `q${i}`;
                         this.userAnswers[qId] = '';
                         
-                        const input = document.querySelector(`[name="${qId}"]`);
+                        // Handle Radios
+                        const radios = document.querySelectorAll(`input[name="${qId}"][type="radio"]`);
+                        if (radios.length > 0) {
+                            radios.forEach(radio => {
+                                radio.checked = false;
+                                const label = radio.closest('label');
+                                label.classList.remove('correct-answer', 'incorrect-answer');
+                            });
+                        }
+
+                        // Handle Selects/Inputs
+                        const input = document.querySelector(`[name="${qId}"]:not([type="radio"])`);
                         if (input) {
                             input.value = '';
                             input.classList.remove('correct-answer', 'incorrect-answer');
@@ -697,6 +841,8 @@
                                     if (opt.disabled && opt.hidden && opt.value === "") opt.remove();
                                 });
                                 input.selectedIndex = 0;
+                            } else if (input.tagName === 'INPUT') {
+                                input.placeholder = '';
                             }
                         }
 
@@ -704,6 +850,7 @@
                         if (expl) expl.remove();
                     }
                     this.updateCheckButtonsState();
+                    this.updateProgress();
                     return;
                 }
 
@@ -721,7 +868,7 @@
                 }
 
                 if (!allAnswered) {
-                    this.showAlert("Incomplete Answers", "Please fill in all the blanks before checking your answers.");
+                    this.showAlert("Incomplete Answers", "Please fill in or select an answer for all questions in this section before checking.", "warning");
                     return;
                 }
                 // -----------------------------------------------------
@@ -733,32 +880,64 @@
                 for (let i = start; i <= end; i++) {
                     const qId = `q${i}`;
                     let userAnswer = (this.userAnswers[qId] || "").toLowerCase().trim();
-                    let correctAnswer = answers[qId].toLowerCase();
                     
-                    let isCorrect = false;
+                    // Support multiple correct variations separated by |
+                    let correctAnswersList = answers[qId].toLowerCase().split('|');
+                    let isCorrect = correctAnswersList.includes(userAnswer);
 
-                    const input = document.querySelector(`[name="${qId}"]`);
-                    if (!input) continue;
+                    let correctFeedbackHTML = '';
 
-                    isCorrect = (userAnswer === correctAnswer);
-                    input.classList.remove('correct-answer', 'incorrect-answer');
-                    
-                    if (isCorrect) {
-                        input.classList.add('correct-answer');
-                    } else {
-                        input.classList.add('incorrect-answer');
-                        if (input.tagName === 'INPUT') {
-                            input.value = '';
-                            input.placeholder = correctAnswer.toUpperCase();
-                        } else if (input.tagName === 'SELECT') {
-                            // For select elements, dynamically insert the correct answer briefly
-                            const opt = document.createElement('option');
-                            opt.value = "";
-                            opt.text = correctAnswer.toUpperCase();
-                            opt.selected = true;
-                            opt.disabled = true;
-                            opt.hidden = true;
-                            input.add(opt, input.options[0]);
+                    // Check Radios
+                    const radios = document.querySelectorAll(`input[name="${qId}"][type="radio"]`);
+                    if (radios.length > 0) {
+                        radios.forEach(radio => {
+                            const label = radio.closest('label');
+                            label.classList.remove('correct-answer', 'incorrect-answer');
+                            
+                            if (correctAnswersList.includes(radio.value)) {
+                                label.classList.add('correct-answer');
+                            } else if (radio.value === userAnswer) {
+                                label.classList.add('incorrect-answer');
+                            }
+                        });
+                        
+                        if (!isCorrect) {
+                            const correctAnsFormatted = correctAnswersList[0].toUpperCase();
+                            correctFeedbackHTML = `<span class="correct-badge">Correct Answer: ${correctAnsFormatted}</span><br>`;
+                        }
+                    }
+
+                    // Check Selects/Inputs
+                    const input = document.querySelector(`[name="${qId}"]:not([type="radio"])`);
+                    if (input) {
+                        input.classList.remove('correct-answer', 'incorrect-answer');
+                        
+                        if (isCorrect) {
+                            input.classList.add('correct-answer');
+                        } else {
+                            input.classList.add('incorrect-answer');
+                            // Format multi-word correct answers nicely
+                            const correctAnsFormatted = correctAnswersList[0]
+                                .split(' ')
+                                .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+                                .join(' ');
+                            
+                            if (input.tagName === 'INPUT') {
+                                input.value = '';
+                                input.placeholder = correctAnsFormatted;
+                            } else if (input.tagName === 'SELECT') {
+                                // For select elements, dynamically insert the correct answer briefly
+                                const opt = document.createElement('option');
+                                opt.value = "";
+                                opt.text = correctAnsFormatted;
+                                opt.selected = true;
+                                opt.disabled = true;
+                                opt.hidden = true;
+                                input.add(opt, input.options[0]);
+                            }
+                            
+                            // Setup feedback HTML for incorrect answers
+                            correctFeedbackHTML = `<span class="correct-badge">Correct Answer: ${correctAnsFormatted}</span><br>`;
                         }
                     }
 
@@ -769,7 +948,7 @@
                             const explDiv = document.createElement('div');
                             explDiv.id = `expl-${qId}`;
                             explDiv.className = 'explanation-box';
-                            explDiv.innerHTML = `<strong>Explanation:</strong> ${explanations[qId]}`;
+                            explDiv.innerHTML = `${correctFeedbackHTML}<strong>Explanation:</strong> ${explanations[qId]}`;
                             
                             const container = document.getElementById(`container-${qId}`);
                             if (container) {
@@ -778,24 +957,6 @@
                         }
                     }
                 }
-            },
-
-            showToast(message) {
-                const toast = document.createElement('div');
-                toast.className = 'fixed top-6 left-1/2 transform -translate-x-1/2 bg-red-600 text-white font-semibold px-6 py-3 rounded-lg shadow-xl z-[100] transition-all duration-300 -translate-y-10 opacity-0 flex items-center gap-3';
-                toast.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg> <span>${message}</span>`;
-                document.body.appendChild(toast);
-
-                requestAnimationFrame(() => {
-                    toast.classList.remove('-translate-y-10', 'opacity-0');
-                    toast.classList.add('translate-y-0', 'opacity-100');
-                });
-
-                setTimeout(() => {
-                    toast.classList.remove('translate-y-0', 'opacity-100');
-                    toast.classList.add('-translate-y-10', 'opacity-0');
-                    setTimeout(() => toast.remove(), 300);
-                }, 3500);
             },
 
             initSplitter() {
@@ -850,6 +1011,8 @@
                             if (container.nodeType === 3) { 
                                 if (range.startContainer.parentElement !== range.endContainer.parentElement) {
                                     this.highlightTooltip.style.display = 'none';
+                                    this.showAlert("Highlight Error", "Please select text within a single paragraph to highlight.", "warning");
+                                    selection.removeAllRanges();
                                     return;
                                 }
                             }
@@ -857,7 +1020,9 @@
                             const mark = document.createElement('mark');
                             try {
                                 range.surroundContents(mark);
-                            } catch (ex) {} 
+                            } catch (ex) {
+                                this.showAlert("Highlight Error", "Please select plain text to highlight. Highlighting across different formatting is restricted.", "warning");
+                            } 
                             finally {
                                 selection.removeAllRanges();
                                 this.highlightTooltip.style.display = 'none';
