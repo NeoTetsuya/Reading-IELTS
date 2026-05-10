@@ -633,11 +633,40 @@
                    if (e.target === this.vocabModal) this.closeModal();
                 });
 
-                // Keyboard accessibility: Close modals with Escape key
+                // Keyboard accessibility: Close modals with Escape key & Disable Ctrl+F
                 document.addEventListener('keydown', (e) => {
                     if (e.key === 'Escape') {
                         if (!this.vocabModal.classList.contains('hidden')) this.closeModal();
                         if (!this.alertModal.classList.contains('hidden')) this.closeAlert();
+                    }
+                    
+                    // Disable Ctrl+F / Cmd+F (Find function)
+                    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
+                        e.preventDefault(); // Stop the browser's find box from opening
+                        this.showAlert("Action Disabled", "The 'Find' function is disabled to simulate real computer-delivered test conditions.", "warning");
+                    }
+
+                    // Disable F5 and Ctrl+R / Cmd+R (Refresh function)
+                    if (e.key === 'F5' || ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'r')) {
+                        e.preventDefault();
+                        this.showAlert("Action Disabled", "Refreshing the page is disabled during the test to prevent losing your progress.", "warning");
+                    }
+                });
+
+                // Detect Tab Switching or Window minimizing
+                document.addEventListener('visibilitychange', () => {
+                    if (document.hidden && this.timeRemaining > 0) {
+                        // Triggers a warning modal when they navigate away
+                        this.showAlert("Warning: Tab Switch Detected", "Please do not switch tabs or leave the test window during the exam. Continued tab switching may result in your test being invalidated.", "warning");
+                    }
+                });
+
+                // Warn user if they try to close or refresh the tab via browser buttons
+                window.addEventListener('beforeunload', (e) => {
+                    // Only warn if the test is currently active (timer hasn't run out, and hasn't just started)
+                    if (this.timeRemaining > 0 && this.timeRemaining < 20 * 60) {
+                        e.preventDefault();
+                        e.returnValue = ''; // Standard requirement to trigger the browser's "Leave Site?" prompt
                     }
                 });
 
