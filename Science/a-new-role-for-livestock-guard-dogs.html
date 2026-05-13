@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IELTS Simulator - A New Role for Livestock Guard Dogs</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --app-font-size: 17px; }
+        body { font-family: 'Inter', sans-serif; overscroll-behavior: none; background-color: #f3f4f6; }
+        .ielts-container { display: grid; grid-template-rows: auto 1fr; height: 100vh; }
+        .content-panes { display: grid; grid-template-columns: 1fr 5px 1fr; overflow: hidden; }
+        .pane { overflow-y: auto; padding: 2rem 3rem; font-size: var(--app-font-size); scroll-behavior: smooth; }
+        #left-pane { background-color: #fdfdfd; }
+        #right-pane { background-color: #f8fafc; }
+        .splitter { background-color: #cbd5e1; cursor: col-resize; z-index: 10; transition: background-color 0.2s; }
+        .splitter:hover, .splitter:active { background-color: #94a3b8; }
+        .reading-passage { font-family: 'Merriweather', serif; line-height: 1.9; color: #334155; text-align: justify; max-width: 800px; margin: 0 auto; }
+        .reading-passage p { margin-bottom: 1.5rem; text-indent: 1.5rem; }
+        .reading-passage h3 { font-family: 'Inter', sans-serif; color: #0f172a; margin-bottom: 0.25rem; font-weight: 700; font-size: 1.5em; text-align: center; text-indent: 0; text-transform: uppercase; letter-spacing: 0.05em; }
+        .reading-passage .subtitle { font-family: 'Inter', sans-serif; color: #64748b; font-size: 0.95em; text-align: center; text-indent: 0; margin-bottom: 1.5rem; font-style: italic; }
+        .reading-passage .para-label { font-family: 'Inter', sans-serif; font-weight: 800; color: #065f46; font-size: 0.85em; display: inline-block; margin-right: 0.5rem; background: #d1fae5; padding: 1px 6px; border-radius: 4px; vertical-align: middle; }
+        .q-item { padding: 1rem; border-radius: 0.5rem; transition: all 0.2s; background-color: white; border: 1px solid #e2e8f0; margin-bottom: 0.75rem; }
+        .text-input { border: 2px solid #cbd5e1; border-radius: 6px; padding: 4px 8px; font-weight: 600; color: #1e293b; transition: all 0.2s; text-align: center; background-color: #f8fafc; }
+        .text-input:focus { outline: none; border-color: #059669; background-color: #fff; box-shadow: 0 0 0 3px rgba(5,150,105,0.12); }
+        .text-input-word { width: 9rem; text-transform: lowercase; }
+        .select-input { border: 2px solid #cbd5e1; border-radius: 6px; padding: 4px 8px; font-weight: 600; color: #1e293b; transition: all 0.2s; background-color: #f8fafc; cursor: pointer; }
+        .select-input:focus { outline: none; border-color: #059669; background-color: #fff; box-shadow: 0 0 0 3px rgba(5,150,105,0.12); }
+        .correct-answer { border-color: #22c55e !important; background-color: #f0fdf4 !important; color: #166534 !important; }
+        .incorrect-answer { border-color: #ef4444 !important; background-color: #fef2f2 !important; color: #991b1b !important; }
+        .explanation-box { animation: fadeIn 0.4s ease-out forwards; margin-top: 0.75rem; padding: 1rem; background-color: #ecfdf5; border-left: 4px solid #059669; border-radius: 0.5rem; font-size: 0.95rem; color: #064e3b; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .explanation-box .correct-badge { display: inline-block; background: #22c55e; color: white; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85em; margin-bottom: 0.5rem; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+        .vocab-word { color: #065f46; font-weight: 600; cursor: pointer; border-bottom: 2px dotted #6ee7b7; transition: all 0.2s ease-in-out; padding: 0 2px; }
+        .vocab-word:hover { background-color: #d1fae5; border-bottom-style: solid; border-radius: 2px; }
+        .highlight-tooltip { position: absolute; background-color: #1e293b; color: white; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 500; z-index: 100; cursor: pointer; display: none; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        mark { background-color: #fef08a; border-radius: 3px; padding: 2px 0; cursor: pointer; }
+        mark:hover { background-color: #fca5a5; color: #7f1d1d; }
+        mark:hover::after { content: ' x'; font-weight: bold; font-size: 0.8em; opacity: 0.7; }
+        .people-table { width: 100%; border-collapse: collapse; margin: 0.75rem 0; }
+        .people-table td { padding: 0.4rem 0.75rem; border: 1px solid #e2e8f0; font-size: 0.9em; }
+        .people-table td:first-child { font-weight: 700; color: #065f46; background: #d1fae5; width: 2rem; text-align: center; }
+        .summary-block { background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 0.75rem; padding: 1.5rem; margin-bottom: 1rem; font-size: 1em; line-height: 2; color: #064e3b; }
+        .summary-block h5 { font-family: 'Inter', sans-serif; font-weight: 700; color: #065f46; font-size: 1em; margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        @media (max-width: 768px) {
+            .content-panes { display: flex; flex-direction: column; overflow-y: auto; }
+            .splitter { display: none; }
+            .pane { padding: 1.25rem 1rem; overflow-y: visible; height: auto; }
+            #left-pane { border-bottom: 2px dashed #cbd5e1; padding-bottom: 2rem; }
+            .text-input, .select-input { max-width: 130px; padding: 2px 6px; }
+        }
+    </style>
+</head>
+<body>
+<div id="test-container" class="ielts-container">
+    <header class="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 flex justify-between items-center z-20 shadow-sm flex-wrap gap-3">
+        <div class="flex items-center gap-2 sm:space-x-3">
+            <div class="bg-emerald-700 text-white p-1.5 sm:p-2 rounded-lg shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+                </svg>
+            </div>
+            <h1 class="text-xl font-bold text-gray-800 hidden sm:block">IELTS Simulator <span class="text-emerald-700 font-medium">| Livestock Guard Dogs</span></h1>
+            <h1 class="text-base font-bold text-gray-800 sm:hidden">IELTS <span class="text-emerald-700">Guard Dogs</span></h1>
+        </div>
+        <div class="flex items-center space-x-4">
+            <div class="hidden sm:flex flex-col items-end">
+                <span class="text-xs text-gray-500 font-bold uppercase tracking-wide">Progress</span>
+                <span id="progress-text" class="text-sm font-semibold text-emerald-700">0 / 14 Answered</span>
+            </div>
+            <div class="flex items-center bg-gray-100 rounded-lg px-3 py-1.5 border border-gray-200">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span id="timer" class="font-mono font-bold text-gray-700 text-lg">20:00</span>
+            </div>
+        </div>
+        <div class="flex items-center gap-2 sm:space-x-3">
+            <button id="clear-highlights-btn" class="hidden sm:flex items-center justify-center px-3 py-1.5 rounded bg-emerald-50 hover:bg-emerald-100 text-emerald-700 transition-colors focus:outline-none border border-emerald-200 text-sm font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                Clear
+            </button>
+            <div class="flex items-center space-x-1 sm:space-x-2 bg-gray-50 p-1 rounded-lg border border-gray-200">
+                <button id="decrease-font-btn" class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded bg-white shadow-sm hover:bg-gray-100 text-gray-700 transition-colors focus:outline-none font-bold text-sm sm:text-base">A-</button>
+                <button id="increase-font-btn" class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded bg-white shadow-sm hover:bg-gray-100 text-gray-700 transition-colors focus:outline-none font-bold text-sm sm:text-base">A+</button>
+            </div>
+        </div>
+    </header>
+
+    <main id="content-panes" class="content-panes">
+        <div id="left-pane" class="pane relative">
+            <div class="reading-passage">
+                <h3>A New Role for Livestock Guard Dogs</h3>
+                <p class="subtitle">Livestock guard dogs, traditionally used to protect farm animals from predators, are now being used to protect the predators themselves</p>
+
+                <p><span class="para-label">A</span>For thousands of years, <span class="vocab-word" data-word="livestock">livestock</span> guard dogs worked alongside shepherds to protect their sheep, goats and cattle from <span class="vocab-word" data-word="predators">predators</span> such as wolves and bears. But in the 19th and 20th centuries, when such predators were largely <span class="vocab-word" data-word="exterminated">exterminated</span>, most guard dogs lost their jobs. In recent years, however, as increased efforts have been made to protect wild animals, predators have become more widespread again. As a result, farmers once more need to protect their livestock, and guard dogs are enjoying an unexpected <span class="vocab-word" data-word="revival">revival</span>.</p>
+
+                <p><span class="para-label">B</span>Today there are around 50 <span class="vocab-word" data-word="breeds">breeds</span> of guard dogs on duty in various parts of the world. These dogs are raised from an early age with the animals they will be watching and eventually these animals become the dog's family. The dogs will place themselves between the livestock and any threat, barking loudly. If necessary, they will chase away predators, but often their mere presence is <span class="vocab-word" data-word="sufficient">sufficient</span>. 'Their initial training is to make them understand that livestock is going to be their life,' says Dan Macon, a shepherd with three guard dogs. 'A fluffy white puppy is fun to be around, but too much human affection makes it a great dog for guarding the front porch, rather than a great livestock guard dog.'</p>
+
+                <p><span class="para-label">C</span>The evidence indicates that guard dogs are highly effective. For example, in Portugal, biologist Silvia Ribeiro has found that more than 90 per cent of the farmers participating in a programme to train and use guard dogs to protect their <span class="vocab-word" data-word="herds">herds</span> against attack from wolves rate the performance of the dogs as very good or excellent. In a study carried out in Australia by Linda van Bommel and Chris Johnson at the University of Tasmania, more than 65 per cent of herders reported that <span class="vocab-word" data-word="predation">predation</span> stopped completely after they got the dogs, and almost all the rest saw a decrease in attacks. 'If they are managed and used properly, livestock guard dogs are the most efficient control method that we have in terms of the amount of livestock that they save from predation,' says van Bommel.</p>
+
+                <p><span class="para-label">D</span>But today's guard dogs also have a new role — to help preserve the predators. It is hoped that reductions in livestock losses can make farmers more <span class="vocab-word" data-word="tolerant">tolerant</span> of predators and less likely to kill them. In Namibia, more than 90 per cent of cheetahs live outside <span class="vocab-word" data-word="protected areas">protected areas</span>, close to humans raising livestock. As a result, the cheetahs are often held responsible for animal losses, and large numbers have been killed by farmers. When guard dogs were introduced, more than 90 per cent of farmers reported a dramatic reduction in livestock losses, and said that as a result they were less likely to kill predators. Julie Young, at Utah State University in the US, believes this result applies widely. 'There is common ground from the livestock perspective and from the <span class="vocab-word" data-word="conservation">conservation</span> perspective,' she says. 'If ranchers don't have a dead cow, they will not make a call to apply for a permit to kill a wolf.'</p>
+
+                <p><span class="para-label">E</span>Looking at all the published evidence, Bethany Smith at Nottingham Trent University in the UK found that up to 88 per cent of farmers said they no longer killed predators after using dogs — but warned that such <span class="vocab-word" data-word="self-reported">self-reported</span> results must be taken with a pinch of salt. What's more, it is possible that livestock guard dogs merely <span class="vocab-word" data-word="displace">displace</span> predators to unprotected neighbouring properties, where their fate isn't recorded. 'In some regions, we work with almost every farmer, but in others only one or two have dogs,' says Ribeiro. 'If we are not working with everybody, we are transferring the wolf pressure to the neighbour's herd and he can use poison and kill an entire pack of wolves.'</p>
+
+                <p><span class="para-label">F</span>Another concern is whether there may be unintended <span class="vocab-word" data-word="ecological">ecological</span> effects of using guard dogs. Studies suggest that reducing deaths of one type of predator may have a negative impact on other species. The extent of this problem isn't known, but the consequences are clear in Namibia. Cheetahs aren't the only species that cause sheep and goat losses there: other predators also attack livestock. In 2015, researchers reported that in spite of the impact farmers obtaining guard dogs had on cheetahs, the number of jackals killed by dogs and people actually increased. Guard dogs have other ecological impacts too. They have been found to spread <span class="vocab-word" data-word="diseases">diseases</span> to wild animals, including endangered Ethiopian wolves. They may also compete with other <span class="vocab-word" data-word="carnivores">carnivores</span> for food. And by creating a 'landscape of fear', their mere presence can influence the behaviour of prey animals.</p>
+
+                <p><span class="para-label">G</span>The evidence so far, however, indicates that these consequences aren't always negative. Guard dogs can deliver unexpected benefits by protecting <span class="vocab-word" data-word="vulnerable">vulnerable</span> wildlife from predators. For example, their presence has been found to protect birds which build their nests on the ground in fields, where foxes would normally raid them. Indeed, Australian researchers are now using dogs to enhance <span class="vocab-word" data-word="biodiversity">biodiversity</span> and create refuges for species threatened by predation. So if we can get this right, there may be a bright future for guard dogs in promoting harmonious <span class="vocab-word" data-word="coexistence">coexistence</span> between humans and wildlife.</p>
+            </div>
+        </div>
+
+        <div id="splitter" class="splitter relative flex items-center justify-center group">
+            <div class="w-1 h-8 bg-gray-400 rounded-full opacity-50 group-hover:bg-gray-600 transition-colors"></div>
+        </div>
+
+        <div id="right-pane" class="pane">
+            <div id="questions-section" class="max-w-3xl mx-auto space-y-8 pb-10">
+
+                <!-- Q27-31: Matching Paragraphs -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-emerald-100 text-emerald-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 27–31</span>
+                        <h4 class="font-bold text-gray-800">Matching Paragraphs</h4>
+                    </div>
+                    <p class="mb-5 text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100 text-sm">
+                        Reading Passage 3 has seven sections, <strong class="text-emerald-700">A–G</strong>.<br>
+                        Which paragraph contains the following information?<br>
+                        Choose the correct letter <strong class="text-emerald-700">A–G</strong>. <em>NB You may use any letter more than once.</em>
+                    </p>
+                    <div class="space-y-4">
+                        <div class="q-item" id="container-q27">
+                            <p class="text-gray-800 font-medium"><span class="font-bold text-emerald-700 mr-2">27</span> an example of how one predator has been protected by the introduction of livestock guard dogs
+                                <select name="q27" class="select-input ml-2">
+                                    <option value="">-- Select --</option>
+                                    <option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option><option value="e">E</option><option value="f">F</option><option value="g">G</option>
+                                </select>
+                            </p>
+                        </div>
+                        <div class="q-item" id="container-q28">
+                            <p class="text-gray-800 font-medium"><span class="font-bold text-emerald-700 mr-2">28</span> an optimistic suggestion about the possible positive developments in the use of livestock guard dogs
+                                <select name="q28" class="select-input ml-2">
+                                    <option value="">-- Select --</option>
+                                    <option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option><option value="e">E</option><option value="f">F</option><option value="g">G</option>
+                                </select>
+                            </p>
+                        </div>
+                        <div class="q-item" id="container-q29">
+                            <p class="text-gray-800 font-medium"><span class="font-bold text-emerald-700 mr-2">29</span> a description of how the methods used by livestock guard dogs help to keep predators away
+                                <select name="q29" class="select-input ml-2">
+                                    <option value="">-- Select --</option>
+                                    <option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option><option value="e">E</option><option value="f">F</option><option value="g">G</option>
+                                </select>
+                            </p>
+                        </div>
+                        <div class="q-item" id="container-q30">
+                            <p class="text-gray-800 font-medium"><span class="font-bold text-emerald-700 mr-2">30</span> claims by different academics that the use of livestock guard dogs is a successful way of protecting farmers' herds
+                                <select name="q30" class="select-input ml-2">
+                                    <option value="">-- Select --</option>
+                                    <option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option><option value="e">E</option><option value="f">F</option><option value="g">G</option>
+                                </select>
+                            </p>
+                        </div>
+                        <div class="q-item" id="container-q31">
+                            <p class="text-gray-800 font-medium"><span class="font-bold text-emerald-700 mr-2">31</span> a reference to how livestock guard dogs gain their skills
+                                <select name="q31" class="select-input ml-2">
+                                    <option value="">-- Select --</option>
+                                    <option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option><option value="e">E</option><option value="f">F</option><option value="g">G</option>
+                                </select>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="27-31">Check Answers</button>
+                    </div>
+                </div>
+
+                <!-- Q32-36: Matching People -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-emerald-100 text-emerald-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 32–36</span>
+                        <h4 class="font-bold text-gray-800">Matching People</h4>
+                    </div>
+                    <p class="mb-4 text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100 text-sm">
+                        Match each statement with the correct person <strong class="text-emerald-700">A–E</strong>.<br>
+                        <em>NB You may use any letter more than once.</em>
+                    </p>
+                    <table class="people-table mb-5">
+                        <tr><td>A</td><td>Dan Macon</td></tr>
+                        <tr><td>B</td><td>Silvia Ribeiro</td></tr>
+                        <tr><td>C</td><td>Linda van Bommel</td></tr>
+                        <tr><td>D</td><td>Julie Young</td></tr>
+                        <tr><td>E</td><td>Bethany Smith</td></tr>
+                    </table>
+                    <div class="space-y-4">
+                        <div class="q-item" id="container-q32">
+                            <p class="text-gray-800 font-medium"><span class="font-bold text-emerald-700 mr-2">32</span> The use of guard dogs may save the lives of both livestock and wild animals.
+                                <select name="q32" class="select-input ml-2">
+                                    <option value="">-- Select --</option>
+                                    <option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option><option value="e">E</option>
+                                </select>
+                            </p>
+                        </div>
+                        <div class="q-item" id="container-q33">
+                            <p class="text-gray-800 font-medium"><span class="font-bold text-emerald-700 mr-2">33</span> Claims of a change in behaviour from those using livestock guard dogs may not be totally accurate.
+                                <select name="q33" class="select-input ml-2">
+                                    <option value="">-- Select --</option>
+                                    <option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option><option value="e">E</option>
+                                </select>
+                            </p>
+                        </div>
+                        <div class="q-item" id="container-q34">
+                            <p class="text-gray-800 font-medium"><span class="font-bold text-emerald-700 mr-2">34</span> There may be negative results if the use of livestock guard dogs is not sufficiently widespread.
+                                <select name="q34" class="select-input ml-2">
+                                    <option value="">-- Select --</option>
+                                    <option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option><option value="e">E</option>
+                                </select>
+                            </p>
+                        </div>
+                        <div class="q-item" id="container-q35">
+                            <p class="text-gray-800 font-medium"><span class="font-bold text-emerald-700 mr-2">35</span> Livestock guard dogs are the best way of protecting farm animals, as long as the dogs are appropriately handled.
+                                <select name="q35" class="select-input ml-2">
+                                    <option value="">-- Select --</option>
+                                    <option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option><option value="e">E</option>
+                                </select>
+                            </p>
+                        </div>
+                        <div class="q-item" id="container-q36">
+                            <p class="text-gray-800 font-medium"><span class="font-bold text-emerald-700 mr-2">36</span> Teaching a livestock guard dog how to do its work needs a different focus from teaching a house guard dog.
+                                <select name="q36" class="select-input ml-2">
+                                    <option value="">-- Select --</option>
+                                    <option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option><option value="e">E</option>
+                                </select>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="32-36">Check Answers</button>
+                    </div>
+                </div>
+
+                <!-- Q37-40: Summary Completion -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-emerald-100 text-emerald-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 37–40</span>
+                        <h4 class="font-bold text-gray-800">Summary Completion</h4>
+                    </div>
+                    <p class="mb-5 text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100 text-sm">
+                        Complete the summary below.<br>
+                        Choose <strong class="text-emerald-700">ONE WORD ONLY</strong> from the passage for each answer.
+                    </p>
+                    <div class="summary-block">
+                        <h5>Unintended ecological effects of using guard dogs</h5>
+                        <p>In Namibia, livestock guard dogs have been used to protect domestic animals from attacks by cheetahs. This has led to a rise in the deaths of other predators, particularly
+                            <span id="container-q37" class="inline-block mx-1"><strong class="text-emerald-700 text-sm mr-1">37</strong><input type="text" name="q37" class="text-input text-input-word" placeholder="________" autocomplete="off" spellcheck="false"></span>.
+                            In addition, it has been suggested that the dogs could have
+                            <span id="container-q38" class="inline-block mx-1"><strong class="text-emerald-700 text-sm mr-1">38</strong><input type="text" name="q38" class="text-input text-input-word" placeholder="________" autocomplete="off" spellcheck="false"></span>
+                            which may affect other species, and that they may reduce the amount of
+                            <span id="container-q39" class="inline-block mx-1"><strong class="text-emerald-700 text-sm mr-1">39</strong><input type="text" name="q39" class="text-input text-input-word" placeholder="________" autocomplete="off" spellcheck="false"></span>
+                            available to certain wild animals. On the other hand, these dogs may help birds by protecting their nests. These might otherwise be threatened by predators such as
+                            <span id="container-q40" class="inline-block mx-1"><strong class="text-emerald-700 text-sm mr-1">40</strong><input type="text" name="q40" class="text-input text-input-word" placeholder="________" autocomplete="off" spellcheck="false"></span>.
+                        </p>
+                    </div>
+                    <div class="mt-4 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="37-40">Check Answers</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+</div>
+
+<div id="highlight-tooltip" class="highlight-tooltip">Highlight Text</div>
+
+<!-- Vocab Modal -->
+<div id="vocab-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
+    <div class="bg-white rounded-2xl shadow-2xl p-5 sm:p-8 w-full max-w-md relative transform transition-all scale-95 opacity-0" id="vocab-modal-content">
+        <button id="close-vocab-modal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-full w-8 h-8 flex items-center justify-center">&times;</button>
+        <div class="flex items-center mb-6 border-b pb-4 mt-2">
+            <h3 id="vocab-word" class="text-2xl sm:text-3xl font-extrabold text-gray-900 capitalize tracking-tight"></h3>
+        </div>
+        <div class="flex items-center mb-5">
+            <button id="play-audio-btn" class="flex items-center justify-center h-10 w-10 sm:h-12 sm:w-12 shrink-0 rounded-full bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white mr-4 transition-all shadow-sm border border-emerald-200">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>
+            </button>
+            <p id="vocab-pronunciation-text" class="text-gray-500 font-mono text-base sm:text-lg bg-gray-50 px-3 py-1 rounded-md border border-gray-100"></p>
+        </div>
+        <p id="vocab-meaning" class="text-gray-700 text-base sm:text-lg leading-relaxed"></p>
+    </div>
+</div>
+
+<!-- Alert Modal -->
+<div id="alert-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-[80]">
+    <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm relative transform transition-all scale-95 opacity-0 text-center" id="alert-modal-content">
+        <div id="alert-icon-container" class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 mb-4">
+            <svg class="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        </div>
+        <h3 id="alert-title" class="text-lg font-medium text-gray-900 mb-2">Notice</h3>
+        <p id="alert-message" class="text-sm text-gray-500 mb-6"></p>
+        <button id="close-alert-btn" class="w-full inline-flex justify-center rounded-md px-4 py-2 bg-emerald-700 text-white font-medium hover:bg-emerald-800 text-sm transition-colors">Got it</button>
+    </div>
+</div>
+
+<script>
+const vocabulary = {
+    'livestock': { meaning: 'Farm animals such as cattle, sheep, pigs, and chickens kept for use or profit.', phonetic: '/ˈlaɪv.stɒk/' },
+    'predators': { meaning: 'Animals that hunt and kill other animals for food; also used figuratively for those who exploit others.', phonetic: '/ˈpred.ə.tərz/' },
+    'exterminated': { meaning: 'Completely destroyed or killed off (a species, population, or group).', phonetic: '/ɪkˈstɜː.mɪ.neɪ.tɪd/' },
+    'revival': { meaning: 'An improvement in the condition, strength, or fortunes of something; a new period of activity after a decline.', phonetic: '/rɪˈvaɪ.vəl/' },
+    'breeds': { meaning: 'Distinct varieties of domesticated animals with specific characteristics developed through selective breeding.', phonetic: '/briːdz/' },
+    'sufficient': { meaning: 'Enough to meet the needs of a situation or proposed end; adequate.', phonetic: '/səˈfɪʃ.ənt/' },
+    'herds': { meaning: 'Large groups of animals, especially cattle or sheep, that live and feed together.', phonetic: '/hɜːdz/' },
+    'predation': { meaning: 'The natural process by which a predator captures and kills prey for food.', phonetic: '/prɪˈdeɪ.ʃən/' },
+    'tolerant': { meaning: 'Willing to accept something, especially behaviour that one may not agree with; showing tolerance.', phonetic: '/ˈtɒl.ər.ənt/' },
+    'protected areas': { meaning: 'Regions of land or sea managed by legal or other effective means for conservation of nature.', phonetic: '/prəˈtek.tɪd ˈeə.ri.əz/' },
+    'conservation': { meaning: 'The protection of natural environments, animals, and plants, especially from human damage.', phonetic: '/ˌkɒn.səˈveɪ.ʃən/' },
+    'self-reported': { meaning: 'Based on an individual\'s own assessment or claim rather than on independent measurement or observation.', phonetic: '/ˌself rɪˈpɔːtɪd/' },
+    'displace': { meaning: 'Force (something or someone) away from the usual or proper position; move from one place to another.', phonetic: '/dɪsˈpleɪs/' },
+    'ecological': { meaning: 'Relating to the relationships between living organisms and their environment.', phonetic: '/ˌiː.kəˈlɒdʒ.ɪ.kəl/' },
+    'diseases': { meaning: 'Illnesses or disorders caused by bacteria, viruses, or other pathogens that affect the health of living organisms.', phonetic: '/dɪˈziː.zɪz/' },
+    'carnivores': { meaning: 'Animals that feed primarily on other animals; meat-eating creatures.', phonetic: '/ˈkɑː.nɪ.vɔːz/' },
+    'vulnerable': { meaning: 'Susceptible to physical or emotional harm; in need of special care or protection.', phonetic: '/ˈvʌl.nər.ə.bəl/' },
+    'biodiversity': { meaning: 'The variety of plant and animal life in a particular habitat, regarded as important and desirable.', phonetic: '/ˌbaɪ.əʊ.daɪˈvɜː.sɪ.ti/' },
+    'coexistence': { meaning: 'The state of living or existing at the same time or in the same place, especially in harmony.', phonetic: '/ˌkəʊ.ɪɡˈzɪs.təns/' }
+};
+
+const ANSWERS = {
+    q27: "d", q28: "g", q29: "b", q30: "c", q31: "b",
+    q32: "d", q33: "e", q34: "b", q35: "c", q36: "a",
+    q37: "jackals", q38: "diseases", q39: "food", q40: "foxes"
+};
+
+const PEOPLE = { a: "Dan Macon", b: "Silvia Ribeiro", c: "Linda van Bommel", d: "Julie Young", e: "Bethany Smith" };
+const SECTIONS = { a:"A", b:"B", c:"C", d:"D", e:"E", f:"F", g:"G" };
+
+const explanations = {
+    q27: "Paragraph D: 'In Namibia, more than 90% of cheetahs live outside protected areas… When guard dogs were introduced, more than 90% of farmers… were less likely to kill predators.' Cheetahs (one predator) were protected as farmers stopped killing them. Answer: D.",
+    q28: "Paragraph G: '…there may be a bright future for guard dogs in promoting harmonious coexistence between humans and wildlife.' This optimistic statement closes the passage. Answer: G.",
+    q29: "Paragraph B: 'The dogs will place themselves between the livestock and any threat, barking loudly. If necessary, they will chase away predators, but often their mere presence is sufficient.' Describes the specific methods. Answer: B.",
+    q30: "Paragraph C: Silvia Ribeiro's Portuguese study and Linda van Bommel's Australian study both cite statistics showing guard dogs' effectiveness — claims from different academics. Answer: C.",
+    q31: "Paragraph B: 'These dogs are raised from an early age with the animals they will be watching and eventually these animals become the dog's family.' Raised from early age = how they gain skills. Answer: B.",
+    q32: "Paragraph D, Julie Young: 'There is common ground from the livestock perspective and from the conservation perspective… If ranchers don't have a dead cow, they will not make a call to apply for a permit to kill a wolf.' Guard dogs save livestock AND protect wild predators. Answer: D (Julie Young).",
+    q33: "Paragraph E, Bethany Smith: '…warned that such self-reported results must be taken with a pinch of salt.' Self-reported claims may not be totally accurate. Answer: E (Bethany Smith).",
+    q34: "Paragraph E, Silvia Ribeiro: 'If we are not working with everybody, we are transferring the wolf pressure to the neighbour's herd and he can use poison and kill an entire pack of wolves.' Not widespread enough = negative results. Answer: B (Silvia Ribeiro).",
+    q35: "Paragraph C, Linda van Bommel: 'If they are managed and used properly, livestock guard dogs are the most efficient control method that we have…' Best method when appropriately handled. Answer: C (Linda van Bommel).",
+    q36: "Paragraph B, Dan Macon: 'too much human affection makes it a great dog for guarding the front porch, rather than a great livestock guard dog.' Shows different training focus needed. Answer: A (Dan Macon).",
+    q37: "Paragraph F: 'the number of jackals killed by dogs and people actually increased.' Jackals are the other predators whose deaths rose. Answer: jackals.",
+    q38: "Paragraph F: 'They have been found to spread diseases to wild animals, including endangered Ethiopian wolves.' Dogs carry diseases affecting other species. Answer: diseases.",
+    q39: "Paragraph F: 'They may also compete with other carnivores for food.' Less food available to wild carnivores. Answer: food.",
+    q40: "Paragraph G: 'their presence has been found to protect birds which build their nests on the ground in fields, where foxes would normally raid them.' Foxes are the predators threatening the birds. Answer: foxes."
+};
+
+const TOTAL_QUESTIONS = 14;
+
+document.addEventListener('DOMContentLoaded', () => {
+    const app = {
+        userAnswers: {}, answersChecked: {}, currentFontSize: 17, timeRemaining: 20 * 60,
+        leftPane: document.getElementById('left-pane'),
+        rightPane: document.getElementById('right-pane'),
+        highlightTooltip: document.getElementById('highlight-tooltip'),
+        vocabModal: document.getElementById('vocab-modal'),
+        vocabModalContent: document.getElementById('vocab-modal-content'),
+        closeVocabModalBtn: document.getElementById('close-vocab-modal'),
+        vocabWordEl: document.getElementById('vocab-word'),
+        vocabMeaningEl: document.getElementById('vocab-meaning'),
+        vocabPronunciationText: document.getElementById('vocab-pronunciation-text'),
+        playAudioBtn: document.getElementById('play-audio-btn'),
+        clearHighlightsBtn: document.getElementById('clear-highlights-btn'),
+        progressText: document.getElementById('progress-text'),
+        timerEl: document.getElementById('timer'),
+        alertModal: document.getElementById('alert-modal'),
+        alertModalContent: document.getElementById('alert-modal-content'),
+        closeAlertBtn: document.getElementById('close-alert-btn'),
+        alertTitleEl: document.getElementById('alert-title'),
+        alertMessageEl: document.getElementById('alert-message'),
+        alertIconContainer: document.getElementById('alert-icon-container'),
+
+        init() { this.setupEventListeners(); this.initSplitter(); this.initHighlighter(); this.updateCheckButtonsState(); this.startTimer(); },
+
+        startTimer() {
+            const interval = setInterval(() => {
+                if (this.timeRemaining <= 0) { clearInterval(interval); this.timerEl.textContent = "00:00"; this.showAlert("Time's Up!", "Your 20 minutes have expired.", "warning"); return; }
+                this.timeRemaining--;
+                const m = Math.floor(this.timeRemaining/60).toString().padStart(2,'0');
+                const s = (this.timeRemaining%60).toString().padStart(2,'0');
+                this.timerEl.textContent = `${m}:${s}`;
+                if (this.timeRemaining <= 300) this.timerEl.classList.add('text-red-500');
+            }, 1000);
+        },
+
+        setupEventListeners() {
+            document.getElementById('increase-font-btn').addEventListener('click', () => this.changeFontSize(1));
+            document.getElementById('decrease-font-btn').addEventListener('click', () => this.changeFontSize(-1));
+            this.clearHighlightsBtn.addEventListener('click', () => this.leftPane.querySelectorAll('mark').forEach(m => m.replaceWith(document.createTextNode(m.textContent))));
+            this.closeVocabModalBtn.addEventListener('click', () => this.closeModal());
+            this.vocabModal.addEventListener('click', (e) => { if (e.target === this.vocabModal) this.closeModal(); });
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') { if (!this.vocabModal.classList.contains('hidden')) this.closeModal(); if (!this.alertModal.classList.contains('hidden')) this.closeAlert(); }
+                if ((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='f') { e.preventDefault(); this.showAlert("Action Disabled","The 'Find' function is disabled to simulate real test conditions.","warning"); }
+            });
+            document.addEventListener('visibilitychange', () => { if (document.hidden && this.timeRemaining > 0) this.showAlert("Warning","Please do not switch tabs during the exam.","warning"); });
+            window.addEventListener('beforeunload', (e) => { if (this.timeRemaining > 0 && this.timeRemaining < 20*60) { e.preventDefault(); e.returnValue=''; } });
+            this.closeAlertBtn.addEventListener('click', () => this.closeAlert());
+            this.alertModal.addEventListener('click', (e) => { if (e.target === this.alertModal) this.closeAlert(); });
+            document.body.addEventListener('input', (e) => {
+                if (e.target.tagName==='INPUT' && e.target.type==='text') {
+                    this.userAnswers[e.target.name] = e.target.value.trim().toLowerCase();
+                    e.target.classList.remove('correct-answer','incorrect-answer');
+                    this.updateCheckButtonsState(); this.updateProgress();
+                }
+            });
+            document.body.addEventListener('change', (e) => {
+                if (e.target.tagName==='SELECT') {
+                    this.userAnswers[e.target.name] = e.target.value;
+                    e.target.classList.remove('correct-answer','incorrect-answer');
+                    this.updateCheckButtonsState(); this.updateProgress();
+                }
+            });
+            this.leftPane.addEventListener('click', (e) => {
+                if (e.target.classList.contains('vocab-word')) this.openVocabModal(e.target.dataset.word);
+                if (e.target.tagName==='MARK') e.target.replaceWith(document.createTextNode(e.target.textContent));
+            });
+            document.querySelectorAll('.check-btn').forEach(btn => btn.addEventListener('click', (e) => this.checkAnswers(e.target.dataset.range, e.target)));
+            this.playAudioBtn.addEventListener('click', () => {
+                const word = this.vocabWordEl.textContent; if (!word) return;
+                if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+                this.playAudioBtn.classList.remove('text-emerald-700','bg-emerald-50'); this.playAudioBtn.classList.add('bg-emerald-600','text-white');
+                if ('speechSynthesis' in window) { const u=new SpeechSynthesisUtterance(word); u.lang='en-GB'; u.rate=0.9; u.onend=()=>this.resetAudioBtn(); u.onerror=()=>this.resetAudioBtn(); window.speechSynthesis.speak(u); }
+                else setTimeout(()=>this.resetAudioBtn(),500);
+            });
+        },
+
+        updateProgress() { let c=0; for (let k in ANSWERS) { if ((this.userAnswers[k]||"").trim()) c++; } this.progressText.textContent=`${Math.min(c,TOTAL_QUESTIONS)} / ${TOTAL_QUESTIONS} Answered`; },
+        resetAudioBtn() { this.playAudioBtn.classList.add('text-emerald-700','bg-emerald-50'); this.playAudioBtn.classList.remove('bg-emerald-600','text-white'); },
+        changeFontSize(d) { this.currentFontSize=Math.max(14,Math.min(26,this.currentFontSize+d)); document.documentElement.style.setProperty('--app-font-size',`${this.currentFontSize}px`); },
+
+        openVocabModal(w) {
+            const d=vocabulary[w]; if(!d) return;
+            this.vocabWordEl.textContent=w; this.vocabMeaningEl.textContent=d.meaning; this.vocabPronunciationText.textContent=d.phonetic||'';
+            this.vocabModal.classList.remove('hidden');
+            setTimeout(()=>{this.vocabModalContent.classList.remove('scale-95','opacity-0'); this.vocabModalContent.classList.add('scale-100','opacity-100');},10);
+        },
+        closeModal() {
+            if('speechSynthesis' in window) window.speechSynthesis.cancel();
+            this.vocabModalContent.classList.remove('scale-100','opacity-100'); this.vocabModalContent.classList.add('scale-95','opacity-0');
+            this.resetAudioBtn(); setTimeout(()=>this.vocabModal.classList.add('hidden'),200);
+        },
+        showAlert(title,message,type='error') {
+            this.alertTitleEl.textContent=title; this.alertMessageEl.textContent=message;
+            const c=type==='warning'?'yellow':'red';
+            this.alertIconContainer.className=`mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-${c}-100 mb-4`;
+            this.alertIconContainer.innerHTML=`<svg class="h-6 w-6 text-${c}-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>`;
+            this.alertModal.classList.remove('hidden');
+            setTimeout(()=>{this.alertModalContent.classList.remove('scale-95','opacity-0'); this.alertModalContent.classList.add('scale-100','opacity-100');},10);
+        },
+        closeAlert() {
+            this.alertModalContent.classList.remove('scale-100','opacity-100'); this.alertModalContent.classList.add('scale-95','opacity-0');
+            setTimeout(()=>this.alertModal.classList.add('hidden'),200);
+        },
+
+        isRangeAnswered(range) {
+            const [s,e]=range.split('-').map(Number);
+            for(let i=s;i<=e;i++){if(!(this.userAnswers[`q${i}`]||"").trim())return false;}
+            return true;
+        },
+
+        updateCheckButtonsState() {
+            document.querySelectorAll('.check-btn').forEach(btn => {
+                const range=btn.dataset.range;
+                if(this.answersChecked[range]){btn.className='check-btn bg-gray-800 hover:bg-gray-900 text-white font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-pointer';btn.textContent='Reset Answers';return;}
+                const allDone=this.isRangeAnswered(range);
+                btn.className=allDone?'check-btn bg-emerald-700 hover:bg-emerald-800 text-white font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-pointer transform hover:-translate-y-0.5':'check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80';
+                btn.textContent='Check Answers';
+            });
+        },
+
+        checkAnswers(range, btn) {
+            if(this.answersChecked[range]){
+                this.answersChecked[range]=false;
+                const [s,e]=range.split('-').map(Number);
+                for(let i=s;i<=e;i++){
+                    const qId=`q${i}`; this.userAnswers[qId]='';
+                    const sel=document.querySelector(`select[name="${qId}"]`); if(sel){sel.value=''; sel.classList.remove('correct-answer','incorrect-answer');}
+                    const inp=document.querySelector(`input[name="${qId}"][type="text"]`); if(inp){inp.value=''; inp.placeholder='________'; inp.classList.remove('correct-answer','incorrect-answer');}
+                    document.getElementById(`expl-${qId}`)?.remove();
+                }
+                this.updateCheckButtonsState(); this.updateProgress(); return;
+            }
+            if(!this.isRangeAnswered(range)){this.showAlert("Incomplete Answers","Please answer all questions in this section before checking.","warning");return;}
+            this.answersChecked[range]=true; this.updateCheckButtonsState();
+
+            const [s,e]=range.split('-').map(Number);
+            for(let i=s;i<=e;i++){
+                const qId=`q${i}`;
+                const userAns=(this.userAnswers[qId]||"").toLowerCase().trim();
+                const correctList=ANSWERS[qId].toLowerCase().split('|');
+                const isCorrect=correctList.includes(userAns);
+                let feedbackHTML='';
+                const sel=document.querySelector(`select[name="${qId}"]`);
+                if(sel){
+                    sel.classList.remove('correct-answer','incorrect-answer');
+                    sel.classList.add(isCorrect?'correct-answer':'incorrect-answer');
+                    if(!isCorrect){
+                        const isParaQ = i<=31;
+                        const dispVal = correctList[0].toUpperCase();
+                        const label = isParaQ ? ` — Section ${SECTIONS[correctList[0]]||dispVal}` : ` (${PEOPLE[correctList[0]]||dispVal})`;
+                        feedbackHTML=`<span class="correct-badge">Correct Answer: ${dispVal}${label}</span><br>`;
+                    }
+                }
+                const inp=document.querySelector(`input[name="${qId}"][type="text"]`);
+                if(inp){
+                    inp.classList.remove('correct-answer','incorrect-answer');
+                    if(isCorrect){inp.classList.add('correct-answer');}
+                    else{inp.classList.add('incorrect-answer'); inp.value=''; inp.placeholder=correctList[0]; feedbackHTML=`<span class="correct-badge">Correct Answer: ${correctList[0]}</span><br>`;}
+                }
+                if(explanations[qId]&&!document.getElementById(`expl-${qId}`)){
+                    const div=document.createElement('div'); div.id=`expl-${qId}`; div.className='explanation-box';
+                    div.innerHTML=`${feedbackHTML}<strong>Explanation:</strong> ${explanations[qId]}`;
+                    const container=document.getElementById(`container-${qId}`);
+                    if(container){const wrap=container.closest('.q-item')||container; wrap.insertAdjacentElement('afterend',div);}
+                }
+            }
+        },
+
+        initSplitter() {
+            let isDragging=false; const panes=document.getElementById('content-panes');
+            this.splitter.addEventListener('mousedown',(e)=>{e.preventDefault();isDragging=true;document.body.style.cursor='col-resize';});
+            document.addEventListener('mousemove',(e)=>{
+                if(!isDragging||window.innerWidth<=768) return;
+                const rect=panes.getBoundingClientRect(); const newLeft=e.clientX-rect.left;
+                if(newLeft>200&&newLeft<rect.width-200) panes.style.gridTemplateColumns=`${(newLeft/rect.width)*100}% 5px 1fr`;
+            });
+            document.addEventListener('mouseup',()=>{if(isDragging){isDragging=false;document.body.style.cursor='default';}});
+        },
+
+        initHighlighter() {
+            document.body.addEventListener('mouseup',(e)=>{
+                const sel=window.getSelection(); const text=sel.toString().trim();
+                if(text.length>0){
+                    const range=sel.getRangeAt(0);
+                    if(!this.leftPane.contains(range.commonAncestorContainer)&&!this.rightPane.contains(range.commonAncestorContainer)){this.highlightTooltip.style.display='none';return;}
+                    this.highlightTooltip.style.left=`${e.pageX-30}px`; this.highlightTooltip.style.top=`${e.pageY-40}px`; this.highlightTooltip.style.display='block';
+                    this.highlightTooltip.onclick=()=>{
+                        const mark=document.createElement('mark');
+                        try{range.surroundContents(mark);}catch(ex){this.showAlert("Highlight Error","Please select text within a single element.","warning");}
+                        finally{sel.removeAllRanges();this.highlightTooltip.style.display='none';}
+                    };
+                }else{this.highlightTooltip.style.display='none';}
+            });
+            document.body.addEventListener('mousedown',()=>{if(window.getSelection().toString().length===0)this.highlightTooltip.style.display='none';});
+        }
+    };
+    app.init();
+});
+</script>
+</body>
+</html>

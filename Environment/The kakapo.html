@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IELTS Academic Simulator - The kākāpō</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --app-font-size: 17px;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            overscroll-behavior: none;
+            background-color: #f3f4f6;
+        }
+        .ielts-container {
+            display: grid;
+            grid-template-rows: auto 1fr;
+            height: 100vh;
+        }
+        .content-panes {
+            display: grid;
+            grid-template-columns: 1fr 5px 1fr;
+            overflow: hidden;
+        }
+        .pane {
+            overflow-y: auto;
+            padding: 2rem 3rem;
+            font-size: var(--app-font-size);
+            scroll-behavior: smooth;
+        }
+        #left-pane {
+            background-color: #fdfdfd;
+        }
+        #right-pane {
+            background-color: #f8fafc;
+        }
+        .splitter {
+            background-color: #cbd5e1;
+            cursor: col-resize;
+            z-index: 10;
+            transition: background-color 0.2s;
+        }
+        .splitter:hover, .splitter:active {
+            background-color: #94a3b8;
+        }
+        
+        /* Typography Improvements */
+        .reading-passage {
+            font-family: 'Merriweather', serif;
+            line-height: 1.9;
+            color: #334155;
+            text-align: justify;
+            margin-bottom: 2rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .reading-passage p {
+            margin-bottom: 1.5rem;
+            text-indent: 1.5rem; 
+        }
+        .reading-passage h3 {
+            font-family: 'Inter', sans-serif;
+            color: #0f172a;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+            font-size: 1.5em;
+            text-align: center;
+            text-indent: 0;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .reading-passage h4 {
+            font-family: 'Inter', sans-serif;
+            color: #475569;
+            margin-bottom: 2rem;
+            font-weight: 500;
+            font-size: 1.1em;
+            text-align: center;
+            text-indent: 0;
+        }
+
+        /* Question Styles */
+        .q-item {
+            padding: 1rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s;
+            background-color: white;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 0.75rem;
+        }
+        
+        .text-input {
+            border: 2px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 4px 8px;
+            font-weight: 600;
+            color: #1e293b;
+            transition: all 0.2s;
+            text-align: center;
+            background-color: #f8fafc;
+        }
+        .text-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            background-color: #ffffff;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+
+        /* Custom Radio Button Styles */
+        .custom-radio-label {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            background-color: white;
+            flex: 1;
+            justify-content: center;
+            text-align: center;
+        }
+        .custom-radio-label.mcq-label {
+            justify-content: flex-start;
+            text-align: left;
+            flex: none;
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+        .custom-radio-label:hover {
+            background-color: #f8fafc;
+            border-color: #cbd5e1;
+        }
+        .custom-radio-label input:checked + span {
+            color: #1e40af;
+            font-weight: 700;
+        }
+
+        /* Answer Feedback Animations & Styles */
+        .correct-answer {
+            border-color: #22c55e !important;
+            background-color: #f0fdf4 !important;
+            color: #166534 !important;
+        }
+        label.correct-answer {
+            box-shadow: 0 0 0 1px #22c55e;
+            color: #166534 !important;
+        }
+        label.correct-answer span { color: #166534 !important; }
+        
+        .incorrect-answer {
+            border-color: #ef4444 !important;
+            background-color: #fef2f2 !important;
+            color: #991b1b !important;
+        }
+        label.incorrect-answer {
+            box-shadow: 0 0 0 1px #ef4444;
+            color: #991b1b !important;
+        }
+        label.incorrect-answer span { color: #991b1b !important; }
+
+        .explanation-box {
+            animation: fadeIn 0.4s ease-out forwards;
+            margin-top: 0.75rem;
+            padding: 1rem;
+            background-color: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            border-radius: 0.5rem;
+            font-size: 0.95rem;
+            color: #1e3a8a;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            text-align: left;
+        }
+        .explanation-box .correct-badge {
+            display: inline-block;
+            background: #22c55e;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.85em;
+            margin-bottom: 0.5rem;
+            letter-spacing: 0.05em;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Vocabulary Styles */
+        .vocab-word {
+            color: #2563eb;
+            font-weight: 600;
+            cursor: pointer;
+            border-bottom: 2px dotted #93c5fd;
+            transition: all 0.2s ease-in-out;
+            padding: 0 2px;
+        }
+        .vocab-word:hover {
+            background-color: #dbeafe;
+            border-bottom-style: solid;
+            border-radius: 2px;
+        }
+
+        /* UI Elements */
+        .highlight-tooltip {
+            position: absolute;
+            background-color: #1e293b;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            z-index: 100;
+            cursor: pointer;
+            display: none;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        mark {
+            background-color: #fef08a;
+            border-radius: 3px;
+            padding: 2px 0;
+            cursor: pointer;
+            transition: background-color 0.2s, color 0.2s;
+            position: relative;
+        }
+        mark:hover {
+            background-color: #fca5a5;
+            color: #7f1d1d;
+        }
+        mark:hover::after {
+            content: ' ×';
+            font-weight: bold;
+            font-size: 0.8em;
+            opacity: 0.7;
+        }
+        
+        /* Responsive Design Overrides */
+        @media (max-width: 768px) {
+            .content-panes {
+                display: flex;
+                flex-direction: column;
+                overflow-y: auto;
+            }
+            .splitter {
+                display: none;
+            }
+            .pane {
+                padding: 1.25rem 1rem;
+                overflow-y: visible;
+                height: auto;
+            }
+            #left-pane {
+                border-bottom: 2px dashed #cbd5e1;
+                padding-bottom: 2rem;
+            }
+            .text-input {
+                max-width: 140px;
+                padding: 2px 6px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div id="test-container" class="ielts-container">
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 flex justify-between items-center z-20 shadow-sm flex-wrap gap-3">
+        <div class="flex items-center gap-2 sm:space-x-3">
+            <div class="bg-blue-600 text-white p-1.5 sm:p-2 rounded-lg shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+            </div>
+            <h1 class="text-xl font-bold text-gray-800 hidden sm:block">IELTS Simulator <span class="text-blue-600 font-medium">| The kākāpō</span></h1>
+            <h1 class="text-base font-bold text-gray-800 sm:hidden">IELTS <span class="text-blue-600">The kākāpō</span></h1>
+        </div>
+        
+        <!-- Timer & Progress -->
+        <div class="flex items-center space-x-4">
+            <div class="hidden sm:flex flex-col items-end">
+                <span class="text-xs text-gray-500 font-bold uppercase tracking-wide">Progress</span>
+                <span id="progress-text" class="text-sm font-semibold text-blue-600">0 / 13 Answered</span>
+            </div>
+            <div class="flex items-center bg-gray-100 rounded-lg px-3 py-1.5 border border-gray-200">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span id="timer" class="font-mono font-bold text-gray-700 text-lg">20:00</span>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2 sm:space-x-3">
+            <button id="clear-highlights-btn" class="hidden sm:flex items-center justify-center px-3 py-1.5 rounded bg-amber-50 hover:bg-amber-100 text-amber-700 transition-colors focus:outline-none border border-amber-200 text-sm font-medium" title="Clear Highlights">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                Clear
+            </button>
+            <div class="flex items-center space-x-1 sm:space-x-2 bg-gray-50 p-1 rounded-lg border border-gray-200">
+                <button id="decrease-font-btn" class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded bg-white shadow-sm hover:bg-gray-100 text-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-400 font-bold text-sm sm:text-base" title="Decrease Font Size">A-</button>
+                <button id="increase-font-btn" class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded bg-white shadow-sm hover:bg-gray-100 text-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-400 font-bold text-sm sm:text-base" title="Increase Font Size">A+</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main id="content-panes" class="content-panes">
+        <!-- Left Pane: Passages -->
+        <div id="left-pane" class="pane relative">
+            <div class="reading-passage">
+                <h3>The kākāpō</h3>
+                <h4>The kākāpō is a <span class="vocab-word" data-word="nocturnal">nocturnal</span>, flightless parrot that is critically endangered and one of New Zealand’s unique treasures</h4>
+                
+                <p>The kākāpō, also known as the owl parrot, is a large, forest-dwelling bird, with a pale owl-like face. Up to 64 cm in length, it has predominantly yellow-green feathers, forward-facing eyes, a large grey beak, large blue feet, and relatively short wings and tail. It is the world’s only flightless parrot, and is also possibly one of the world’s longest-living birds, with a reported lifespan of up to 100 years.</p>
+
+                <p>Kākāpō are solitary birds and tend to occupy the same home range for many years. They forage on the ground and climb high into trees. They often leap from trees and flap their wings, but at best manage a controlled descent to the ground. They are entirely vegetarian, with their diet including the leaves, roots and bark of trees as well as bulbs, and fern fronds.</p>
+
+                <p>Kākāpō breed in summer and autumn, but only in years when food is plentiful. Males play no part in <span class="vocab-word" data-word="incubation">incubation</span> or chick-rearing – females alone incubate eggs and feed the chicks. The 1-4 eggs are laid in soil, which is repeatedly turned over before and during incubation. The female kākāpō has to spend long periods away from the nest searching for food, which leaves the unattended eggs and chicks particularly <span class="vocab-word" data-word="vulnerable">vulnerable</span> to predators.</p>
+
+                <p>Before humans arrived, kākāpō were common throughout New Zealand’s forests. However, this all changed with the arrival of the first Polynesian settlers about 700 years ago. For the early settlers, the flightless kākāpō was easy prey. They ate its meat and used its feathers to make soft cloaks. With them came the Polynesian dog and rat, which also preyed on kākāpō. By the time European <span class="vocab-word" data-word="colonisers">colonisers</span> arrived in the early 1800s, kākāpō had become confined to the central North Island and forested parts of the South Island. The fall in kākāpō numbers was accelerated by European colonisation. A great deal of habitat was lost through forest clearance, and introduced species such as deer <span class="vocab-word" data-word="deplete">depleted</span> the remaining forests of food. Other predators such as cats, stoats and two more species of rat were also introduced. The kākāpō were in serious trouble.</p>
+
+                <p>In 1894, the New Zealand government launched its first attempt to save the kākāpō. Conservationist Richard Henry led an effort to relocate several hundred of the birds to predator-free Resolution Island in Fiordland. Unfortunately, the island didn’t remain predator free – stoats arrived within six years, eventually destroying the kākāpō population. By the mid-1900s, the kākāpō was practically a lost species. Only a few clung to life in the most isolated parts of New Zealand.</p>
+
+                <p>From 1949 to 1973, the newly formed New Zealand Wildlife Service made over 60 expeditions to find kākāpō, focusing mainly on Fiordland. Six were caught, but there were no females amongst them and all but one died within a few months of <span class="vocab-word" data-word="captivity">captivity</span>. In 1974, a new initiative was launched, and by 1977, 18 more kākāpō were found in Fiordland. However, there were still no females. In 1977, a large population of males was spotted in Rakiura – a large island free from stoats, ferrets and weasels. There were about 200 individuals, and in 1980 it was confirmed females were also present. These birds have been the foundation of all subsequent work in managing the species.</p>
+
+                <p>Unfortunately, predation by feral cats on Rakiura Island led to a rapid decline in kākāpō numbers. As a result, during 1980-97, the surviving population was evacuated to three island sanctuaries: Codfish Island, Maud Island and Little Barrier Island. However, breeding success was hard to achieve. Rats were found to be a major predator of kākāpō chicks and an insufficient number of chicks survived to offset adult mortality. By 1995, although at least 12 chicks had been produced on the islands, only three had survived. The kākāpō population had dropped to 51 birds. The critical situation prompted an urgent review of kākāpō management in New Zealand.</p>
+
+                <p>In 1996, a new Recovery Plan was launched, together with a specialist advisory group called the Kākāpō Scientific and Technical Advisory Committee and a higher amount of funding. Renewed steps were taken to control predators on the three islands. Cats were <span class="vocab-word" data-word="eradicate">eradicated</span> from Little Barrier Island in 1980, and possums were eradicated from Codfish Island by 1986. However, the population did not start to increase until rats were removed from all three islands, and the birds were more intensively managed. This involved moving the birds between islands, supplementary feeding of adults and rescuing and hand-raising any failing chicks.</p>
+
+                <p>After the first five years of the Recovery Plan, the population was on target. By 2000, five new females had been produced, and the total population had grown to 62 birds. For the first time, there was cautious optimism for the future of kākāpō and by June 2020, a total of 210 birds was recorded.</p>
+
+                <p>Today, kākāpō management continues to be guided by the kākāpō Recovery Plan. Its key goals are: minimise the loss of genetic diversity in the kākāpō population, restore or maintain sufficient habitat to accommodate the expected increase in the kākāpō population, and ensure <span class="vocab-word" data-word="stakeholders">stakeholders</span> continue to be fully engaged in the preservation of the species.</p>
+            </div>
+        </div>
+
+        <!-- Splitter -->
+        <div id="splitter" class="splitter relative flex items-center justify-center group">
+            <div class="w-1 h-8 bg-gray-400 rounded-full opacity-50 group-hover:bg-gray-600 transition-colors"></div>
+        </div>
+
+        <!-- Right Pane: Questions -->
+        <div id="right-pane" class="pane">
+            <div id="questions-section" class="max-w-3xl mx-auto space-y-8 pb-10">
+                
+                <!-- TRUE / FALSE / NOT GIVEN -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-blue-100 text-blue-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 1-6</span>
+                        <h4 class="font-bold text-gray-800">TRUE / FALSE / NOT GIVEN</h4>
+                    </div>
+                    <p class="mb-5 text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100 text-sm">
+                        Do the following statements agree with the information given in Reading Passage 1?<br><br>
+                        Select the correct option below:<br>
+                        <strong class="text-blue-700">TRUE</strong> if the statement agrees with the information<br>
+                        <strong class="text-blue-700">FALSE</strong> if the statement contradicts the information<br>
+                        <strong class="text-blue-700">NOT GIVEN</strong> if there is no information on this
+                    </p>
+                    
+                    <div class="space-y-6">
+                        <div class="q-item border border-gray-100 p-4" id="container-q1">
+                            <p class="mb-3 text-gray-800 font-medium leading-snug"><span class="font-bold text-blue-600 mr-2">1</span> There are other parrots that share the kakapo’s inability to fly.</p>
+                            <div class="flex flex-wrap gap-3">
+                                <label class="custom-radio-label"><input type="radio" name="q1" value="true" class="mr-2 hidden"><span class="font-semibold text-gray-600">True</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q1" value="false" class="mr-2 hidden"><span class="font-semibold text-gray-600">False</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q1" value="not given" class="mr-2 hidden"><span class="font-semibold text-gray-600">Not Given</span></label>
+                            </div>
+                        </div>
+
+                        <div class="q-item border border-gray-100 p-4" id="container-q2">
+                            <p class="mb-3 text-gray-800 font-medium leading-snug"><span class="font-bold text-blue-600 mr-2">2</span> Adult kakapo produce chicks every year.</p>
+                            <div class="flex flex-wrap gap-3">
+                                <label class="custom-radio-label"><input type="radio" name="q2" value="true" class="mr-2 hidden"><span class="font-semibold text-gray-600">True</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q2" value="false" class="mr-2 hidden"><span class="font-semibold text-gray-600">False</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q2" value="not given" class="mr-2 hidden"><span class="font-semibold text-gray-600">Not Given</span></label>
+                            </div>
+                        </div>
+
+                        <div class="q-item border border-gray-100 p-4" id="container-q3">
+                            <p class="mb-3 text-gray-800 font-medium leading-snug"><span class="font-bold text-blue-600 mr-2">3</span> Adult male kakapo bring food back to nesting females.</p>
+                            <div class="flex flex-wrap gap-3">
+                                <label class="custom-radio-label"><input type="radio" name="q3" value="true" class="mr-2 hidden"><span class="font-semibold text-gray-600">True</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q3" value="false" class="mr-2 hidden"><span class="font-semibold text-gray-600">False</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q3" value="not given" class="mr-2 hidden"><span class="font-semibold text-gray-600">Not Given</span></label>
+                            </div>
+                        </div>
+
+                        <div class="q-item border border-gray-100 p-4" id="container-q4">
+                            <p class="mb-3 text-gray-800 font-medium leading-snug"><span class="font-bold text-blue-600 mr-2">4</span> The Polynesian rat was a greater threat to the kakapo than Polynesian settlers.</p>
+                            <div class="flex flex-wrap gap-3">
+                                <label class="custom-radio-label"><input type="radio" name="q4" value="true" class="mr-2 hidden"><span class="font-semibold text-gray-600">True</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q4" value="false" class="mr-2 hidden"><span class="font-semibold text-gray-600">False</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q4" value="not given" class="mr-2 hidden"><span class="font-semibold text-gray-600">Not Given</span></label>
+                            </div>
+                        </div>
+
+                        <div class="q-item border border-gray-100 p-4" id="container-q5">
+                            <p class="mb-3 text-gray-800 font-medium leading-snug"><span class="font-bold text-blue-600 mr-2">5</span> Kakapo were transferred from Rakiura Island to other locations because they were at risk from feral cats.</p>
+                            <div class="flex flex-wrap gap-3">
+                                <label class="custom-radio-label"><input type="radio" name="q5" value="true" class="mr-2 hidden"><span class="font-semibold text-gray-600">True</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q5" value="false" class="mr-2 hidden"><span class="font-semibold text-gray-600">False</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q5" value="not given" class="mr-2 hidden"><span class="font-semibold text-gray-600">Not Given</span></label>
+                            </div>
+                        </div>
+
+                        <div class="q-item border border-gray-100 p-4" id="container-q6">
+                            <p class="mb-3 text-gray-800 font-medium leading-snug"><span class="font-bold text-blue-600 mr-2">6</span> One Recovery Plan initiative that helped increase the kakapo population size was caring for struggling young birds.</p>
+                            <div class="flex flex-wrap gap-3">
+                                <label class="custom-radio-label"><input type="radio" name="q6" value="true" class="mr-2 hidden"><span class="font-semibold text-gray-600">True</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q6" value="false" class="mr-2 hidden"><span class="font-semibold text-gray-600">False</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q6" value="not given" class="mr-2 hidden"><span class="font-semibold text-gray-600">Not Given</span></label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="1-6">Check Answers</button>
+                    </div>
+                </div>
+
+                <!-- Note Completion -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-blue-100 text-blue-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 7-13</span>
+                        <h4 class="font-bold text-gray-800">Note Completion</h4>
+                    </div>
+                    <p class="mb-5 text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100 text-sm">
+                        Complete the notes below.<br>
+                        Choose <strong>ONE WORD AND/OR A NUMBER</strong> from the passage for each answer.
+                    </p>
+                    
+                    <div class="bg-yellow-50/40 p-5 sm:p-8 border border-yellow-100 rounded-xl">
+                        <h5 class="font-bold text-xl text-center mb-6 text-gray-900 uppercase tracking-wide">New Zealand’s kākāpō</h5>
+                        
+                        <div class="space-y-4 text-gray-800 text-[0.95em]">
+                            <p class="font-bold text-blue-800 border-b border-blue-200 pb-1 mb-2">A type of parrot:</p>
+                            <ul class="list-disc pl-5 space-y-2 mb-4">
+                                <li class="leading-relaxed pl-1">
+                                    diet consists of fern fronds, various parts of a tree and 
+                                    <span id="container-q7" class="inline-block mx-1 my-1"><strong class="text-blue-600 mr-1 text-sm">7</strong><input type="text" name="q7" class="text-input w-28"></span>
+                                </li>
+                                <li class="leading-relaxed pl-1">
+                                    nests are created in 
+                                    <span id="container-q8" class="inline-block mx-1 my-1"><strong class="text-blue-600 mr-1 text-sm">8</strong><input type="text" name="q8" class="text-input w-28"></span> 
+                                    where eggs are laid.
+                                </li>
+                            </ul>
+
+                            <p class="font-bold text-blue-800 border-b border-blue-200 pb-1 mb-2">Arrival of Polynesian settlers</p>
+                            <ul class="list-disc pl-5 space-y-2 mb-4">
+                                <li class="leading-relaxed pl-1">
+                                    the 
+                                    <span id="container-q9" class="inline-block mx-1 my-1"><strong class="text-blue-600 mr-1 text-sm">9</strong><input type="text" name="q9" class="text-input w-28"></span> 
+                                    of the kākāpō were used to make clothes.
+                                </li>
+                            </ul>
+
+                            <p class="font-bold text-blue-800 border-b border-blue-200 pb-1 mb-2">Arrival of European colonisers</p>
+                            <ul class="list-disc pl-5 space-y-2 mb-4">
+                                <li class="leading-relaxed pl-1">
+                                    <span id="container-q10" class="inline-block mx-1 my-1"><strong class="text-blue-600 mr-1 text-sm">10</strong><input type="text" name="q10" class="text-input w-28"></span> 
+                                    were an animal which they introduced that ate the kākāpō’s food sources.
+                                </li>
+                            </ul>
+
+                            <p class="font-bold text-blue-800 border-b border-blue-200 pb-1 mb-2">Protecting kākāpō</p>
+                            <ul class="list-disc pl-5 space-y-2">
+                                <li class="leading-relaxed pl-1">
+                                    Richard Henry, a conservationist, tried to protect the kākāpō.
+                                </li>
+                                <li class="leading-relaxed pl-1">
+                                    a definite sighting of female kākāpō on Rakiura Island was reported in the year 
+                                    <span id="container-q11" class="inline-block mx-1 my-1"><strong class="text-blue-600 mr-1 text-sm">11</strong><input type="text" name="q11" class="text-input w-24"></span>
+                                </li>
+                                <li class="leading-relaxed pl-1">
+                                    the Recovery Plan included an increase in 
+                                    <span id="container-q12" class="inline-block mx-1 my-1"><strong class="text-blue-600 mr-1 text-sm">12</strong><input type="text" name="q12" class="text-input w-32"></span>
+                                </li>
+                                <li class="leading-relaxed pl-1">
+                                    a current goal of the Recovery Plan is to maintain the involvement of 
+                                    <span id="container-q13" class="inline-block mx-1 my-1"><strong class="text-blue-600 mr-1 text-sm">13</strong><input type="text" name="q13" class="text-input w-36"></span> 
+                                    in kākāpō protection.
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="7-13">Check Answers</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Highlight Tooltip -->
+<div id="highlight-tooltip" class="highlight-tooltip">Highlight Text</div>
+
+<!-- Vocabulary Modal -->
+<div id="vocab-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50 transition-opacity">
+    <div class="bg-white rounded-2xl shadow-2xl p-5 sm:p-8 w-full max-w-md relative transform transition-all scale-95 opacity-0" id="vocab-modal-content">
+        <button id="close-vocab-modal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-full w-8 h-8 flex items-center justify-center transition-colors">&times;</button>
+        <div class="flex items-center mb-6 border-b pb-4 mt-2">
+            <h3 id="vocab-word" class="text-2xl sm:text-3xl font-extrabold text-gray-900 capitalize tracking-tight"></h3>
+        </div>
+        <div class="flex items-center mb-5">
+            <button id="play-audio-btn" class="flex items-center justify-center h-10 w-10 sm:h-12 sm:w-12 shrink-0 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white mr-4 transition-all shadow-sm border border-blue-100" title="Listen to pronunciation">
+                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>
+            </button>
+            <p id="vocab-pronunciation-text" class="text-gray-500 font-mono text-base sm:text-lg bg-gray-50 px-3 py-1 rounded-md border border-gray-100"></p>
+        </div>
+        <p id="vocab-meaning" class="text-gray-700 text-base sm:text-lg leading-relaxed"></p>
+    </div>
+</div>
+
+<!-- Alert Modal -->
+<div id="alert-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-[80] transition-opacity">
+    <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm relative transform transition-all scale-95 opacity-0 text-center" id="alert-modal-content">
+        <div id="alert-icon-container" class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+            <svg id="alert-icon" class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+        </div>
+        <h3 id="alert-title" class="text-lg leading-6 font-medium text-gray-900 mb-2">Notice</h3>
+        <p id="alert-message" class="text-sm text-gray-500 mb-6">Message goes here.</p>
+        <button id="close-alert-btn" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm transition-colors">
+            Got it
+        </button>
+    </div>
+</div>
+
+<script>
+    // --- DATA ---
+    const vocabulary = {
+        'nocturnal': { meaning: 'Hoạt động về đêm', phonetic: '/nɒkˈtɜː.nəl/' },
+        'incubation': { meaning: 'Sự ấp trứng', phonetic: '/ˌɪn.kjʊˈbeɪ.ʃən/' },
+        'vulnerable': { meaning: 'Dễ bị tổn thương', phonetic: '/ˈvʌl.nər.ə.bəl/' },
+        'colonisers': { meaning: 'Thực dân, người đi khai hoang', phonetic: '/ˈkɒl.ə.naɪ.zəz/' },
+        'deplete': { meaning: 'Làm cạn kiệt', phonetic: '/dɪˈpliːt/' },
+        'captivity': { meaning: 'Tình trạng bị giam cầm, nuôi nhốt', phonetic: '/kæpˈtɪv.ə.ti/' },
+        'eradicate': { meaning: 'Tiêu diệt, xóa sổ', phonetic: '/ɪˈræd.ɪ.keɪt/' },
+        'stakeholders': { meaning: 'Các bên liên quan', phonetic: '/ˈsteɪkˌhəʊl.dəz/' }
+    };
+
+    const answers = {
+        q1: "false",
+        q2: "false",
+        q3: "false",
+        q4: "not given",
+        q5: "true",
+        q6: "true",
+        q7: "bulbs",
+        q8: "soil",
+        q9: "feathers",
+        q10: "deer",
+        q11: "1980",
+        q12: "funding",
+        q13: "stakeholders"
+    };
+
+    const explanations = {
+        q1: "<b>Giải thích:</b> Đoạn 2 khẳng định: “It is the world’s only flightless parrot” (Nó là loài vẹt không biết bay duy nhất trên thế giới).<br><b>Kết luận:</b> Thông tin trái ngược hoàn toàn.",
+        q2: "<b>Giải thích:</b> Đoạn 4 nói: “Kākāpō breed… only in years when food is plentiful.” (Kākāpō chỉ sinh sản vào những năm thức ăn dồi dào). Nghĩa là không phải năm nào cũng sinh.<br><b>Kết luận:</b> Sai so với bài đọc.",
+        q3: "<b>Giải thích:</b> Đoạn 4 nói: “Males play no part in incubation or chick-rearing – females alone incubate eggs and feed the chicks.” (Con đực không tham gia… con cái một mình ấp trứng và nuôi con).<br><b>Kết luận:</b> Sai.",
+        q4: "<b>Giải thích:</b> Đoạn 5 có nhắc đến cả hai đối tượng này đều săn bắt kākāpō, nhưng không hề có sự so sánh xem ai là mối đe dọa lớn hơn (greater threat).<br><b>Kết luận:</b> Không có thông tin.",
+        q5: "<b>Giải thích:</b> Đoạn 8: “predation by feral cats on Rakiura Island led to a rapid decline… As a result… the surviving population was evacuated to three island sanctuaries” (Sự săn mồi của mèo hoang… dẫn đến sự sơ tán…).<br><b>Kết luận:</b> Đúng.",
+        q6: "<b>Giải thích:</b> Đoạn 9 nói về các biện pháp quản lý, trong đó có: “…rescuing and hand-raising any failing chicks” (giải cứu và nuôi bộ những con gà con ốm yếu/thất bại). “Failing chicks” tương đương “struggling young birds”.<br><b>Kết luận:</b> Đúng.",
+        q7: "<b>Giải thích:</b> “…diet including the leaves, roots and bark of trees as well as <b>bulbs</b>, and fern fronds.” (Đoạn 3)",
+        q8: "<b>Giải thích:</b> “The 1–4 eggs are laid in <b>soil</b>…” (Đoạn 4)",
+        q9: "<b>Giải thích:</b> “…used its <b>feathers</b> to make soft cloaks.” (Cloaks là một loại áo choàng/quần áo). (Đoạn 5)",
+        q10: "<b>Giải thích:</b> “…introduced species such as <b>deer</b> depleted the remaining forests of food.” (Đoạn 5)",
+        q11: "<b>Giải thích:</b> “…in <b>1980</b> it was confirmed females were also present.” (Đoạn 7)",
+        q12: "<b>Giải thích:</b> “In 1996, a new Recovery Plan was launched… and a higher amount of <b>funding</b>.” (Higher amount = Increase). (Đoạn 9)",
+        q13: "<b>Giải thích:</b> “…ensure <b>stakeholders</b> continue to be fully engaged…” (Fully engaged = Involvement). (Đoạn 11)"
+    };
+
+    // --- APPLICATION LOGIC ---
+    document.addEventListener('DOMContentLoaded', () => {
+        const app = {
+            userAnswers: {},
+            answersChecked: {},
+            currentFontSize: 17,
+            totalQuestions: Object.keys(answers).length,
+            timeRemaining: 20 * 60, // 20 minutes
+
+            // Elements
+            leftPane: document.getElementById('left-pane'),
+            rightPane: document.getElementById('right-pane'),
+            splitter: document.getElementById('splitter'),
+            highlightTooltip: document.getElementById('highlight-tooltip'),
+            vocabModal: document.getElementById('vocab-modal'),
+            vocabModalContent: document.getElementById('vocab-modal-content'),
+            closeVocabModalBtn: document.getElementById('close-vocab-modal'),
+            vocabWordEl: document.getElementById('vocab-word'),
+            vocabMeaningEl: document.getElementById('vocab-meaning'),
+            vocabPronunciationText: document.getElementById('vocab-pronunciation-text'),
+            playAudioBtn: document.getElementById('play-audio-btn'),
+            clearHighlightsBtn: document.getElementById('clear-highlights-btn'),
+            progressText: document.getElementById('progress-text'),
+            timerEl: document.getElementById('timer'),
+
+            // Alert Elements
+            alertModal: document.getElementById('alert-modal'),
+            alertModalContent: document.getElementById('alert-modal-content'),
+            closeAlertBtn: document.getElementById('close-alert-btn'),
+            alertTitleEl: document.getElementById('alert-title'),
+            alertMessageEl: document.getElementById('alert-message'),
+            alertIconContainer: document.getElementById('alert-icon-container'),
+
+            init() {
+                this.setupEventListeners();
+                this.initSplitter();
+                this.initHighlighter();
+                this.updateCheckButtonsState();
+                this.startTimer();
+            },
+
+            startTimer() {
+                const interval = setInterval(() => {
+                    if (this.timeRemaining <= 0) {
+                        clearInterval(interval);
+                        this.timerEl.textContent = "00:00";
+                        this.timerEl.classList.add('text-red-600');
+                        this.showAlert("Time's Up!", "Your 20 minutes for this reading passage have expired.", "warning");
+                        return;
+                    }
+                    this.timeRemaining--;
+                    const m = Math.floor(this.timeRemaining / 60).toString().padStart(2, '0');
+                    const s = (this.timeRemaining % 60).toString().padStart(2, '0');
+                    this.timerEl.textContent = `${m}:${s}`;
+                    
+                    if (this.timeRemaining <= 300) { // last 5 minutes
+                        this.timerEl.classList.add('text-red-500');
+                    }
+                }, 1000);
+            },
+
+            setupEventListeners() {
+                document.getElementById('increase-font-btn').addEventListener('click', () => this.changeFontSize(1));
+                document.getElementById('decrease-font-btn').addEventListener('click', () => this.changeFontSize(-1));
+
+                this.clearHighlightsBtn.addEventListener('click', () => {
+                    const marks = this.leftPane.querySelectorAll('mark');
+                    marks.forEach(mark => {
+                        const text = document.createTextNode(mark.textContent);
+                        mark.replaceWith(text);
+                    });
+                });
+
+                this.closeVocabModalBtn.addEventListener('click', () => this.closeModal());
+                this.vocabModal.addEventListener('click', (e) => {
+                   if (e.target === this.vocabModal) this.closeModal();
+                });
+
+                // Keyboard accessibility: Close modals with Escape key & Disable Ctrl+F
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') {
+                        if (!this.vocabModal.classList.contains('hidden')) this.closeModal();
+                        if (!this.alertModal.classList.contains('hidden')) this.closeAlert();
+                    }
+                    
+                    // Disable Ctrl+F / Cmd+F (Find function)
+                    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
+                        e.preventDefault(); 
+                        this.showAlert("Action Disabled", "The 'Find' function is disabled to simulate real computer-delivered test conditions.", "warning");
+                    }
+
+                    // Disable F5 and Ctrl+R / Cmd+R (Refresh function)
+                    if (e.key === 'F5' || ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'r')) {
+                        e.preventDefault();
+                        this.showAlert("Action Disabled", "Refreshing the page is disabled during the test to prevent losing your progress.", "warning");
+                    }
+                });
+
+                // Detect Tab Switching or Window minimizing
+                document.addEventListener('visibilitychange', () => {
+                    if (document.hidden && this.timeRemaining > 0) {
+                        this.showAlert("Warning: Tab Switch Detected", "Please do not switch tabs or leave the test window during the exam. Continued tab switching may result in your test being invalidated.", "warning");
+                    }
+                });
+
+                window.addEventListener('beforeunload', (e) => {
+                    if (this.timeRemaining > 0 && this.timeRemaining < 20 * 60) {
+                        e.preventDefault();
+                        e.returnValue = ''; 
+                    }
+                });
+
+                // Alert Modal Events
+                this.closeAlertBtn.addEventListener('click', () => this.closeAlert());
+                this.alertModal.addEventListener('click', (e) => {
+                   if (e.target === this.alertModal) this.closeAlert();
+                });
+
+                // Track text inputs
+                document.body.addEventListener('input', (e) => {
+                    if (e.target.tagName === 'INPUT' && e.target.type === 'text') {
+                        this.userAnswers[e.target.name] = e.target.value;
+                        e.target.classList.remove('correct-answer', 'incorrect-answer');
+                        e.target.placeholder = '';
+                        const container = document.getElementById(`container-${e.target.name}`);
+                        if(container) container.classList.remove('bg-red-50', 'bg-green-50');
+                        
+                        this.updateCheckButtonsState();
+                        this.updateProgress();
+                    }
+                });
+
+                // Track Radio button changes
+                document.body.addEventListener('change', (e) => {
+                    if (e.target.tagName === 'INPUT' && e.target.type === 'radio') {
+                        this.userAnswers[e.target.name] = e.target.value;
+                        
+                        const groupRadios = document.querySelectorAll(`input[name="${e.target.name}"]`);
+                        groupRadios.forEach(radio => {
+                            const label = radio.closest('label');
+                            if(label) label.classList.remove('correct-answer', 'incorrect-answer');
+                        });
+                        
+                        this.updateCheckButtonsState();
+                        this.updateProgress();
+                    }
+                });
+
+                // Vocab Words & Removable Highlights Event Delegation
+                this.leftPane.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('vocab-word')) {
+                        const wordKey = e.target.dataset.word;
+                        this.openVocabModal(wordKey);
+                    }
+                    
+                    if (e.target.tagName === 'MARK') {
+                        const textNode = document.createTextNode(e.target.textContent);
+                        e.target.replaceWith(textNode);
+                    }
+                });
+
+                // Check Buttons Event Delegation
+                document.querySelectorAll('.check-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const range = e.target.dataset.range;
+                        this.checkAnswers(range, e.target);
+                    });
+                });
+                
+                // Real Audio Pronunciation Event
+                this.playAudioBtn.addEventListener('click', () => {
+                   const word = this.vocabWordEl.textContent;
+                   if (!word) return;
+                   if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+                   
+                   this.playAudioBtn.classList.remove('text-blue-600', 'bg-blue-50');
+                   this.playAudioBtn.classList.add('bg-green-500', 'text-white');
+                   
+                   if ('speechSynthesis' in window) {
+                       const utterance = new SpeechSynthesisUtterance(word);
+                       utterance.lang = 'en-GB'; 
+                       utterance.rate = 0.9; 
+                       utterance.onend = () => this.resetAudioBtn();
+                       utterance.onerror = () => this.resetAudioBtn();
+                       window.speechSynthesis.speak(utterance);
+                   } else {
+                       this.showAlert("Audio Error", "Sorry, your browser doesn't support text-to-speech audio.", "warning");
+                       setTimeout(() => this.resetAudioBtn(), 500);
+                   }
+                });
+            },
+
+            updateProgress() {
+                let answeredCount = 0;
+                for(let key in answers) {
+                    if(this.userAnswers[key] && this.userAnswers[key].trim() !== '') {
+                        answeredCount++;
+                    }
+                }
+                this.progressText.textContent = `${answeredCount} / ${this.totalQuestions} Answered`;
+            },
+
+            resetAudioBtn() {
+                this.playAudioBtn.classList.add('text-blue-600', 'bg-blue-50');
+                this.playAudioBtn.classList.remove('bg-green-500', 'text-white');
+            },
+            
+            changeFontSize(delta) {
+                this.currentFontSize += delta;
+                if (this.currentFontSize < 14) this.currentFontSize = 14;
+                if (this.currentFontSize > 26) this.currentFontSize = 26;
+                document.documentElement.style.setProperty('--app-font-size', `${this.currentFontSize}px`);
+            },
+
+            openVocabModal(wordKey) {
+                const data = vocabulary[wordKey];
+                if (data) {
+                    this.vocabWordEl.textContent = wordKey;
+                    this.vocabMeaningEl.textContent = data.meaning;
+                    this.vocabPronunciationText.textContent = data.phonetic || '';
+                    this.vocabModal.classList.remove('hidden');
+                    setTimeout(() => {
+                        this.vocabModalContent.classList.remove('scale-95', 'opacity-0');
+                        this.vocabModalContent.classList.add('scale-100', 'opacity-100');
+                    }, 10);
+                }
+            },
+
+            closeModal() {
+                if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+                this.vocabModalContent.classList.remove('scale-100', 'opacity-100');
+                this.vocabModalContent.classList.add('scale-95', 'opacity-0');
+                this.resetAudioBtn();
+                setTimeout(() => this.vocabModal.classList.add('hidden'), 200);
+            },
+
+            showAlert(title, message, type = 'error') {
+                this.alertTitleEl.textContent = title;
+                this.alertMessageEl.textContent = message;
+                
+                if (type === 'warning') {
+                    this.alertIconContainer.className = 'mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 mb-4';
+                    this.alertIconContainer.innerHTML = '<svg class="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>';
+                } else {
+                    this.alertIconContainer.className = 'mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4';
+                    this.alertIconContainer.innerHTML = '<svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>';
+                }
+                
+                this.alertModal.classList.remove('hidden');
+                setTimeout(() => {
+                    this.alertModalContent.classList.remove('scale-95', 'opacity-0');
+                    this.alertModalContent.classList.add('scale-100', 'opacity-100');
+                }, 10);
+            },
+
+            closeAlert() {
+                this.alertModalContent.classList.remove('scale-100', 'opacity-100');
+                this.alertModalContent.classList.add('scale-95', 'opacity-0');
+                setTimeout(() => {
+                    this.alertModal.classList.add('hidden');
+                }, 200);
+            },
+            
+            updateCheckButtonsState() {
+                document.querySelectorAll('.check-btn').forEach(btn => {
+                    const range = btn.dataset.range;
+                    if (this.answersChecked[range]) {
+                        btn.className = 'check-btn bg-gray-800 hover:bg-gray-900 text-white font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-pointer transform hover:-translate-y-0.5 hover:shadow-md active:scale-95';
+                        btn.textContent = 'Reset Answers';
+                        return;
+                    }
+
+                    const [start, end] = range.split('-').map(Number);
+                    let allAnswered = true;
+                    for (let i = start; i <= end; i++) {
+                        const qId = `q${i}`;
+                        const answer = (this.userAnswers[qId] || "").trim();
+                        if (!answer) {
+                            allAnswered = false;
+                            break;
+                        }
+                    }
+
+                    if (allAnswered) {
+                        btn.className = 'check-btn bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-pointer transform hover:-translate-y-0.5 hover:shadow-md active:scale-95';
+                    } else {
+                        btn.className = 'check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80';
+                    }
+                });
+            },
+
+            checkAnswers(range, btn) {
+                if (this.answersChecked[range]) {
+                    // Reset mode
+                    this.answersChecked[range] = false;
+                    
+                    const [start, end] = range.split('-').map(Number);
+                    for (let i = start; i <= end; i++) {
+                        const qId = `q${i}`;
+                        this.userAnswers[qId] = '';
+
+                        // Handle Radios
+                        const radios = document.querySelectorAll(`input[name="${qId}"][type="radio"]`);
+                        if (radios.length > 0) {
+                            radios.forEach(radio => {
+                                radio.checked = false;
+                                const label = radio.closest('label');
+                                if (label) label.classList.remove('correct-answer', 'incorrect-answer');
+                            });
+                        }
+
+                        // Handle Inputs
+                        const input = document.querySelector(`input[name="${qId}"][type="text"]`);
+                        if (input) {
+                            input.value = '';
+                            input.placeholder = '';
+                            input.classList.remove('correct-answer', 'incorrect-answer');
+                        }
+
+                        const expl = document.getElementById(`expl-${qId}`);
+                        if (expl) expl.remove();
+                    }
+                    this.updateCheckButtonsState();
+                    this.updateProgress();
+                    return;
+                }
+
+                const [start, end] = range.split('-').map(Number);
+
+                // --- Validation: Ensure all questions are answered ---
+                let allAnswered = true;
+                for (let i = start; i <= end; i++) {
+                    const qId = `q${i}`;
+                    const answer = (this.userAnswers[qId] || "").trim();
+                    if (!answer) {
+                        allAnswered = false;
+                        break;
+                    }
+                }
+
+                if (!allAnswered) {
+                    this.showAlert("Incomplete Answers", "Please fill in or select an answer for all questions in this section before checking.", "warning");
+                    return;
+                }
+                // -----------------------------------------------------
+
+                // Check mode
+                this.answersChecked[range] = true;
+                this.updateCheckButtonsState();
+
+                for (let i = start; i <= end; i++) {
+                    const qId = `q${i}`;
+                    let userAnswer = (this.userAnswers[qId] || "").toLowerCase().trim();
+                    
+                    let correctAnswersList = answers[qId].toLowerCase().split('|');
+                    let isCorrect = correctAnswersList.includes(userAnswer);
+
+                    let correctFeedbackHTML = '';
+
+                    // Check Radios
+                    const radios = document.querySelectorAll(`input[name="${qId}"][type="radio"]`);
+                    if (radios.length > 0) {
+                        radios.forEach(radio => {
+                            const label = radio.closest('label');
+                            if (label) label.classList.remove('correct-answer', 'incorrect-answer');
+                            
+                            if (correctAnswersList.includes(radio.value.toLowerCase())) {
+                                if (label) label.classList.add('correct-answer');
+                            } else if (radio.value.toLowerCase() === userAnswer) {
+                                if (label) label.classList.add('incorrect-answer');
+                            }
+                        });
+                        
+                        if (!isCorrect) {
+                            const correctAnsFormatted = correctAnswersList[0]
+                                .split(' ')
+                                .map(w => w.length === 1 ? w.toUpperCase() : w.charAt(0).toUpperCase() + w.slice(1))
+                                .join(' ');
+                            correctFeedbackHTML = `<span class="correct-badge">Correct Answer: ${correctAnsFormatted}</span><br>`;
+                        }
+                    }
+
+                    // Check Inputs
+                    const input = document.querySelector(`input[name="${qId}"][type="text"]`);
+                    if (input) {
+                        input.classList.remove('correct-answer', 'incorrect-answer');
+                        
+                        if (isCorrect) {
+                            input.classList.add('correct-answer');
+                        } else {
+                            input.classList.add('incorrect-answer');
+                            const correctAnsFormatted = correctAnswersList[0]
+                                .split(' ')
+                                .map(w => w.length === 1 ? w.toUpperCase() : w.charAt(0).toUpperCase() + w.slice(1)) 
+                                .join(' ');
+                                
+                            input.value = '';
+                            input.placeholder = correctAnsFormatted;
+                            
+                            correctFeedbackHTML = `<span class="correct-badge">Correct Answer: ${correctAnsFormatted}</span><br>`;
+                        }
+                    }
+
+                    // Add Explanation Box
+                    if (explanations[qId]) {
+                        const existingExpl = document.getElementById(`expl-${qId}`);
+                        if (!existingExpl) {
+                            const explDiv = document.createElement('div');
+                            explDiv.id = `expl-${qId}`;
+                            explDiv.className = 'explanation-box';
+                            explDiv.innerHTML = `${correctFeedbackHTML}${explanations[qId]}`;
+                            
+                            const container = document.getElementById(`container-${qId}`);
+                            if (container) {
+                                if(container.tagName === "SPAN" || container.tagName === "P" && container.style.display === "inline") {
+                                    const wrap = container.closest('li.leading-relaxed') || container.closest('div.leading-loose') || container.parentElement;
+                                    wrap.insertAdjacentElement('afterend', explDiv);
+                                } else {
+                                    container.insertAdjacentElement('afterend', explDiv);
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+
+            initSplitter() {
+                let isDragging = false;
+                const contentPanes = document.getElementById('content-panes');
+
+                this.splitter.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    isDragging = true;
+                    document.body.style.cursor = 'col-resize';
+                });
+
+                document.addEventListener('mousemove', (e) => {
+                    if (!isDragging) return;
+                    e.preventDefault();
+                    if (window.innerWidth <= 768) return; 
+                    
+                    const containerRect = contentPanes.getBoundingClientRect();
+                    const newLeftWidth = e.clientX - containerRect.left;
+                    if (newLeftWidth > 200 && newLeftWidth < containerRect.width - 200) {
+                        const newLeftPercent = (newLeftWidth / containerRect.width) * 100;
+                        contentPanes.style.gridTemplateColumns = `${newLeftPercent}% 5px 1fr`;
+                    }
+                });
+
+                document.addEventListener('mouseup', () => {
+                    if (isDragging) {
+                        isDragging = false;
+                        document.body.style.cursor = 'default';
+                    }
+                });
+            },
+
+            initHighlighter() {
+                document.body.addEventListener('mouseup', (e) => {
+                    const selection = window.getSelection();
+                    const selectedText = selection.toString().trim();
+
+                    if (selectedText.length > 0) {
+                        const range = selection.getRangeAt(0);
+                        if (!this.leftPane.contains(range.commonAncestorContainer) && !this.rightPane.contains(range.commonAncestorContainer)) {
+                           this.highlightTooltip.style.display = 'none';
+                           return;
+                        }
+
+                        this.highlightTooltip.style.left = `${e.pageX - 30}px`;
+                        this.highlightTooltip.style.top = `${e.pageY - 40}px`;
+                        this.highlightTooltip.style.display = 'block';
+
+                        this.highlightTooltip.onclick = () => {
+                            const container = range.commonAncestorContainer;
+                            if (container.nodeType === 3) { 
+                                if (range.startContainer.parentElement !== range.endContainer.parentElement) {
+                                    this.highlightTooltip.style.display = 'none';
+                                    this.showAlert("Highlight Error", "Please select text within a single paragraph to highlight.", "warning");
+                                    selection.removeAllRanges();
+                                    return;
+                                }
+                            }
+                            
+                            const mark = document.createElement('mark');
+                            try {
+                                range.surroundContents(mark);
+                            } catch (ex) {
+                                this.showAlert("Highlight Error", "Please select plain text to highlight. Highlighting across different formatting is restricted.", "warning");
+                            } 
+                            finally {
+                                selection.removeAllRanges();
+                                this.highlightTooltip.style.display = 'none';
+                            }
+                        };
+                    } else {
+                        this.highlightTooltip.style.display = 'none';
+                    }
+                });
+
+                document.body.addEventListener('mousedown', (e) => {
+                   if (e.target !== this.highlightTooltip && window.getSelection().toString().length === 0) {
+                        this.highlightTooltip.style.display = 'none';
+                   }
+                });
+            }
+        };
+
+        app.init();
+    });
+</script>
+
+</body>
+</html>

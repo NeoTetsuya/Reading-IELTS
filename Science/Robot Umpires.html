@@ -1,0 +1,1160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IELTS Academic Simulator - Invasion of the Robot Umpires</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --app-font-size: 17px;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            overscroll-behavior: none;
+            background-color: #f3f4f6;
+        }
+        .ielts-container {
+            display: grid;
+            grid-template-rows: auto 1fr;
+            height: 100vh;
+        }
+        .content-panes {
+            display: grid;
+            grid-template-columns: 1fr 5px 1fr;
+            overflow: hidden;
+        }
+        .pane {
+            overflow-y: auto;
+            padding: 2rem 3rem;
+            font-size: var(--app-font-size);
+            scroll-behavior: smooth;
+        }
+        #left-pane {
+            background-color: #fdfdfd;
+        }
+        #right-pane {
+            background-color: #f8fafc;
+        }
+        .splitter {
+            background-color: #cbd5e1;
+            cursor: col-resize;
+            z-index: 10;
+            transition: background-color 0.2s;
+        }
+        .splitter:hover, .splitter:active {
+            background-color: #94a3b8;
+        }
+        
+        /* Typography Improvements */
+        .reading-passage {
+            font-family: 'Merriweather', serif;
+            line-height: 1.9;
+            color: #334155;
+            text-align: justify;
+            margin-bottom: 2rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .reading-passage p {
+            margin-bottom: 1.5rem;
+            text-indent: 1.5rem; 
+        }
+        .reading-passage h3 {
+            font-family: 'Inter', sans-serif;
+            color: #0f172a;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+            font-size: 1.5em;
+            text-align: center;
+            text-indent: 0;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .reading-passage h4 {
+            font-family: 'Inter', sans-serif;
+            color: #475569;
+            margin-bottom: 2rem;
+            font-weight: 500;
+            font-size: 1.1em;
+            text-align: center;
+            text-indent: 0;
+        }
+
+        /* Question Styles */
+        .q-item {
+            padding: 1rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s;
+            background-color: white;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 0.75rem;
+        }
+        
+        .text-input {
+            border: 2px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 4px 8px;
+            font-weight: 600;
+            color: #1e293b;
+            transition: all 0.2s;
+            text-align: center;
+            background-color: #f8fafc;
+        }
+        .text-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            background-color: #ffffff;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+
+        /* Custom Radio Button Styles */
+        .custom-radio-label {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            background-color: white;
+            flex: 1;
+            justify-content: center;
+            text-align: center;
+        }
+        .custom-radio-label.mcq-label {
+            justify-content: flex-start;
+            text-align: left;
+            flex: none;
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+        .custom-radio-label:hover {
+            background-color: #f8fafc;
+            border-color: #cbd5e1;
+        }
+        .custom-radio-label input:checked + span {
+            color: #1e40af;
+            font-weight: 700;
+        }
+
+        /* Custom Dropdown Styles */
+        select.text-input {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 0.25rem center;
+            background-size: 1em;
+            padding-right: 1.25rem;
+            padding-left: 0.5rem;
+            cursor: pointer;
+        }
+
+        select.text-input-short {
+            width: 4.5rem; 
+        }
+
+        /* Answer Feedback Animations & Styles */
+        .correct-answer {
+            border-color: #22c55e !important;
+            background-color: #f0fdf4 !important;
+            color: #166534 !important;
+        }
+        label.correct-answer {
+            box-shadow: 0 0 0 1px #22c55e;
+            color: #166534 !important;
+        }
+        label.correct-answer span { color: #166534 !important; }
+        
+        .incorrect-answer {
+            border-color: #ef4444 !important;
+            background-color: #fef2f2 !important;
+            color: #991b1b !important;
+        }
+        label.incorrect-answer {
+            box-shadow: 0 0 0 1px #ef4444;
+            color: #991b1b !important;
+        }
+        label.incorrect-answer span { color: #991b1b !important; }
+
+        .explanation-box {
+            animation: fadeIn 0.4s ease-out forwards;
+            margin-top: 0.75rem;
+            padding: 1rem;
+            background-color: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            border-radius: 0.5rem;
+            font-size: 0.95rem;
+            color: #1e3a8a;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            text-align: left;
+        }
+        .explanation-box .correct-badge {
+            display: inline-block;
+            background: #22c55e;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.85em;
+            margin-bottom: 0.5rem;
+            letter-spacing: 0.05em;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Vocabulary Styles */
+        .vocab-word {
+            color: #2563eb;
+            font-weight: 600;
+            cursor: pointer;
+            border-bottom: 2px dotted #93c5fd;
+            transition: all 0.2s ease-in-out;
+            padding: 0 2px;
+        }
+        .vocab-word:hover {
+            background-color: #dbeafe;
+            border-bottom-style: solid;
+            border-radius: 2px;
+        }
+
+        /* UI Elements */
+        .highlight-tooltip {
+            position: absolute;
+            background-color: #1e293b;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            z-index: 100;
+            cursor: pointer;
+            display: none;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        mark {
+            background-color: #fef08a;
+            border-radius: 3px;
+            padding: 2px 0;
+            cursor: pointer;
+            transition: background-color 0.2s, color 0.2s;
+            position: relative;
+        }
+        mark:hover {
+            background-color: #fca5a5;
+            color: #7f1d1d;
+        }
+        mark:hover::after {
+            content: ' ×';
+            font-weight: bold;
+            font-size: 0.8em;
+            opacity: 0.7;
+        }
+        
+        /* Responsive Design Overrides */
+        @media (max-width: 768px) {
+            .content-panes {
+                display: flex;
+                flex-direction: column;
+                overflow-y: auto;
+            }
+            .splitter {
+                display: none;
+            }
+            .pane {
+                padding: 1.25rem 1rem;
+                overflow-y: visible;
+                height: auto;
+            }
+            #left-pane {
+                border-bottom: 2px dashed #cbd5e1;
+                padding-bottom: 2rem;
+            }
+            .text-input {
+                max-width: 140px;
+                padding: 2px 6px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div id="test-container" class="ielts-container">
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 flex justify-between items-center z-20 shadow-sm flex-wrap gap-3">
+        <div class="flex items-center gap-2 sm:space-x-3">
+            <div class="bg-blue-600 text-white p-1.5 sm:p-2 rounded-lg shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+            </div>
+            <h1 class="text-xl font-bold text-gray-800 hidden sm:block">IELTS Simulator <span class="text-blue-600 font-medium">| Robot Umpires</span></h1>
+            <h1 class="text-base font-bold text-gray-800 sm:hidden">IELTS <span class="text-blue-600">Robot Umpires</span></h1>
+        </div>
+        
+        <!-- Timer & Progress -->
+        <div class="flex items-center space-x-4">
+            <div class="hidden sm:flex flex-col items-end">
+                <span class="text-xs text-gray-500 font-bold uppercase tracking-wide">Progress</span>
+                <span id="progress-text" class="text-sm font-semibold text-blue-600">0 / 14 Answered</span>
+            </div>
+            <div class="flex items-center bg-gray-100 rounded-lg px-3 py-1.5 border border-gray-200">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span id="timer" class="font-mono font-bold text-gray-700 text-lg">20:00</span>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2 sm:space-x-3">
+            <button id="clear-highlights-btn" class="hidden sm:flex items-center justify-center px-3 py-1.5 rounded bg-amber-50 hover:bg-amber-100 text-amber-700 transition-colors focus:outline-none border border-amber-200 text-sm font-medium" title="Clear Highlights">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                Clear
+            </button>
+            <div class="flex items-center space-x-1 sm:space-x-2 bg-gray-50 p-1 rounded-lg border border-gray-200">
+                <button id="decrease-font-btn" class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded bg-white shadow-sm hover:bg-gray-100 text-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-400 font-bold text-sm sm:text-base" title="Decrease Font Size">A-</button>
+                <button id="increase-font-btn" class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded bg-white shadow-sm hover:bg-gray-100 text-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-400 font-bold text-sm sm:text-base" title="Increase Font Size">A+</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main id="content-panes" class="content-panes">
+        <!-- Left Pane: Passages -->
+        <div id="left-pane" class="pane relative">
+            <div class="reading-passage">
+                <h3>Invasion of the Robot Umpires</h3>
+                
+                <p>A few years ago, Fred DeJesus from Brooklyn, New York became the first umpire in a minor league baseball game to use something called the Automated Ball-Strike System (ABS), often referred to as the ‘robo-umpire’. Instead of making any judgments himself about a strike*, DeJesus had decisions fed to him through an earpiece, connected to a modified missile-tracking system. The <span class="vocab-word" data-word="contraption">contraption</span> looked like a large black pizza box with one glowing green eye; it was mounted above the press stand.</p>
+
+                <p>Major League Baseball (MLB), who had commissioned the system, wanted human umpires to announce the calls, just as they would have done in the past. When the first pitch came in, a recorded voice told DeJesus it was a strike. Previously, calling a strike was a judgment call on the part of the umpire. Even if the batter does not hit the ball, a pitch that passes through the ‘strike zone’ (an imaginary zone about seventeen inches wide, stretching from the batter’s knees to the middle of his chest) is considered a strike. During that first game, when DeJesus announced calls, there was no <span class="vocab-word" data-word="heckling">heckling</span> and no shouted disagreement. Nobody said a word.</p>
+
+                <p>For a hundred and fifty years or so, the strike zone has been the game’s animating force-countless arguments between a team’s manager and the umpire have taken place over its boundaries and whether a ball had crossed through it. The rules of play have evolved in various stages. Today, everyone knows that you may scream your disagreement in an umpire’s face, but you must never shout personal abuse at them or touch them. That’s a no-no. When the robo-umpires came, however, the arguments stopped.</p>
+
+                <p>During the first robo-umpire season, players complained about some strange calls. In response, MLB decided to tweak the dimensions of the zone, and the following year the <span class="vocab-word" data-word="consensus">consensus</span> was that ABS is profoundly consistent. MLB says the device is near-perfect, precise to within fractions of an inch. “It’ll reduce controversy in the game, and be good for the game,” says Rob Manfred, who is Commissioner for MLB. But the question is whether controversy is worth reducing, or whether it is the sign of a human hand.</p>
+
+                <p>A human, at least, yells back. When I spoke with Frank Viola, a coach for a North Carolina team, he said that ABS works as designed, but that it was also unforgiving and <span class="vocab-word" data-word="pedantic">pedantic</span>, almost legalistic. “Manfred is a lawyer,” Viola noted. Some pitchers have complained that, compared with a human’s, the robot’s strike zone seems too precise. Viola was once a major-league player himself. When he was pitching, he explained, umpires rewarded skill. “Throw it where you aimed, and it would be a strike, even if it was an inch or two outside. There was a dialogue between pitcher and umpire.”</p>
+
+                <p>The executive tasked with running the experiment for MLB is Morgan Sword, who’s in charge of baseball operations. According to Sword, ABS was part of a larger project to make baseball more exciting since executives are terrified of losing younger fans, as has been the case with horse racing and boxing. He explains how they began the process by asking fans what version of baseball they found most exciting. The results showed that everyone wanted more action: more hits, more defense, more baserunning. This type of baseball essentially hasn’t existed since the 1960s, when the hundred-mile-an-hour fastball, which is difficult to hit and control, entered the game. It flattened the game into strikeouts, walks, and home runs a type of play lacking much action.</p>
+
+                <p>Sword’s team brainstormed potential fixes. Any rule that existed, they talked about changing-from changing the bats to changing the geometry of the field. But while all of these were ruled out as potential fixes, ABS was seen as a perfect vehicle for change. According to Sword, once you get the technology right, you can load any strike zone you want into the system. “It might be a triangle, or a blob, or something shaped like Texas. Over time, as baseball evolves, ABS can allow the zone to change with it.”</p>
+
+                <p>“In the past twenty years, sports have moved away from judgment calls. Soccer has Video Assistant Referees (for offside decisions, for example). Tennis has Hawk-Eye (for line calls, for example). For almost a decade, baseball has used instant replay on the base paths. This is widely liked, even if the precision can sometimes cause problems. But these applications deal with something physical: bases, lines, goals. The boundaries of action are precise, <span class="vocab-word" data-word="delineated">delineated</span> like the keys of a piano. This is not the case with ABS and the strike zone. Historically, a certain <span class="vocab-word" data-word="discretion">discretion</span> has been appreciated.”</p>
+
+                <p>I decided to email Alva Noë, a professor at Berkeley University and a baseball fan, for his opinion. “Hardly a day goes by that I don’t wake up and run through the reasons that this [robo-umpires] is such a terrible idea,” he replied. He later told me, “This is part of a movement to use algorithms to take the hard choices of living out of life.” Perhaps he’s right. We watch baseball to kill time, not to maximize it. Some players I have met take a <span class="vocab-word" data-word="dissenting">dissenting</span> stance toward the robots too, believing that accuracy is not the answer. According to Joe Russo, who plays for a New Jersey team, “With technology, people just want everything to be perfect. That’s not reality. I think perfect would be weird. Your teams are always winning, work is always just great, there’s always money in your pocket, your car never breaks down. What is there to talk about?”</p>
+                
+                <p class="text-sm text-gray-500 italic mt-6 border-t border-gray-200 pt-2">*strike: a strike is when the batter swings at a ball and misses or when the batter does not swing at a ball that passes through the strike zone.</p>
+            </div>
+        </div>
+
+        <!-- Splitter -->
+        <div id="splitter" class="splitter relative flex items-center justify-center group">
+            <div class="w-1 h-8 bg-gray-400 rounded-full opacity-50 group-hover:bg-gray-600 transition-colors"></div>
+        </div>
+
+        <!-- Right Pane: Questions -->
+        <div id="right-pane" class="pane">
+            <div id="questions-section" class="max-w-3xl mx-auto space-y-8 pb-10">
+                
+                <!-- YES / NO / NOT GIVEN -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-blue-100 text-blue-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 27-32</span>
+                        <h4 class="font-bold text-gray-800">YES / NO / NOT GIVEN</h4>
+                    </div>
+                    <p class="mb-5 text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100 text-sm">
+                        Do the following statements agree with the claims of the writer in Reading Passage 3?<br><br>
+                        Select the correct option below:<br>
+                        <strong class="text-blue-700">YES</strong> if the statement agrees with the claims of the writer<br>
+                        <strong class="text-blue-700">NO</strong> if the statement contradicts the claims of the writer<br>
+                        <strong class="text-blue-700">NOT GIVEN</strong> if it is impossible to say what the writer thinks about this
+                    </p>
+                    
+                    <div class="space-y-6">
+                        <div class="q-item border border-gray-100 p-4" id="container-q27">
+                            <p class="mb-3 text-gray-800 font-medium leading-snug"><span class="font-bold text-blue-600 mr-2">27</span> When DeJesus first used ABS, he shared decision-making about strikes with it.</p>
+                            <div class="flex flex-wrap gap-3">
+                                <label class="custom-radio-label"><input type="radio" name="q27" value="yes" class="mr-2 hidden"><span class="font-semibold text-gray-600">Yes</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q27" value="no" class="mr-2 hidden"><span class="font-semibold text-gray-600">No</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q27" value="not given" class="mr-2 hidden"><span class="font-semibold text-gray-600">Not Given</span></label>
+                            </div>
+                        </div>
+
+                        <div class="q-item border border-gray-100 p-4" id="container-q28">
+                            <p class="mb-3 text-gray-800 font-medium leading-snug"><span class="font-bold text-blue-600 mr-2">28</span> MLB considered it necessary to amend the size of the strike zone when criticisms were received from players.</p>
+                            <div class="flex flex-wrap gap-3">
+                                <label class="custom-radio-label"><input type="radio" name="q28" value="yes" class="mr-2 hidden"><span class="font-semibold text-gray-600">Yes</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q28" value="no" class="mr-2 hidden"><span class="font-semibold text-gray-600">No</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q28" value="not given" class="mr-2 hidden"><span class="font-semibold text-gray-600">Not Given</span></label>
+                            </div>
+                        </div>
+
+                        <div class="q-item border border-gray-100 p-4" id="container-q29">
+                            <p class="mb-3 text-gray-800 font-medium leading-snug"><span class="font-bold text-blue-600 mr-2">29</span> MLB is keen to justify the money spent on improving the accuracy of ABS’s calculations.</p>
+                            <div class="flex flex-wrap gap-3">
+                                <label class="custom-radio-label"><input type="radio" name="q29" value="yes" class="mr-2 hidden"><span class="font-semibold text-gray-600">Yes</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q29" value="no" class="mr-2 hidden"><span class="font-semibold text-gray-600">No</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q29" value="not given" class="mr-2 hidden"><span class="font-semibold text-gray-600">Not Given</span></label>
+                            </div>
+                        </div>
+
+                        <div class="q-item border border-gray-100 p-4" id="container-q30">
+                            <p class="mb-3 text-gray-800 font-medium leading-snug"><span class="font-bold text-blue-600 mr-2">30</span> The hundred-mile-an-hour fastball led to a more exciting style of play.</p>
+                            <div class="flex flex-wrap gap-3">
+                                <label class="custom-radio-label"><input type="radio" name="q30" value="yes" class="mr-2 hidden"><span class="font-semibold text-gray-600">Yes</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q30" value="no" class="mr-2 hidden"><span class="font-semibold text-gray-600">No</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q30" value="not given" class="mr-2 hidden"><span class="font-semibold text-gray-600">Not Given</span></label>
+                            </div>
+                        </div>
+                        
+                        <div class="q-item border border-gray-100 p-4" id="container-q31">
+                            <p class="mb-3 text-gray-800 font-medium leading-snug"><span class="font-bold text-blue-600 mr-2">31</span> The differing proposals for alterations to the baseball bat led to fierce debate on Sword’s team.</p>
+                            <div class="flex flex-wrap gap-3">
+                                <label class="custom-radio-label"><input type="radio" name="q31" value="yes" class="mr-2 hidden"><span class="font-semibold text-gray-600">Yes</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q31" value="no" class="mr-2 hidden"><span class="font-semibold text-gray-600">No</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q31" value="not given" class="mr-2 hidden"><span class="font-semibold text-gray-600">Not Given</span></label>
+                            </div>
+                        </div>
+
+                        <div class="q-item border border-gray-100 p-4" id="container-q32">
+                            <p class="mb-3 text-gray-800 font-medium leading-snug"><span class="font-bold text-blue-600 mr-2">32</span> ABS makes changes to the shape of the strike zone feasible.</p>
+                            <div class="flex flex-wrap gap-3">
+                                <label class="custom-radio-label"><input type="radio" name="q32" value="yes" class="mr-2 hidden"><span class="font-semibold text-gray-600">Yes</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q32" value="no" class="mr-2 hidden"><span class="font-semibold text-gray-600">No</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q32" value="not given" class="mr-2 hidden"><span class="font-semibold text-gray-600">Not Given</span></label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="27-32">Check Answers</button>
+                    </div>
+                </div>
+
+                <!-- Summary Completion with List -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-blue-100 text-blue-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 33-37</span>
+                        <h4 class="font-bold text-gray-800">Summary Completion</h4>
+                    </div>
+                    <p class="mb-5 text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100 text-sm">
+                        Complete the summary using the list of phrases, <strong>A-H</strong>, below.<br>
+                        Choose the correct letter, <strong>A-H</strong>, for each answer.
+                    </p>
+
+                    <div class="mb-6 p-5 border border-blue-200 bg-blue-50/50 rounded-xl w-full mx-auto shadow-sm grid grid-cols-2 gap-y-3 gap-x-4">
+                        <div class="text-gray-800 text-sm"><strong class="text-blue-700 mr-2">A</strong> pitch boundary</div>
+                        <div class="text-gray-800 text-sm"><strong class="text-blue-700 mr-2">B</strong> numerous disputes</div>
+                        <div class="text-gray-800 text-sm"><strong class="text-blue-700 mr-2">C</strong> team tactics</div>
+                        <div class="text-gray-800 text-sm"><strong class="text-blue-700 mr-2">D</strong> subjective assessment</div>
+                        <div class="text-gray-800 text-sm"><strong class="text-blue-700 mr-2">E</strong> widespread approval</div>
+                        <div class="text-gray-800 text-sm"><strong class="text-blue-700 mr-2">F</strong> former roles</div>
+                        <div class="text-gray-800 text-sm"><strong class="text-blue-700 mr-2">G</strong> total silence</div>
+                        <div class="text-gray-800 text-sm"><strong class="text-blue-700 mr-2">H</strong> perceived area</div>
+                    </div>
+                    
+                    <div class="leading-loose text-gray-800 text-[0.95em] bg-gray-50 p-6 rounded-lg border border-gray-100">
+                        <h5 class="font-bold text-lg text-center mb-4 text-gray-900 uppercase tracking-wide">Calls by the umpire</h5>
+                        
+                        <p class="mb-4" id="container-q33" style="display:inline;">
+                            Even after ABS was developed, MLB still wanted human umpires to shout out decisions as they had in their 
+                            <span class="inline-block mx-1"><strong class="text-blue-600 mx-1">33</strong>
+                                <select name="q33" class="text-input text-input-short">
+                                    <option value=""></option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option><option value="E">E</option><option value="F">F</option><option value="G">G</option><option value="H">H</option>
+                                </select>
+                            </span>. 
+                        </p>
+                        <p class="mb-4" id="container-q34" style="display:inline;">
+                            The umpire’s job had, at one time, required a 
+                            <span class="inline-block mx-1"><strong class="text-blue-600 mx-1">34</strong>
+                                <select name="q34" class="text-input text-input-short">
+                                    <option value=""></option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option><option value="E">E</option><option value="F">F</option><option value="G">G</option><option value="H">H</option>
+                                </select>
+                            </span> 
+                            about whether a ball was a strike. 
+                        </p>
+                        <p class="mb-4" id="container-q35" style="display:inline;">
+                            A ball is considered a strike when the batter does not hit it and it crosses through a 
+                            <span class="inline-block mx-1"><strong class="text-blue-600 mx-1">35</strong>
+                                <select name="q35" class="text-input text-input-short">
+                                    <option value=""></option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option><option value="E">E</option><option value="F">F</option><option value="G">G</option><option value="H">H</option>
+                                </select>
+                            </span> 
+                            extending approximately from the batter’s knee to his chest.
+                        </p>
+                        <p class="mt-4 mb-4" id="container-q36" style="display:inline;">
+                            In the past, 
+                            <span class="inline-block mx-1"><strong class="text-blue-600 mx-1">36</strong>
+                                <select name="q36" class="text-input text-input-short">
+                                    <option value=""></option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option><option value="E">E</option><option value="F">F</option><option value="G">G</option><option value="H">H</option>
+                                </select>
+                            </span> 
+                            over strike calls were not uncommon, but today everyone accepts the complete ban on pushing or shoving the umpire. 
+                        </p>
+                        <p class="mb-4" id="container-q37" style="display:inline;">
+                            One difference, however, is that during the first game DeJesus used ABS, strike calls were met with 
+                            <span class="inline-block mx-1"><strong class="text-blue-600 mx-1">37</strong>
+                                <select name="q37" class="text-input text-input-short">
+                                    <option value=""></option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option><option value="E">E</option><option value="F">F</option><option value="G">G</option><option value="H">H</option>
+                                </select>
+                            </span>.
+                        </p>
+                    </div>
+                    <div class="mt-6 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="33-37">Check Answers</button>
+                    </div>
+                </div>
+
+                <!-- Multiple Choice -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-blue-100 text-blue-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 38-40</span>
+                        <h4 class="font-bold text-gray-800">Multiple Choice</h4>
+                    </div>
+                    <p class="mb-5 text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100 text-sm">
+                        Choose the correct letter, <strong>A, B, C,</strong> or <strong>D</strong>.
+                    </p>
+                    
+                    <div class="space-y-6">
+                        <div class="q-item border border-gray-100 p-4" id="container-q38">
+                            <p class="mb-3 text-gray-800 font-medium leading-snug"><span class="font-bold text-blue-600 mr-2">38</span> What does the writer suggest about ABS in the fifth paragraph?</p>
+                            <div class="flex flex-col gap-2">
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q38" value="a" class="mr-3 hidden"><span class="text-gray-700"><strong class="mr-2">A</strong> It is bound to make key decisions that are wrong.</span></label>
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q38" value="b" class="mr-3 hidden"><span class="text-gray-700"><strong class="mr-2">B</strong> It may reduce some of the appeal of the game.</span></label>
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q38" value="c" class="mr-3 hidden"><span class="text-gray-700"><strong class="mr-2">C</strong> It will lead to the disappearance of human umpires.</span></label>
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q38" value="d" class="mr-3 hidden"><span class="text-gray-700"><strong class="mr-2">D</strong> It may increase calls for the rules of baseball to be changed.</span></label>
+                            </div>
+                        </div>
+
+                        <div class="q-item border border-gray-100 p-4" id="container-q39">
+                            <p class="mb-3 text-gray-800 font-medium leading-snug"><span class="font-bold text-blue-600 mr-2">39</span> Morgan Sword says that the introduction of ABS</p>
+                            <div class="flex flex-col gap-2">
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q39" value="a" class="mr-3 hidden"><span class="text-gray-700"><strong class="mr-2">A</strong> was regarded as an experiment without a guaranteed outcome.</span></label>
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q39" value="b" class="mr-3 hidden"><span class="text-gray-700"><strong class="mr-2">B</strong> was intended to keep up with developments in other sports.</span></label>
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q39" value="c" class="mr-3 hidden"><span class="text-gray-700"><strong class="mr-2">C</strong> was a response to changing attitudes about the role of sport.</span></label>
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q39" value="d" class="mr-3 hidden"><span class="text-gray-700"><strong class="mr-2">D</strong> was an attempt to ensure baseball retained a young audience.</span></label>
+                            </div>
+                        </div>
+
+                        <div class="q-item border border-gray-100 p-4" id="container-q40">
+                            <p class="mb-3 text-gray-800 font-medium leading-snug"><span class="font-bold text-blue-600 mr-2">40</span> Why does the writer include the views of Noe and Russo?</p>
+                            <div class="flex flex-col gap-2">
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q40" value="a" class="mr-3 hidden"><span class="text-gray-700"><strong class="mr-2">A</strong> to show that attitudes to technology vary widely</span></label>
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q40" value="b" class="mr-3 hidden"><span class="text-gray-700"><strong class="mr-2">B</strong> to argue that people have unrealistic expectations of sport</span></label>
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q40" value="c" class="mr-3 hidden"><span class="text-gray-700"><strong class="mr-2">C</strong> to indicate that accuracy is not the same thing as enjoyment</span></label>
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q40" value="d" class="mr-3 hidden"><span class="text-gray-700"><strong class="mr-2">D</strong> to suggest that the number of baseball fans needs to increase</span></label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="38-40">Check Answers</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Highlight Tooltip -->
+<div id="highlight-tooltip" class="highlight-tooltip">Highlight Text</div>
+
+<!-- Vocabulary Modal -->
+<div id="vocab-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50 transition-opacity">
+    <div class="bg-white rounded-2xl shadow-2xl p-5 sm:p-8 w-full max-w-md relative transform transition-all scale-95 opacity-0" id="vocab-modal-content">
+        <button id="close-vocab-modal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-full w-8 h-8 flex items-center justify-center transition-colors">&times;</button>
+        <div class="flex items-center mb-6 border-b pb-4 mt-2">
+            <h3 id="vocab-word" class="text-2xl sm:text-3xl font-extrabold text-gray-900 capitalize tracking-tight"></h3>
+        </div>
+        <div class="flex items-center mb-5">
+            <button id="play-audio-btn" class="flex items-center justify-center h-10 w-10 sm:h-12 sm:w-12 shrink-0 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white mr-4 transition-all shadow-sm border border-blue-100" title="Listen to pronunciation">
+                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>
+            </button>
+            <p id="vocab-pronunciation-text" class="text-gray-500 font-mono text-base sm:text-lg bg-gray-50 px-3 py-1 rounded-md border border-gray-100"></p>
+        </div>
+        <p id="vocab-meaning" class="text-gray-700 text-base sm:text-lg leading-relaxed"></p>
+    </div>
+</div>
+
+<!-- Alert Modal -->
+<div id="alert-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-[80] transition-opacity">
+    <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm relative transform transition-all scale-95 opacity-0 text-center" id="alert-modal-content">
+        <div id="alert-icon-container" class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+            <svg id="alert-icon" class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+        </div>
+        <h3 id="alert-title" class="text-lg leading-6 font-medium text-gray-900 mb-2">Notice</h3>
+        <p id="alert-message" class="text-sm text-gray-500 mb-6">Message goes here.</p>
+        <button id="close-alert-btn" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm transition-colors">
+            Got it
+        </button>
+    </div>
+</div>
+
+<script>
+    // --- DATA ---
+    const vocabulary = {
+        'contraption': { meaning: 'A machine or device that appears strange or unnecessarily complicated, and often badly made or unsafe.', phonetic: '/kənˈtræp.ʃən/' },
+        'heckling': { meaning: 'Interrupting a public speaker or performer with derisive or aggressive comments or abuse.', phonetic: '/ˈhek.lɪŋ/' },
+        'consensus': { meaning: 'A general agreement.', phonetic: '/kənˈsen.səs/' },
+        'pedantic': { meaning: 'Excessively concerned with minor details or rules; overscrupulous.', phonetic: '/pɪˈdæn.tɪk/' },
+        'delineated': { meaning: 'Described or portrayed (something) precisely.', phonetic: '/dɪˈlɪn.i.eɪtɪd/' },
+        'discretion': { meaning: 'The freedom to decide what should be done in a particular situation.', phonetic: '/dɪˈskreʃ.ən/' },
+        'dissenting': { meaning: 'Holding or expressing opinions that are at odds with those previously or commonly held.', phonetic: '/dɪˈsen.tɪŋ/' }
+    };
+
+    const answers = {
+        q27: "no",
+        q28: "yes",
+        q29: "not given",
+        q30: "no",
+        q31: "not given",
+        q32: "yes",
+        q33: "f",
+        q34: "d",
+        q35: "h",
+        q36: "b",
+        q37: "g",
+        q38: "b",
+        q39: "d",
+        q40: "c"
+    };
+
+    const explanations = {
+        q27: "Bài đọc nói “Thay vì tự đưa ra bất kỳ phán đoán nào…” (Instead of making any judgments himself…), DeJesus nhận quyết định từ hệ thống. Điều này có nghĩa là anh ấy chỉ thực hiện theo quyết định của hệ thống, TRÁI NGƯỢC với thông tin trong câu là DeJesus cùng chia sẻ việc ra quyết định với hệ thống ABS.",
+        q28: "Sau khi nhận được những phàn nàn của các cầu thủ về những quyết định lạ (“players complained about some strange calls”), MLB đã quyết định điều chỉnh lại kích thước của vùng strike (“MLB decided to tweak the dimensions of the zone”). Điều này XÁC NHẬN rằng MLB thấy việc điều chỉnh là cần thiết sau khi nhận được phàn nàn.",
+        q29: "Đoạn văn nói rằng MLB cho biết thiết bị gần như hoàn hảo và chính xác, nhưng không có thông tin nào cho thấy họ cố gắng biện minh (“justify”) cho số tiền đã chi tiêu để cải thiện độ chính xác đó.",
+        q30: "Bài đọc nói rằng những cú ném bóng nhanh đã “làm trận đấu trở nên đơn điệu” (flattened the game) và “thiếu nhiều hành động” (lacking much action). Thông tin này TRÁI NGƯỢC với nội dung của câu hỏi là nó dẫn đến một lối chơi hấp dẫn hơn.",
+        q31: "Bài đọc có nói rằng đội của Sword đã bàn về việc thay đổi nhiều thứ, bao gồm cả gậy bóng chày. Tuy nhiên, không có thông tin nào đề cập đến việc đã có một cuộc “tranh cãi nảy lửa” (fierce debate) về các đề xuất này.",
+        q32: "Theo Sword, ABS cho phép tải bất kỳ hình dạng vùng strike nào vào hệ thống và có thể thay đổi theo thời gian. Điều này TRÙNG KHỚP với thông tin trong câu – ABS làm cho các thay đổi về hình dạng của vùng strike trở nên khả thi (feasible).",
+        q33: "MLB vẫn muốn trọng tài con người công bố các quyết định như họ đã làm trong quá khứ (“as they would have done in the past”). Cụm từ này tương đương với vai trò cũ của họ (“their former roles”). => F – former roles",
+        q34: "Trước đây, việc đưa ra quyết định là một “judgment call”, tức là dựa vào sự phán đoán của trọng tài. Điều này tương đương với “subjective assessment” (sự đánh giá chủ quan). => D – subjective assessment",
+        q35: "Một cú đánh được coi là “strike” khi nó đi qua một “imaginary zone” (khu vực tưởng tượng). Cụm từ này tương đương với “perceived area” (khu vực được cảm nhận/tưởng tượng ra). => H – perceived area",
+        q36: "Trong quá khứ, đã có vô số cuộc tranh cãi (“countless arguments”) giữa người quản lý và trọng tài. Cụm từ này tương đương với “numerous disputes” (nhiều cuộc tranh chấp). => B – numerous disputes",
+        q37: "Trong trận đấu đầu tiên, khi DeJesus đưa ra quyết định, không có ai nói gì cả (“Nobody said a word”). Điều này tương đương với sự im lặng hoàn toàn (“total silence”) => G - total silence",
+        q38: "Việc ABS quá chính xác, “không khoan nhượng và câu nệ” (“unforgiving and pedantic”) đã loại bỏ “cuộc đối thoại” (“dialogue”) giữa cầu thủ và trọng tài. Điều này ngụ ý rằng sự chính xác tuyệt đối này làm mất đi yếu tố con người, một phần hấp dẫn của trò chơi.",
+        q39: "Morgan Sword nói rằng ABS là một phần của dự án lớn hơn nhằm làm cho bóng chày hấp dẫn hơn vì các giám đốc điều hành lo sợ mất đi những người hâm mộ trẻ tuổi (“losing younger fans”). Do đó, đây là một nỗ lực nhằm giữ chân khán giả trẻ.",
+        q40: "Cả Noë và Russo đều cho rằng sự hoàn hảo do công nghệ mang lại không phải là điều cốt lõi. Noë nói “accuracy is not the answer” (sự chính xác không phải là câu trả lời), và Russo cho rằng sự hoàn hảo sẽ rất kỳ lạ và không còn gì để bàn luận. Điều này cho thấy sự chính xác không đồng nghĩa với sự thú vị hay niềm vui trong trải nghiệm."
+    };
+
+    // --- APPLICATION LOGIC ---
+    document.addEventListener('DOMContentLoaded', () => {
+        const app = {
+            userAnswers: {},
+            answersChecked: {},
+            currentFontSize: 17,
+            totalQuestions: Object.keys(answers).length,
+            timeRemaining: 20 * 60, // 20 minutes
+
+            // Elements
+            leftPane: document.getElementById('left-pane'),
+            rightPane: document.getElementById('right-pane'),
+            splitter: document.getElementById('splitter'),
+            highlightTooltip: document.getElementById('highlight-tooltip'),
+            vocabModal: document.getElementById('vocab-modal'),
+            vocabModalContent: document.getElementById('vocab-modal-content'),
+            closeVocabModalBtn: document.getElementById('close-vocab-modal'),
+            vocabWordEl: document.getElementById('vocab-word'),
+            vocabMeaningEl: document.getElementById('vocab-meaning'),
+            vocabPronunciationText: document.getElementById('vocab-pronunciation-text'),
+            playAudioBtn: document.getElementById('play-audio-btn'),
+            clearHighlightsBtn: document.getElementById('clear-highlights-btn'),
+            progressText: document.getElementById('progress-text'),
+            timerEl: document.getElementById('timer'),
+
+            // Alert Elements
+            alertModal: document.getElementById('alert-modal'),
+            alertModalContent: document.getElementById('alert-modal-content'),
+            closeAlertBtn: document.getElementById('close-alert-btn'),
+            alertTitleEl: document.getElementById('alert-title'),
+            alertMessageEl: document.getElementById('alert-message'),
+            alertIconContainer: document.getElementById('alert-icon-container'),
+
+            init() {
+                this.setupEventListeners();
+                this.initSplitter();
+                this.initHighlighter();
+                this.updateCheckButtonsState();
+                this.startTimer();
+            },
+
+            startTimer() {
+                const interval = setInterval(() => {
+                    if (this.timeRemaining <= 0) {
+                        clearInterval(interval);
+                        this.timerEl.textContent = "00:00";
+                        this.timerEl.classList.add('text-red-600');
+                        this.showAlert("Time's Up!", "Your 20 minutes for this reading passage have expired.", "warning");
+                        return;
+                    }
+                    this.timeRemaining--;
+                    const m = Math.floor(this.timeRemaining / 60).toString().padStart(2, '0');
+                    const s = (this.timeRemaining % 60).toString().padStart(2, '0');
+                    this.timerEl.textContent = `${m}:${s}`;
+                    
+                    if (this.timeRemaining <= 300) { // last 5 minutes
+                        this.timerEl.classList.add('text-red-500');
+                    }
+                }, 1000);
+            },
+
+            setupEventListeners() {
+                document.getElementById('increase-font-btn').addEventListener('click', () => this.changeFontSize(1));
+                document.getElementById('decrease-font-btn').addEventListener('click', () => this.changeFontSize(-1));
+
+                this.clearHighlightsBtn.addEventListener('click', () => {
+                    const marks = this.leftPane.querySelectorAll('mark');
+                    marks.forEach(mark => {
+                        const text = document.createTextNode(mark.textContent);
+                        mark.replaceWith(text);
+                    });
+                });
+
+                this.closeVocabModalBtn.addEventListener('click', () => this.closeModal());
+                this.vocabModal.addEventListener('click', (e) => {
+                   if (e.target === this.vocabModal) this.closeModal();
+                });
+
+                // Keyboard accessibility: Close modals with Escape key & Disable Ctrl+F
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') {
+                        if (!this.vocabModal.classList.contains('hidden')) this.closeModal();
+                        if (!this.alertModal.classList.contains('hidden')) this.closeAlert();
+                    }
+                    
+                    // Disable Ctrl+F / Cmd+F
+                    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
+                        e.preventDefault(); 
+                        this.showAlert("Action Disabled", "The 'Find' function is disabled to simulate real computer-delivered test conditions.", "warning");
+                    }
+
+                    // Disable F5 and Ctrl+R / Cmd+R
+                    if (e.key === 'F5' || ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'r')) {
+                        e.preventDefault();
+                        this.showAlert("Action Disabled", "Refreshing the page is disabled during the test to prevent losing your progress.", "warning");
+                    }
+                });
+
+                // Detect Tab Switching or Window minimizing
+                document.addEventListener('visibilitychange', () => {
+                    if (document.hidden && this.timeRemaining > 0) {
+                        this.showAlert("Warning: Tab Switch Detected", "Please do not switch tabs or leave the test window during the exam. Continued tab switching may result in your test being invalidated.", "warning");
+                    }
+                });
+
+                window.addEventListener('beforeunload', (e) => {
+                    if (this.timeRemaining > 0 && this.timeRemaining < 20 * 60) {
+                        e.preventDefault();
+                        e.returnValue = ''; 
+                    }
+                });
+
+                // Alert Modal Events
+                this.closeAlertBtn.addEventListener('click', () => this.closeAlert());
+                this.alertModal.addEventListener('click', (e) => {
+                   if (e.target === this.alertModal) this.closeAlert();
+                });
+
+                // Track text inputs and dropdowns
+                document.body.addEventListener('input', (e) => {
+                    if ((e.target.tagName === 'INPUT' && e.target.type === 'text') || e.target.tagName === 'SELECT') {
+                        this.userAnswers[e.target.name] = e.target.value;
+                        e.target.classList.remove('correct-answer', 'incorrect-answer');
+                        if (e.target.tagName === 'INPUT') e.target.placeholder = '';
+                        const container = document.getElementById(`container-${e.target.name}`);
+                        if(container) container.classList.remove('bg-red-50', 'bg-green-50');
+                        
+                        this.updateCheckButtonsState();
+                        this.updateProgress();
+                    }
+                });
+
+                // Track Radio button changes
+                document.body.addEventListener('change', (e) => {
+                    if (e.target.tagName === 'INPUT' && e.target.type === 'radio') {
+                        this.userAnswers[e.target.name] = e.target.value;
+                        
+                        const groupRadios = document.querySelectorAll(`input[name="${e.target.name}"]`);
+                        groupRadios.forEach(radio => {
+                            const label = radio.closest('label');
+                            if(label) label.classList.remove('correct-answer', 'incorrect-answer');
+                        });
+                        
+                        this.updateCheckButtonsState();
+                        this.updateProgress();
+                    }
+                });
+
+                // Vocab Words & Removable Highlights Event Delegation
+                this.leftPane.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('vocab-word')) {
+                        const wordKey = e.target.dataset.word;
+                        this.openVocabModal(wordKey);
+                    }
+                    
+                    if (e.target.tagName === 'MARK') {
+                        const textNode = document.createTextNode(e.target.textContent);
+                        e.target.replaceWith(textNode);
+                    }
+                });
+
+                // Check Buttons Event Delegation
+                document.querySelectorAll('.check-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const range = e.target.dataset.range;
+                        this.checkAnswers(range, e.target);
+                    });
+                });
+                
+                // Real Audio Pronunciation Event
+                this.playAudioBtn.addEventListener('click', () => {
+                   const word = this.vocabWordEl.textContent;
+                   if (!word) return;
+                   if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+                   
+                   this.playAudioBtn.classList.remove('text-blue-600', 'bg-blue-50');
+                   this.playAudioBtn.classList.add('bg-green-500', 'text-white');
+                   
+                   if ('speechSynthesis' in window) {
+                       const utterance = new SpeechSynthesisUtterance(word);
+                       utterance.lang = 'en-GB'; 
+                       utterance.rate = 0.9; 
+                       utterance.onend = () => this.resetAudioBtn();
+                       utterance.onerror = () => this.resetAudioBtn();
+                       window.speechSynthesis.speak(utterance);
+                   } else {
+                       this.showAlert("Audio Error", "Sorry, your browser doesn't support text-to-speech audio.", "warning");
+                       setTimeout(() => this.resetAudioBtn(), 500);
+                   }
+                });
+            },
+
+            updateProgress() {
+                let answeredCount = 0;
+                for(let key in answers) {
+                    if(this.userAnswers[key] && this.userAnswers[key].trim() !== '') {
+                        answeredCount++;
+                    }
+                }
+                this.progressText.textContent = `${answeredCount} / ${this.totalQuestions} Answered`;
+            },
+
+            resetAudioBtn() {
+                this.playAudioBtn.classList.add('text-blue-600', 'bg-blue-50');
+                this.playAudioBtn.classList.remove('bg-green-500', 'text-white');
+            },
+            
+            changeFontSize(delta) {
+                this.currentFontSize += delta;
+                if (this.currentFontSize < 14) this.currentFontSize = 14;
+                if (this.currentFontSize > 26) this.currentFontSize = 26;
+                document.documentElement.style.setProperty('--app-font-size', `${this.currentFontSize}px`);
+            },
+
+            openVocabModal(wordKey) {
+                const data = vocabulary[wordKey];
+                if (data) {
+                    this.vocabWordEl.textContent = wordKey;
+                    this.vocabMeaningEl.textContent = data.meaning;
+                    this.vocabPronunciationText.textContent = data.phonetic || '';
+                    this.vocabModal.classList.remove('hidden');
+                    setTimeout(() => {
+                        this.vocabModalContent.classList.remove('scale-95', 'opacity-0');
+                        this.vocabModalContent.classList.add('scale-100', 'opacity-100');
+                    }, 10);
+                }
+            },
+
+            closeModal() {
+                if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+                this.vocabModalContent.classList.remove('scale-100', 'opacity-100');
+                this.vocabModalContent.classList.add('scale-95', 'opacity-0');
+                this.resetAudioBtn();
+                setTimeout(() => this.vocabModal.classList.add('hidden'), 200);
+            },
+
+            showAlert(title, message, type = 'error') {
+                this.alertTitleEl.textContent = title;
+                this.alertMessageEl.textContent = message;
+                
+                if (type === 'warning') {
+                    this.alertIconContainer.className = 'mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 mb-4';
+                    this.alertIconContainer.innerHTML = '<svg class="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>';
+                } else {
+                    this.alertIconContainer.className = 'mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4';
+                    this.alertIconContainer.innerHTML = '<svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>';
+                }
+                
+                this.alertModal.classList.remove('hidden');
+                setTimeout(() => {
+                    this.alertModalContent.classList.remove('scale-95', 'opacity-0');
+                    this.alertModalContent.classList.add('scale-100', 'opacity-100');
+                }, 10);
+            },
+
+            closeAlert() {
+                this.alertModalContent.classList.remove('scale-100', 'opacity-100');
+                this.alertModalContent.classList.add('scale-95', 'opacity-0');
+                setTimeout(() => {
+                    this.alertModal.classList.add('hidden');
+                }, 200);
+            },
+            
+            updateCheckButtonsState() {
+                document.querySelectorAll('.check-btn').forEach(btn => {
+                    const range = btn.dataset.range;
+                    if (this.answersChecked[range]) {
+                        btn.className = 'check-btn bg-gray-800 hover:bg-gray-900 text-white font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-pointer transform hover:-translate-y-0.5 hover:shadow-md active:scale-95';
+                        btn.textContent = 'Reset Answers';
+                        return;
+                    }
+
+                    const [start, end] = range.split('-').map(Number);
+                    let allAnswered = true;
+                    for (let i = start; i <= end; i++) {
+                        const qId = `q${i}`;
+                        const answer = (this.userAnswers[qId] || "").trim();
+                        if (!answer) {
+                            allAnswered = false;
+                            break;
+                        }
+                    }
+
+                    if (allAnswered) {
+                        btn.className = 'check-btn bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-pointer transform hover:-translate-y-0.5 hover:shadow-md active:scale-95';
+                    } else {
+                        btn.className = 'check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80';
+                    }
+                });
+            },
+
+            checkAnswers(range, btn) {
+                if (this.answersChecked[range]) {
+                    // Reset mode
+                    this.answersChecked[range] = false;
+                    
+                    const [start, end] = range.split('-').map(Number);
+                    for (let i = start; i <= end; i++) {
+                        const qId = `q${i}`;
+                        this.userAnswers[qId] = '';
+
+                        // Handle Radios
+                        const radios = document.querySelectorAll(`input[name="${qId}"][type="radio"]`);
+                        if (radios.length > 0) {
+                            radios.forEach(radio => {
+                                radio.checked = false;
+                                const label = radio.closest('label');
+                                if (label) label.classList.remove('correct-answer', 'incorrect-answer');
+                            });
+                        }
+
+                        // Handle Selects and Inputs
+                        const input = document.querySelector(`input[name="${qId}"][type="text"], select[name="${qId}"]`);
+                        if (input) {
+                            input.value = '';
+                            if (input.tagName === 'INPUT') input.placeholder = '';
+                            input.classList.remove('correct-answer', 'incorrect-answer');
+                        }
+
+                        const expl = document.getElementById(`expl-${qId}`);
+                        if (expl) expl.remove();
+                    }
+                    this.updateCheckButtonsState();
+                    this.updateProgress();
+                    return;
+                }
+
+                const [start, end] = range.split('-').map(Number);
+
+                // --- Validation: Ensure all questions are answered ---
+                let allAnswered = true;
+                for (let i = start; i <= end; i++) {
+                    const qId = `q${i}`;
+                    const answer = (this.userAnswers[qId] || "").trim();
+                    if (!answer) {
+                        allAnswered = false;
+                        break;
+                    }
+                }
+
+                if (!allAnswered) {
+                    this.showAlert("Incomplete Answers", "Please fill in or select an answer for all questions in this section before checking.", "warning");
+                    return;
+                }
+                // -----------------------------------------------------
+
+                // Check mode
+                this.answersChecked[range] = true;
+                this.updateCheckButtonsState();
+
+                for (let i = start; i <= end; i++) {
+                    const qId = `q${i}`;
+                    let userAnswer = (this.userAnswers[qId] || "").toLowerCase().trim();
+                    
+                    let correctAnswersList = answers[qId].toLowerCase().split('|');
+                    let isCorrect = correctAnswersList.includes(userAnswer);
+
+                    let correctFeedbackHTML = '';
+
+                    // Check Radios
+                    const radios = document.querySelectorAll(`input[name="${qId}"][type="radio"]`);
+                    if (radios.length > 0) {
+                        radios.forEach(radio => {
+                            const label = radio.closest('label');
+                            if (label) label.classList.remove('correct-answer', 'incorrect-answer');
+                            
+                            if (correctAnswersList.includes(radio.value.toLowerCase())) {
+                                if (label) label.classList.add('correct-answer');
+                            } else if (radio.value.toLowerCase() === userAnswer) {
+                                if (label) label.classList.add('incorrect-answer');
+                            }
+                        });
+                        
+                        if (!isCorrect) {
+                            const correctAnsFormatted = correctAnswersList[0]
+                                .split(' ')
+                                .map(w => w.length === 1 ? w.toUpperCase() : w.charAt(0).toUpperCase() + w.slice(1))
+                                .join(' ');
+                            correctFeedbackHTML = `<span class="correct-badge">Correct Answer: ${correctAnsFormatted}</span><br>`;
+                        }
+                    }
+
+                    // Check Selects and Inputs
+                    const input = document.querySelector(`input[name="${qId}"][type="text"], select[name="${qId}"]`);
+                    if (input) {
+                        input.classList.remove('correct-answer', 'incorrect-answer');
+                        
+                        if (isCorrect) {
+                            input.classList.add('correct-answer');
+                        } else {
+                            input.classList.add('incorrect-answer');
+                            const correctAnsFormatted = correctAnswersList[0]
+                                .split(' ')
+                                .map(w => w.length === 1 ? w.toUpperCase() : w.charAt(0).toUpperCase() + w.slice(1)) 
+                                .join(' ');
+                                
+                            if (input.tagName === 'INPUT') {
+                                input.value = '';
+                                input.placeholder = correctAnsFormatted;
+                            }
+                            
+                            correctFeedbackHTML = `<span class="correct-badge">Correct Answer: ${correctAnsFormatted}</span><br>`;
+                        }
+                    }
+
+                    // Add Explanation Box
+                    if (explanations[qId]) {
+                        const existingExpl = document.getElementById(`expl-${qId}`);
+                        if (!existingExpl) {
+                            const explDiv = document.createElement('div');
+                            explDiv.id = `expl-${qId}`;
+                            explDiv.className = 'explanation-box';
+                            explDiv.innerHTML = `${correctFeedbackHTML}<strong>Explanation:</strong> ${explanations[qId]}`;
+                            
+                            const container = document.getElementById(`container-${qId}`);
+                            if (container) {
+                                if(container.tagName === "SPAN" || container.tagName === "P" && container.style.display === "inline") {
+                                    const wrap = container.closest('div.leading-loose') || container.closest('p.leading-relaxed') || container.parentElement;
+                                    wrap.insertAdjacentElement('afterend', explDiv);
+                                } else {
+                                    container.insertAdjacentElement('afterend', explDiv);
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+
+            initSplitter() {
+                let isDragging = false;
+                const contentPanes = document.getElementById('content-panes');
+
+                this.splitter.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    isDragging = true;
+                    document.body.style.cursor = 'col-resize';
+                });
+
+                document.addEventListener('mousemove', (e) => {
+                    if (!isDragging) return;
+                    e.preventDefault();
+                    if (window.innerWidth <= 768) return; 
+                    
+                    const containerRect = contentPanes.getBoundingClientRect();
+                    const newLeftWidth = e.clientX - containerRect.left;
+                    if (newLeftWidth > 200 && newLeftWidth < containerRect.width - 200) {
+                        const newLeftPercent = (newLeftWidth / containerRect.width) * 100;
+                        contentPanes.style.gridTemplateColumns = `${newLeftPercent}% 5px 1fr`;
+                    }
+                });
+
+                document.addEventListener('mouseup', () => {
+                    if (isDragging) {
+                        isDragging = false;
+                        document.body.style.cursor = 'default';
+                    }
+                });
+            },
+
+            initHighlighter() {
+                document.body.addEventListener('mouseup', (e) => {
+                    const selection = window.getSelection();
+                    const selectedText = selection.toString().trim();
+
+                    if (selectedText.length > 0) {
+                        const range = selection.getRangeAt(0);
+                        if (!this.leftPane.contains(range.commonAncestorContainer) && !this.rightPane.contains(range.commonAncestorContainer)) {
+                           this.highlightTooltip.style.display = 'none';
+                           return;
+                        }
+
+                        this.highlightTooltip.style.left = `${e.pageX - 30}px`;
+                        this.highlightTooltip.style.top = `${e.pageY - 40}px`;
+                        this.highlightTooltip.style.display = 'block';
+
+                        this.highlightTooltip.onclick = () => {
+                            const container = range.commonAncestorContainer;
+                            if (container.nodeType === 3) { 
+                                if (range.startContainer.parentElement !== range.endContainer.parentElement) {
+                                    this.highlightTooltip.style.display = 'none';
+                                    this.showAlert("Highlight Error", "Please select text within a single paragraph to highlight.", "warning");
+                                    selection.removeAllRanges();
+                                    return;
+                                }
+                            }
+                            
+                            const mark = document.createElement('mark');
+                            try {
+                                range.surroundContents(mark);
+                            } catch (ex) {
+                                this.showAlert("Highlight Error", "Please select plain text to highlight. Highlighting across different formatting is restricted.", "warning");
+                            } 
+                            finally {
+                                selection.removeAllRanges();
+                                this.highlightTooltip.style.display = 'none';
+                            }
+                        };
+                    } else {
+                        this.highlightTooltip.style.display = 'none';
+                    }
+                });
+
+                document.body.addEventListener('mousedown', (e) => {
+                   if (e.target !== this.highlightTooltip && window.getSelection().toString().length === 0) {
+                        this.highlightTooltip.style.display = 'none';
+                   }
+                });
+            }
+        };
+
+        app.init();
+    });
+</script>
+
+</body>
+</html>

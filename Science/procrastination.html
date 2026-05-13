@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IELTS Simulator - Procrastination</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --app-font-size: 17px; }
+        body { font-family: 'Inter', sans-serif; overscroll-behavior: none; background-color: #f3f4f6; }
+        .ielts-container { display: grid; grid-template-rows: auto 1fr; height: 100vh; }
+        .content-panes { display: grid; grid-template-columns: 1fr 5px 1fr; overflow: hidden; }
+        .pane { overflow-y: auto; padding: 2rem 3rem; font-size: var(--app-font-size); scroll-behavior: smooth; }
+        #left-pane { background-color: #fdfdfd; }
+        #right-pane { background-color: #f8fafc; }
+        .splitter { background-color: #cbd5e1; cursor: col-resize; z-index: 10; transition: background-color 0.2s; }
+        .splitter:hover, .splitter:active { background-color: #94a3b8; }
+        .reading-passage { font-family: 'Merriweather', serif; line-height: 1.9; color: #334155; text-align: justify; max-width: 800px; margin: 0 auto; }
+        .reading-passage p { margin-bottom: 1.5rem; text-indent: 1.5rem; }
+        .reading-passage h3 { font-family: 'Inter', sans-serif; color: #0f172a; margin-bottom: 0.25rem; font-weight: 700; font-size: 1.5em; text-align: center; text-indent: 0; text-transform: uppercase; letter-spacing: 0.05em; }
+        .reading-passage .subtitle { font-family: 'Inter', sans-serif; color: #64748b; font-size: 0.95em; text-align: center; text-indent: 0; margin-bottom: 1.5rem; font-style: italic; }
+        .reading-passage .para-label { font-family: 'Inter', sans-serif; font-weight: 800; color: #6d28d9; font-size: 0.85em; display: inline-block; margin-right: 0.5rem; background: #ede9fe; padding: 1px 6px; border-radius: 4px; vertical-align: middle; }
+        .q-item { padding: 1rem; border-radius: 0.5rem; transition: all 0.2s; background-color: white; border: 1px solid #e2e8f0; margin-bottom: 0.75rem; }
+        .text-input { border: 2px solid #cbd5e1; border-radius: 6px; padding: 4px 8px; font-weight: 600; color: #1e293b; transition: all 0.2s; text-align: center; background-color: #f8fafc; }
+        .text-input:focus { outline: none; border-color: #7c3aed; background-color: #ffffff; box-shadow: 0 0 0 3px rgba(124,58,237,0.12); }
+        .text-input-word { width: 9rem; text-transform: lowercase; }
+        .select-input { border: 2px solid #cbd5e1; border-radius: 6px; padding: 4px 8px; font-weight: 600; color: #1e293b; transition: all 0.2s; background-color: #f8fafc; cursor: pointer; }
+        .select-input:focus { outline: none; border-color: #7c3aed; background-color: #ffffff; box-shadow: 0 0 0 3px rgba(124,58,237,0.12); }
+        .checkbox-label { display: flex; align-items: center; padding: 0.75rem 1rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s ease-in-out; background-color: white; margin-bottom: 0.4rem; }
+        .checkbox-label:hover { background-color: #faf5ff; border-color: #c4b5fd; }
+        .checkbox-label input { margin-right: 0.75rem; width: 1.1em; height: 1.1em; accent-color: #7c3aed; }
+        .correct-answer { border-color: #22c55e !important; background-color: #f0fdf4 !important; color: #166534 !important; }
+        .incorrect-answer { border-color: #ef4444 !important; background-color: #fef2f2 !important; color: #991b1b !important; }
+        .explanation-box { animation: fadeIn 0.4s ease-out forwards; margin-top: 0.75rem; padding: 1rem; background-color: #faf5ff; border-left: 4px solid #7c3aed; border-radius: 0.5rem; font-size: 0.95rem; color: #4c1d95; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .explanation-box .correct-badge { display: inline-block; background: #22c55e; color: white; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85em; margin-bottom: 0.5rem; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+        .vocab-word { color: #6d28d9; font-weight: 600; cursor: pointer; border-bottom: 2px dotted #c4b5fd; transition: all 0.2s ease-in-out; padding: 0 2px; }
+        .vocab-word:hover { background-color: #ede9fe; border-bottom-style: solid; border-radius: 2px; }
+        .highlight-tooltip { position: absolute; background-color: #1e293b; color: white; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 500; z-index: 100; cursor: pointer; display: none; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        mark { background-color: #fef08a; border-radius: 3px; padding: 2px 0; cursor: pointer; }
+        mark:hover { background-color: #fca5a5; color: #7f1d1d; }
+        mark:hover::after { content: ' x'; font-weight: bold; font-size: 0.8em; opacity: 0.7; }
+        .summary-block { background: #faf5ff; border: 1px solid #ddd6fe; border-radius: 0.75rem; padding: 1.5rem; margin-bottom: 1rem; font-size: 1em; line-height: 2; color: #3b0764; }
+        .summary-block h5 { font-family: 'Inter', sans-serif; font-weight: 700; color: #6d28d9; font-size: 1em; margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        @media (max-width: 768px) {
+            .content-panes { display: flex; flex-direction: column; overflow-y: auto; }
+            .splitter { display: none; }
+            .pane { padding: 1.25rem 1rem; overflow-y: visible; height: auto; }
+            #left-pane { border-bottom: 2px dashed #cbd5e1; padding-bottom: 2rem; }
+            .text-input, .select-input { max-width: 130px; padding: 2px 6px; }
+        }
+    </style>
+</head>
+<body>
+<div id="test-container" class="ielts-container">
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 flex justify-between items-center z-20 shadow-sm flex-wrap gap-3">
+        <div class="flex items-center gap-2 sm:space-x-3">
+            <div class="bg-violet-700 text-white p-1.5 sm:p-2 rounded-lg shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                </svg>
+            </div>
+            <h1 class="text-xl font-bold text-gray-800 hidden sm:block">IELTS Simulator <span class="text-violet-700 font-medium">| Procrastination</span></h1>
+            <h1 class="text-base font-bold text-gray-800 sm:hidden">IELTS <span class="text-violet-700">Procrastination</span></h1>
+        </div>
+        <div class="flex items-center space-x-4">
+            <div class="hidden sm:flex flex-col items-end">
+                <span class="text-xs text-gray-500 font-bold uppercase tracking-wide">Progress</span>
+                <span id="progress-text" class="text-sm font-semibold text-violet-700">0 / 13 Answered</span>
+            </div>
+            <div class="flex items-center bg-gray-100 rounded-lg px-3 py-1.5 border border-gray-200">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span id="timer" class="font-mono font-bold text-gray-700 text-lg">20:00</span>
+            </div>
+        </div>
+        <div class="flex items-center gap-2 sm:space-x-3">
+            <button id="clear-highlights-btn" class="hidden sm:flex items-center justify-center px-3 py-1.5 rounded bg-violet-50 hover:bg-violet-100 text-violet-700 transition-colors focus:outline-none border border-violet-200 text-sm font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                Clear
+            </button>
+            <div class="flex items-center space-x-1 sm:space-x-2 bg-gray-50 p-1 rounded-lg border border-gray-200">
+                <button id="decrease-font-btn" class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded bg-white shadow-sm hover:bg-gray-100 text-gray-700 transition-colors focus:outline-none font-bold text-sm sm:text-base">A-</button>
+                <button id="increase-font-btn" class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded bg-white shadow-sm hover:bg-gray-100 text-gray-700 transition-colors focus:outline-none font-bold text-sm sm:text-base">A+</button>
+            </div>
+        </div>
+    </header>
+
+    <main id="content-panes" class="content-panes">
+        <!-- Left Pane -->
+        <div id="left-pane" class="pane relative">
+            <div class="reading-passage">
+                <h3>Procrastination</h3>
+                <p class="subtitle">A psychologist explains why we put off important tasks and how we can break this habit</p>
+
+                <p><span class="para-label">A</span>Procrastination is the habit of delaying a necessary task, usually by focusing on less urgent, more enjoyable, and easier activities instead. We all do it from time to time. We might be composing a message to a friend who we have to let down, or putting together an important report for college or work; we're doing our best to avoid doing the job at hand, but deep down we know that we should just be getting on with it. Unfortunately, <span class="vocab-word" data-word="berating">berating</span> ourselves won't stop us procrastinating again. In fact, it's one of the worst things we can do. This matters because, as my research shows, procrastination doesn't just waste time, but is actually linked to other problems, too.</p>
+
+                <p><span class="para-label">B</span>Contrary to popular belief, procrastination is not due to <span class="vocab-word" data-word="laziness">laziness</span> or poor time management. Scientific studies suggest procrastination is, in fact, caused by poor <span class="vocab-word" data-word="mood">mood</span> management. This makes sense if we consider that people are more likely to put off starting or completing tasks that they are really not keen to do. If just thinking about the task threatens our sense of <span class="vocab-word" data-word="self-worth">self-worth</span> or makes us anxious, we will be more likely to put it off. Research involving <span class="vocab-word" data-word="brain imaging">brain imaging</span> has found that areas of the brain linked to detection of threats and <span class="vocab-word" data-word="emotion regulation">emotion regulation</span> are actually different in people who <span class="vocab-word" data-word="chronically">chronically</span> procrastinate compared to those who don't procrastinate frequently.</p>
+
+                <p><span class="para-label">C</span>Tasks that are emotionally loaded or difficult, such as preparing for exams, are prime candidates for procrastination. People with low <span class="vocab-word" data-word="self-esteem">self-esteem</span> are more likely to procrastinate. Another group of people who tend to procrastinate are <span class="vocab-word" data-word="perfectionists">perfectionists</span>, who worry their work will be judged harshly by others. We know that if we don't finish that report or complete those home repairs, then what we did can't be evaluated. When we avoid such tasks, we also avoid the negative emotions associated with them. This is rewarding, and it conditions us to use procrastination to repair our mood. If we engage in more enjoyable tasks instead, we get another mood boost. In the long run, however, procrastination isn't an effective way of managing emotions. The 'mood repair' we experience is temporary. Afterwards, people tend to be left with a sense of <span class="vocab-word" data-word="guilt">guilt</span> that not only increases their negative mood, but also reinforces their tendency to procrastinate.</p>
+
+                <p><span class="para-label">D</span>So why is this such a problem? When most people think of the costs of procrastination, they think of the toll on productivity. For example, studies have shown that procrastination negatively impacts on student performance. But putting off reading textbooks and writing essays may affect other areas of students' lives. In one study of over 3,000 German students over a six-month period, those who reported procrastinating over their university work were also more likely to engage in study-related <span class="vocab-word" data-word="misconduct">misconduct</span>, such as cheating and plagiarism. But the behaviour that procrastination was most closely linked with was using <span class="vocab-word" data-word="fraudulent">fraudulent</span> excuses to get deadline extensions. Other research shows that employees on average spend almost a quarter of their workday procrastinating, and again this is linked with negative outcomes. In fact, in one US survey of over 22,000 employees, participants who said they regularly procrastinated had less annual income and less <span class="vocab-word" data-word="employment stability">employment stability</span>. For every one-point increase on a measure of chronic procrastination, annual income decreased by US$15,000.</p>
+
+                <p><span class="para-label">E</span>Procrastination also <span class="vocab-word" data-word="correlates with">correlates with</span> serious health and well-being problems. A tendency to procrastinate is linked to poor mental health, including higher levels of depression and anxiety. Across numerous studies, I've found people who regularly procrastinate report a greater number of health issues, such as headaches, flu and colds, and digestive issues. They also experience higher levels of stress and poor sleep quality. They are less likely to practise healthy behaviours, such as eating a healthy diet and regularly exercising, and use <span class="vocab-word" data-word="destructive">destructive</span> coping strategies to manage their stress. In one study of over 700 people, I found people prone to procrastination had a 63% greater risk of poor heart health after accounting for other personality traits and demographics.</p>
+
+                <p><span class="para-label">F</span>Finding better ways of managing our emotions is one route out of the <span class="vocab-word" data-word="vicious cycle">vicious cycle</span> of procrastination. An important first step is to manage our environment and how we view the task. There are a number of evidence-based strategies that can help us <span class="vocab-word" data-word="fend off">fend off</span> distractions that can occupy our minds when we should be focusing on the thing we should be getting on with. For example, reminding ourselves about why the task is important and valuable can increase positive feelings towards it. Forgiving ourselves and feeling <span class="vocab-word" data-word="compassion">compassion</span> when we procrastinate can help break the procrastination cycle. We should admit that we feel bad, but not be overly critical of ourselves. We should remind ourselves that we're not the first person to procrastinate, nor the last. Doing this can take the edge off the negative feelings we have about ourselves when we procrastinate. This can all make it easier to get back on track.</p>
+            </div>
+        </div>
+
+        <div id="splitter" class="splitter relative flex items-center justify-center group">
+            <div class="w-1 h-8 bg-gray-400 rounded-full opacity-50 group-hover:bg-gray-600 transition-colors"></div>
+        </div>
+
+        <!-- Right Pane -->
+        <div id="right-pane" class="pane">
+            <div id="questions-section" class="max-w-3xl mx-auto space-y-8 pb-10">
+
+                <!-- Q14-16: Matching Paragraphs -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-violet-100 text-violet-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 14–16</span>
+                        <h4 class="font-bold text-gray-800">Matching Paragraphs</h4>
+                    </div>
+                    <p class="mb-5 text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100 text-sm">
+                        Reading Passage 2 has six paragraphs, <strong class="text-violet-700">A–F</strong>.<br>
+                        Which paragraph contains the following information?<br>
+                        Choose the correct letter <strong class="text-violet-700">A–F</strong>. <em>NB You may use any letter more than once.</em>
+                    </p>
+                    <div class="space-y-4">
+                        <div class="q-item" id="container-q14">
+                            <p class="mb-2 text-gray-800 font-medium"><span class="font-bold text-violet-700 mr-2">14</span> mention of false assumptions about why people procrastinate
+                                <select name="q14" class="select-input ml-2">
+                                    <option value="">-- Select --</option>
+                                    <option value="a">A</option><option value="b">B</option><option value="c">C</option>
+                                    <option value="d">D</option><option value="e">E</option><option value="f">F</option>
+                                </select>
+                            </p>
+                        </div>
+                        <div class="q-item" id="container-q15">
+                            <p class="mb-2 text-gray-800 font-medium"><span class="font-bold text-violet-700 mr-2">15</span> reference to the realisation that others also procrastinate
+                                <select name="q15" class="select-input ml-2">
+                                    <option value="">-- Select --</option>
+                                    <option value="a">A</option><option value="b">B</option><option value="c">C</option>
+                                    <option value="d">D</option><option value="e">E</option><option value="f">F</option>
+                                </select>
+                            </p>
+                        </div>
+                        <div class="q-item" id="container-q16">
+                            <p class="mb-2 text-gray-800 font-medium"><span class="font-bold text-violet-700 mr-2">16</span> neurological evidence of a link between procrastination and emotion
+                                <select name="q16" class="select-input ml-2">
+                                    <option value="">-- Select --</option>
+                                    <option value="a">A</option><option value="b">B</option><option value="c">C</option>
+                                    <option value="d">D</option><option value="e">E</option><option value="f">F</option>
+                                </select>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="14-16">Check Answers</button>
+                    </div>
+                </div>
+
+                <!-- Q17-22: Summary Completion -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-violet-100 text-violet-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 17–22</span>
+                        <h4 class="font-bold text-gray-800">Summary Completion</h4>
+                    </div>
+                    <p class="mb-5 text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100 text-sm">
+                        Complete the summary below.<br>
+                        Choose <strong class="text-violet-700">ONE WORD ONLY</strong> from the passage for each answer.
+                    </p>
+                    <div class="summary-block">
+                        <h5>What makes us procrastinate?</h5>
+                        <p>Many people think that procrastination is the result of
+                            <span id="container-q17" class="inline-block mx-1"><strong class="text-violet-700 text-sm mr-1">17</strong><input type="text" name="q17" class="text-input text-input-word" placeholder="________" autocomplete="off" spellcheck="false"></span>.
+                            Others believe it to be the result of an inability to organise time efficiently.
+                        </p>
+                        <p>But scientific studies suggest that procrastination is actually due to poor mood management. The tasks we are most likely to put off are those that could damage our self-esteem or cause us to feel
+                            <span id="container-q18" class="inline-block mx-1"><strong class="text-violet-700 text-sm mr-1">18</strong><input type="text" name="q18" class="text-input text-input-word" placeholder="________" autocomplete="off" spellcheck="false"></span>
+                            when we think about them. Research comparing chronic procrastinators with other people even found differences in the brain regions associated with regulating emotions and identifying
+                            <span id="container-q19" class="inline-block mx-1"><strong class="text-violet-700 text-sm mr-1">19</strong><input type="text" name="q19" class="text-input text-input-word" placeholder="________" autocomplete="off" spellcheck="false"></span>.
+                        </p>
+                        <p>Emotionally loaded and difficult tasks often cause us to procrastinate. Getting ready to take
+                            <span id="container-q20" class="inline-block mx-1"><strong class="text-violet-700 text-sm mr-1">20</strong><input type="text" name="q20" class="text-input text-input-word" placeholder="________" autocomplete="off" spellcheck="false"></span>
+                            might be a typical example of one such task.
+                        </p>
+                        <p>People who are likely to procrastinate tend to be either
+                            <span id="container-q21" class="inline-block mx-1"><strong class="text-violet-700 text-sm mr-1">21</strong><input type="text" name="q21" class="text-input text-input-word" placeholder="________" autocomplete="off" spellcheck="false"></span>
+                            or those with low self-esteem.
+                        </p>
+                        <p>Procrastination is only a short-term measure for managing emotions. It's often followed by a feeling of
+                            <span id="container-q22" class="inline-block mx-1"><strong class="text-violet-700 text-sm mr-1">22</strong><input type="text" name="q22" class="text-input text-input-word" placeholder="________" autocomplete="off" spellcheck="false"></span>,
+                            which worsens our mood and leads to more procrastination.
+                        </p>
+                    </div>
+                    <div class="mt-4 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="17-22">Check Answers</button>
+                    </div>
+                </div>
+
+                <!-- Q23-24: Choose TWO -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-violet-100 text-violet-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 23–24</span>
+                        <h4 class="font-bold text-gray-800">Choose TWO Letters</h4>
+                    </div>
+                    <p class="mb-5 text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100 text-sm">
+                        Which <strong class="text-violet-700">TWO</strong> comparisons between employees who often procrastinate and those who do not are mentioned in the text?
+                    </p>
+                    <div id="container-q2324" class="space-y-2">
+                        <label class="checkbox-label"><input type="checkbox" name="q2324" value="a"><span><strong class="text-violet-700">A</strong> &nbsp; Their salaries are lower.</span></label>
+                        <label class="checkbox-label"><input type="checkbox" name="q2324" value="b"><span><strong class="text-violet-700">B</strong> &nbsp; The quality of their work is inferior.</span></label>
+                        <label class="checkbox-label"><input type="checkbox" name="q2324" value="c"><span><strong class="text-violet-700">C</strong> &nbsp; They don't keep their jobs for as long.</span></label>
+                        <label class="checkbox-label"><input type="checkbox" name="q2324" value="d"><span><strong class="text-violet-700">D</strong> &nbsp; They don't enjoy their working lives as much.</span></label>
+                        <label class="checkbox-label"><input type="checkbox" name="q2324" value="e"><span><strong class="text-violet-700">E</strong> &nbsp; They have poorer relationships with colleagues.</span></label>
+                    </div>
+                    <div class="mt-4 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="2324">Check Answers</button>
+                    </div>
+                </div>
+
+                <!-- Q25-26: Choose TWO -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-violet-100 text-violet-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 25–26</span>
+                        <h4 class="font-bold text-gray-800">Choose TWO Letters</h4>
+                    </div>
+                    <p class="mb-5 text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100 text-sm">
+                        Which <strong class="text-violet-700">TWO</strong> recommendations for getting out of a cycle of procrastination does the writer give?
+                    </p>
+                    <div id="container-q2526" class="space-y-2">
+                        <label class="checkbox-label"><input type="checkbox" name="q2526" value="a"><span><strong class="text-violet-700">A</strong> &nbsp; not judging ourselves harshly</span></label>
+                        <label class="checkbox-label"><input type="checkbox" name="q2526" value="b"><span><strong class="text-violet-700">B</strong> &nbsp; setting ourselves manageable aims</span></label>
+                        <label class="checkbox-label"><input type="checkbox" name="q2526" value="c"><span><strong class="text-violet-700">C</strong> &nbsp; rewarding ourselves for tasks achieved</span></label>
+                        <label class="checkbox-label"><input type="checkbox" name="q2526" value="d"><span><strong class="text-violet-700">D</strong> &nbsp; prioritising tasks according to their importance</span></label>
+                        <label class="checkbox-label"><input type="checkbox" name="q2526" value="e"><span><strong class="text-violet-700">E</strong> &nbsp; avoiding things that stop us concentrating on our tasks</span></label>
+                    </div>
+                    <div class="mt-4 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="2526">Check Answers</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+</div>
+
+<div id="highlight-tooltip" class="highlight-tooltip">Highlight Text</div>
+
+<!-- Vocab Modal -->
+<div id="vocab-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
+    <div class="bg-white rounded-2xl shadow-2xl p-5 sm:p-8 w-full max-w-md relative transform transition-all scale-95 opacity-0" id="vocab-modal-content">
+        <button id="close-vocab-modal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-full w-8 h-8 flex items-center justify-center">&times;</button>
+        <div class="flex items-center mb-6 border-b pb-4 mt-2">
+            <h3 id="vocab-word" class="text-2xl sm:text-3xl font-extrabold text-gray-900 capitalize tracking-tight"></h3>
+        </div>
+        <div class="flex items-center mb-5">
+            <button id="play-audio-btn" class="flex items-center justify-center h-10 w-10 sm:h-12 sm:w-12 shrink-0 rounded-full bg-violet-50 text-violet-700 hover:bg-violet-600 hover:text-white mr-4 transition-all shadow-sm border border-violet-200">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>
+            </button>
+            <p id="vocab-pronunciation-text" class="text-gray-500 font-mono text-base sm:text-lg bg-gray-50 px-3 py-1 rounded-md border border-gray-100"></p>
+        </div>
+        <p id="vocab-meaning" class="text-gray-700 text-base sm:text-lg leading-relaxed"></p>
+    </div>
+</div>
+
+<!-- Alert Modal -->
+<div id="alert-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-[80]">
+    <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm relative transform transition-all scale-95 opacity-0 text-center" id="alert-modal-content">
+        <div id="alert-icon-container" class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 mb-4">
+            <svg class="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        </div>
+        <h3 id="alert-title" class="text-lg font-medium text-gray-900 mb-2">Notice</h3>
+        <p id="alert-message" class="text-sm text-gray-500 mb-6"></p>
+        <button id="close-alert-btn" class="w-full inline-flex justify-center rounded-md px-4 py-2 bg-violet-700 text-white font-medium hover:bg-violet-800 text-sm transition-colors">Got it</button>
+    </div>
+</div>
+
+<script>
+const vocabulary = {
+    'berating': { meaning: 'Scolding or criticising someone angrily and at length.', phonetic: '/bɪˈreɪ.tɪŋ/' },
+    'laziness': { meaning: 'The quality of being unwilling to work or use energy; lack of effort.', phonetic: '/ˈleɪ.zi.nəs/' },
+    'mood': { meaning: 'A temporary state of mind or feeling; emotional state.', phonetic: '/muːd/' },
+    'self-worth': { meaning: 'The sense of one\'s own value or worth as a person; self-esteem.', phonetic: '/ˌself ˈwɜːθ/' },
+    'brain imaging': { meaning: 'Scientific techniques used to view the structure or function of the brain, such as MRI or fMRI scans.', phonetic: '/breɪn ˈɪm.ɪ.dʒɪŋ/' },
+    'emotion regulation': { meaning: 'The ability to effectively manage and respond to an emotional experience; controlling one\'s emotional reactions.', phonetic: '/ɪˈməʊ.ʃən ˌreɡ.jʊˈleɪ.ʃən/' },
+    'chronically': { meaning: 'In a way that is persisting for a long time or constantly recurring; habitually.', phonetic: '/ˈkrɒn.ɪ.kli/' },
+    'self-esteem': { meaning: 'Confidence in one\'s own worth or abilities; self-respect.', phonetic: '/ˌself.ɪˈstiːm/' },
+    'perfectionists': { meaning: 'People who refuse to accept any standard short of perfection; those who set excessively high standards for themselves.', phonetic: '/pəˈfek.ʃən.ɪsts/' },
+    'guilt': { meaning: 'The fact of having committed a wrong or failed in an obligation; a feeling of having done wrong.', phonetic: '/ɡɪlt/' },
+    'misconduct': { meaning: 'Unacceptable or improper behaviour, especially by an employee or professional person.', phonetic: '/ˌmɪsˈkɒn.dʌkt/' },
+    'fraudulent': { meaning: 'Obtained, done by, or involving deception, especially criminal deception.', phonetic: '/ˈfrɔː.djʊ.lənt/' },
+    'employment stability': { meaning: 'The consistency and security of a person\'s job situation; the likelihood of retaining employment over time.', phonetic: '/ɪmˈplɔɪ.mənt stəˈbɪl.ɪ.ti/' },
+    'correlates with': { meaning: 'Has a mutual relationship or connection, in which one thing affects or depends on another.', phonetic: '/ˈkɒr.ɪ.leɪts wɪð/' },
+    'destructive': { meaning: 'Causing great damage or harm; tending to cause harm or destruction.', phonetic: '/dɪˈstrʌk.tɪv/' },
+    'vicious cycle': { meaning: 'A sequence of events in which the response to one problem creates new problems that eventually recreate the original problem.', phonetic: '/ˈvɪʃ.əs ˈsaɪ.kəl/' },
+    'fend off': { meaning: 'Defend oneself from (an attack or attacker); resist or deflect something unpleasant.', phonetic: '/fend ɒf/' },
+    'compassion': { meaning: 'Sympathetic pity and concern for the sufferings or misfortunes of others; kindness towards oneself or others.', phonetic: '/kəmˈpæʃ.ən/' }
+};
+
+// For checkbox questions, use special keys
+const ANSWERS = {
+    q14: "b", q15: "f", q16: "b",
+    q17: "laziness", q18: "anxious", q19: "threats", q20: "exams", q21: "perfectionists", q22: "guilt",
+    q2324: ["a","c"],
+    q2526: ["a","e"]
+};
+
+const TOTAL_QUESTIONS = 13; // 14,15,16 = 3 | 17-22 = 6 | 23-24 = 1 pair | 25-26 = 1 pair → track as 11 items + 2 pairs = 13 items for display
+
+const explanations = {
+    q14: "Paragraph B: 'Contrary to popular belief, procrastination is not due to laziness or poor time management.' This phrase introduces false assumptions (popular beliefs) about why people procrastinate. Answer: B.",
+    q15: "Paragraph F: 'We should remind ourselves that we're not the first person to procrastinate, nor the last.' This is the realisation that others also procrastinate. Answer: F.",
+    q16: "Paragraph B: 'Research involving brain imaging has found that areas of the brain linked to detection of threats and emotion regulation are actually different in people who chronically procrastinate.' Brain imaging = neurological evidence. Answer: B.",
+    q17: "Paragraph B: 'Contrary to popular belief, procrastination is not due to laziness...' Many people think it results from laziness. Answer: laziness.",
+    q18: "Paragraph B: 'If just thinking about the task ... makes us anxious, we will be more likely to put it off.' The feeling is anxious. Answer: anxious.",
+    q19: "Paragraph B: '...areas of the brain linked to detection of threats and emotion regulation...' The brain regions identify threats. Answer: threats.",
+    q20: "Paragraph C: 'Tasks that are emotionally loaded or difficult, such as preparing for exams, are prime candidates for procrastination.' Getting ready to take exams is the example. Answer: exams.",
+    q21: "Paragraph C: 'Another group of people who tend to procrastinate are perfectionists...' alongside people with low self-esteem. Answer: perfectionists.",
+    q22: "Paragraph C: 'Afterwards, people tend to be left with a sense of guilt that not only increases their negative mood...' The feeling is guilt. Answer: guilt.",
+    q2324: "Paragraph D: 'participants who said they regularly procrastinated had less annual income' → A (salaries are lower). 'and less employment stability' → C (they don't keep their jobs for as long). Correct answers: A and C.",
+    q2526: "Paragraph F: 'strategies that can help us fend off distractions' → E (avoiding things that stop us concentrating). 'We should admit that we feel bad, but not be overly critical of ourselves' → A (not judging ourselves harshly). Correct answers: A and E."
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    const app = {
+        userAnswers: {}, answersChecked: {}, currentFontSize: 17, timeRemaining: 20 * 60,
+        checkboxSelections: { q2324: [], q2526: [] },
+        leftPane: document.getElementById('left-pane'),
+        rightPane: document.getElementById('right-pane'),
+        highlightTooltip: document.getElementById('highlight-tooltip'),
+        vocabModal: document.getElementById('vocab-modal'),
+        vocabModalContent: document.getElementById('vocab-modal-content'),
+        closeVocabModalBtn: document.getElementById('close-vocab-modal'),
+        vocabWordEl: document.getElementById('vocab-word'),
+        vocabMeaningEl: document.getElementById('vocab-meaning'),
+        vocabPronunciationText: document.getElementById('vocab-pronunciation-text'),
+        playAudioBtn: document.getElementById('play-audio-btn'),
+        clearHighlightsBtn: document.getElementById('clear-highlights-btn'),
+        progressText: document.getElementById('progress-text'),
+        timerEl: document.getElementById('timer'),
+        alertModal: document.getElementById('alert-modal'),
+        alertModalContent: document.getElementById('alert-modal-content'),
+        closeAlertBtn: document.getElementById('close-alert-btn'),
+        alertTitleEl: document.getElementById('alert-title'),
+        alertMessageEl: document.getElementById('alert-message'),
+        alertIconContainer: document.getElementById('alert-icon-container'),
+
+        init() { this.setupEventListeners(); this.initSplitter(); this.initHighlighter(); this.updateCheckButtonsState(); this.startTimer(); },
+
+        startTimer() {
+            const interval = setInterval(() => {
+                if (this.timeRemaining <= 0) { clearInterval(interval); this.timerEl.textContent = "00:00"; this.timerEl.classList.add('text-red-600'); this.showAlert("Time's Up!", "Your 20 minutes have expired.", "warning"); return; }
+                this.timeRemaining--;
+                const m = Math.floor(this.timeRemaining/60).toString().padStart(2,'0');
+                const s = (this.timeRemaining%60).toString().padStart(2,'0');
+                this.timerEl.textContent = `${m}:${s}`;
+                if (this.timeRemaining <= 300) this.timerEl.classList.add('text-red-500');
+            }, 1000);
+        },
+
+        setupEventListeners() {
+            document.getElementById('increase-font-btn').addEventListener('click', () => this.changeFontSize(1));
+            document.getElementById('decrease-font-btn').addEventListener('click', () => this.changeFontSize(-1));
+            this.clearHighlightsBtn.addEventListener('click', () => this.leftPane.querySelectorAll('mark').forEach(m => m.replaceWith(document.createTextNode(m.textContent))));
+            this.closeVocabModalBtn.addEventListener('click', () => this.closeModal());
+            this.vocabModal.addEventListener('click', (e) => { if (e.target === this.vocabModal) this.closeModal(); });
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') { if (!this.vocabModal.classList.contains('hidden')) this.closeModal(); if (!this.alertModal.classList.contains('hidden')) this.closeAlert(); }
+                if ((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='f') { e.preventDefault(); this.showAlert("Action Disabled","The 'Find' function is disabled to simulate real test conditions.","warning"); }
+            });
+            document.addEventListener('visibilitychange', () => { if (document.hidden && this.timeRemaining > 0) this.showAlert("Warning","Please do not switch tabs during the exam.","warning"); });
+            window.addEventListener('beforeunload', (e) => { if (this.timeRemaining > 0 && this.timeRemaining < 20*60) { e.preventDefault(); e.returnValue=''; } });
+            this.closeAlertBtn.addEventListener('click', () => this.closeAlert());
+            this.alertModal.addEventListener('click', (e) => { if (e.target === this.alertModal) this.closeAlert(); });
+
+            document.body.addEventListener('input', (e) => {
+                if (e.target.tagName==='INPUT' && e.target.type==='text') {
+                    this.userAnswers[e.target.name] = e.target.value.trim().toLowerCase();
+                    e.target.classList.remove('correct-answer','incorrect-answer');
+                    this.updateCheckButtonsState(); this.updateProgress();
+                }
+            });
+            document.body.addEventListener('change', (e) => {
+                if (e.target.tagName==='SELECT') {
+                    this.userAnswers[e.target.name] = e.target.value;
+                    e.target.classList.remove('correct-answer','incorrect-answer');
+                    this.updateCheckButtonsState(); this.updateProgress();
+                }
+                if (e.target.type==='checkbox') {
+                    const grp = e.target.name;
+                    const checked = [...document.querySelectorAll(`input[name="${grp}"]:checked`)].map(c=>c.value);
+                    if (checked.length > 2) { e.target.checked = false; this.showAlert("Limit Reached","You can only select TWO answers for this question.","warning"); return; }
+                    this.checkboxSelections[grp] = checked;
+                    this.userAnswers[grp] = checked.join(',');
+                    this.updateCheckButtonsState(); this.updateProgress();
+                }
+            });
+            this.leftPane.addEventListener('click', (e) => {
+                if (e.target.classList.contains('vocab-word')) this.openVocabModal(e.target.dataset.word);
+                if (e.target.tagName==='MARK') e.target.replaceWith(document.createTextNode(e.target.textContent));
+            });
+            document.querySelectorAll('.check-btn').forEach(btn => btn.addEventListener('click', (e) => this.checkAnswers(e.target.dataset.range, e.target)));
+            this.playAudioBtn.addEventListener('click', () => {
+                const word = this.vocabWordEl.textContent; if (!word) return;
+                if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+                this.playAudioBtn.classList.remove('text-violet-700','bg-violet-50'); this.playAudioBtn.classList.add('bg-violet-600','text-white');
+                if ('speechSynthesis' in window) { const u=new SpeechSynthesisUtterance(word); u.lang='en-GB'; u.rate=0.9; u.onend=()=>this.resetAudioBtn(); u.onerror=()=>this.resetAudioBtn(); window.speechSynthesis.speak(u); }
+                else setTimeout(()=>this.resetAudioBtn(),500);
+            });
+        },
+
+        updateProgress() {
+            let c = 0;
+            // individual questions
+            for (let k of ['q14','q15','q16','q17','q18','q19','q20','q21','q22']) { if ((this.userAnswers[k]||"").trim()) c++; }
+            // checkbox groups count as 2 each
+            if ((this.checkboxSelections['q2324']||[]).length === 2) c += 2;
+            if ((this.checkboxSelections['q2526']||[]).length === 2) c += 2;
+            this.progressText.textContent = `${Math.min(c, TOTAL_QUESTIONS)} / ${TOTAL_QUESTIONS} Answered`;
+        },
+
+        resetAudioBtn() { this.playAudioBtn.classList.add('text-violet-700','bg-violet-50'); this.playAudioBtn.classList.remove('bg-violet-600','text-white'); },
+        changeFontSize(d) { this.currentFontSize=Math.max(14,Math.min(26,this.currentFontSize+d)); document.documentElement.style.setProperty('--app-font-size',`${this.currentFontSize}px`); },
+
+        openVocabModal(w) {
+            const d=vocabulary[w]; if(!d) return;
+            this.vocabWordEl.textContent=w; this.vocabMeaningEl.textContent=d.meaning; this.vocabPronunciationText.textContent=d.phonetic||'';
+            this.vocabModal.classList.remove('hidden');
+            setTimeout(()=>{this.vocabModalContent.classList.remove('scale-95','opacity-0'); this.vocabModalContent.classList.add('scale-100','opacity-100');},10);
+        },
+        closeModal() {
+            if('speechSynthesis' in window) window.speechSynthesis.cancel();
+            this.vocabModalContent.classList.remove('scale-100','opacity-100'); this.vocabModalContent.classList.add('scale-95','opacity-0');
+            this.resetAudioBtn(); setTimeout(()=>this.vocabModal.classList.add('hidden'),200);
+        },
+        showAlert(title,message,type='error') {
+            this.alertTitleEl.textContent=title; this.alertMessageEl.textContent=message;
+            const c=type==='warning'?'yellow':'red';
+            this.alertIconContainer.className=`mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-${c}-100 mb-4`;
+            this.alertIconContainer.innerHTML=`<svg class="h-6 w-6 text-${c}-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>`;
+            this.alertModal.classList.remove('hidden');
+            setTimeout(()=>{this.alertModalContent.classList.remove('scale-95','opacity-0'); this.alertModalContent.classList.add('scale-100','opacity-100');},10);
+        },
+        closeAlert() {
+            this.alertModalContent.classList.remove('scale-100','opacity-100'); this.alertModalContent.classList.add('scale-95','opacity-0');
+            setTimeout(()=>this.alertModal.classList.add('hidden'),200);
+        },
+
+        isRangeAnswered(range) {
+            if (range === '2324') return (this.checkboxSelections['q2324']||[]).length === 2;
+            if (range === '2526') return (this.checkboxSelections['q2526']||[]).length === 2;
+            const [s,e] = range.split('-').map(Number);
+            for (let i=s;i<=e;i++) { if (!(this.userAnswers[`q${i}`]||"").trim()) return false; }
+            return true;
+        },
+
+        updateCheckButtonsState() {
+            document.querySelectorAll('.check-btn').forEach(btn => {
+                const range = btn.dataset.range;
+                if (this.answersChecked[range]) { btn.className='check-btn bg-gray-800 hover:bg-gray-900 text-white font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-pointer'; btn.textContent='Reset Answers'; return; }
+                const allDone = this.isRangeAnswered(range);
+                btn.className = allDone ? 'check-btn bg-violet-700 hover:bg-violet-800 text-white font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-pointer transform hover:-translate-y-0.5' : 'check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80';
+                btn.textContent = 'Check Answers';
+            });
+        },
+
+        checkAnswers(range, btn) {
+            if (this.answersChecked[range]) {
+                this.answersChecked[range] = false;
+                if (range === '2324' || range === '2526') {
+                    const grp = `q${range}`;
+                    this.checkboxSelections[grp] = []; this.userAnswers[grp] = '';
+                    document.querySelectorAll(`input[name="${grp}"]`).forEach(cb => { cb.checked=false; cb.closest('label').classList.remove('correct-answer','incorrect-answer'); });
+                    document.getElementById(`expl-${grp}`)?.remove();
+                } else {
+                    const [s,e] = range.split('-').map(Number);
+                    for (let i=s;i<=e;i++) {
+                        const qId=`q${i}`; this.userAnswers[qId]='';
+                        const sel=document.querySelector(`select[name="${qId}"]`); if(sel){sel.value=''; sel.classList.remove('correct-answer','incorrect-answer');}
+                        const inp=document.querySelector(`input[name="${qId}"][type="text"]`); if(inp){inp.value=''; inp.placeholder='________'; inp.classList.remove('correct-answer','incorrect-answer');}
+                        document.getElementById(`expl-${qId}`)?.remove();
+                    }
+                }
+                this.updateCheckButtonsState(); this.updateProgress(); return;
+            }
+            if (!this.isRangeAnswered(range)) { this.showAlert("Incomplete Answers","Please answer all questions in this section before checking.","warning"); return; }
+            this.answersChecked[range] = true; this.updateCheckButtonsState();
+
+            // Checkbox groups
+            if (range === '2324' || range === '2526') {
+                const grp = `q${range}`;
+                const correctSet = new Set(ANSWERS[grp]);
+                const userSet = new Set(this.checkboxSelections[grp]);
+                document.querySelectorAll(`input[name="${grp}"]`).forEach(cb => {
+                    const lbl = cb.closest('label');
+                    lbl.classList.remove('correct-answer','incorrect-answer');
+                    if (correctSet.has(cb.value)) lbl.classList.add('correct-answer');
+                    else if (userSet.has(cb.value) && !correctSet.has(cb.value)) lbl.classList.add('incorrect-answer');
+                });
+                if (!document.getElementById(`expl-${grp}`)) {
+                    const div=document.createElement('div'); div.id=`expl-${grp}`; div.className='explanation-box mt-4';
+                    const allCorrect=[...userSet].every(v=>correctSet.has(v)) && userSet.size===correctSet.size;
+                    const fb=allCorrect?'':` <span class="correct-badge">Correct: ${[...correctSet].map(v=>v.toUpperCase()).join(' & ')}</span><br>`;
+                    div.innerHTML=`${fb}<strong>Explanation:</strong> ${explanations[grp]}`;
+                    document.getElementById(`container-${grp}`).insertAdjacentElement('afterend',div);
+                }
+                return;
+            }
+
+            // Normal questions
+            const [s,e] = range.split('-').map(Number);
+            for (let i=s;i<=e;i++) {
+                const qId=`q${i}`;
+                const userAns=(this.userAnswers[qId]||"").toLowerCase().trim();
+                const correctList=ANSWERS[qId].toLowerCase().split('|');
+                const isCorrect=correctList.includes(userAns);
+                let feedbackHTML='';
+                const sel=document.querySelector(`select[name="${qId}"]`);
+                if(sel){ sel.classList.remove('correct-answer','incorrect-answer'); sel.classList.add(isCorrect?'correct-answer':'incorrect-answer'); if(!isCorrect) feedbackHTML=`<span class="correct-badge">Correct Answer: ${correctList[0].toUpperCase()}</span><br>`; }
+                const inp=document.querySelector(`input[name="${qId}"][type="text"]`);
+                if(inp){ inp.classList.remove('correct-answer','incorrect-answer'); if(isCorrect){inp.classList.add('correct-answer');}else{inp.classList.add('incorrect-answer'); inp.value=''; inp.placeholder=correctList[0]; feedbackHTML=`<span class="correct-badge">Correct Answer: ${correctList[0]}</span><br>`;} }
+                if(explanations[qId]&&!document.getElementById(`expl-${qId}`)){
+                    const div=document.createElement('div'); div.id=`expl-${qId}`; div.className='explanation-box';
+                    div.innerHTML=`${feedbackHTML}<strong>Explanation:</strong> ${explanations[qId]}`;
+                    const container=document.getElementById(`container-${qId}`);
+                    if(container){const wrap=container.closest('.q-item')||container; wrap.insertAdjacentElement('afterend',div);}
+                }
+            }
+        },
+
+        initSplitter() {
+            let isDragging=false; const panes=document.getElementById('content-panes');
+            this.splitter.addEventListener('mousedown',(e)=>{e.preventDefault();isDragging=true;document.body.style.cursor='col-resize';});
+            document.addEventListener('mousemove',(e)=>{
+                if(!isDragging||window.innerWidth<=768) return;
+                const rect=panes.getBoundingClientRect(); const newLeft=e.clientX-rect.left;
+                if(newLeft>200&&newLeft<rect.width-200) panes.style.gridTemplateColumns=`${(newLeft/rect.width)*100}% 5px 1fr`;
+            });
+            document.addEventListener('mouseup',()=>{if(isDragging){isDragging=false;document.body.style.cursor='default';}});
+        },
+
+        initHighlighter() {
+            document.body.addEventListener('mouseup',(e)=>{
+                const sel=window.getSelection(); const text=sel.toString().trim();
+                if(text.length>0){
+                    const range=sel.getRangeAt(0);
+                    if(!this.leftPane.contains(range.commonAncestorContainer)&&!this.rightPane.contains(range.commonAncestorContainer)){this.highlightTooltip.style.display='none';return;}
+                    this.highlightTooltip.style.left=`${e.pageX-30}px`; this.highlightTooltip.style.top=`${e.pageY-40}px`; this.highlightTooltip.style.display='block';
+                    this.highlightTooltip.onclick=()=>{
+                        const mark=document.createElement('mark');
+                        try{range.surroundContents(mark);}catch(ex){this.showAlert("Highlight Error","Please select text within a single element.","warning");}
+                        finally{sel.removeAllRanges();this.highlightTooltip.style.display='none';}
+                    };
+                }else{this.highlightTooltip.style.display='none';}
+            });
+            document.body.addEventListener('mousedown',()=>{if(window.getSelection().toString().length===0)this.highlightTooltip.style.display='none';});
+        }
+    };
+    app.init();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IELTS Academic Simulator - The Steam Car</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --app-font-size: 17px;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            overscroll-behavior: none;
+            background-color: #f3f4f6;
+        }
+        .ielts-container {
+            display: grid;
+            grid-template-rows: auto 1fr;
+            height: 100vh;
+        }
+        .content-panes {
+            display: grid;
+            grid-template-columns: 1fr 5px 1fr;
+            overflow: hidden;
+        }
+        .pane {
+            overflow-y: auto;
+            padding: 2rem 3rem;
+            font-size: var(--app-font-size);
+            scroll-behavior: smooth;
+        }
+        #left-pane {
+            background-color: #fdfdfd;
+        }
+        #right-pane {
+            background-color: #f8fafc;
+        }
+        .splitter {
+            background-color: #cbd5e1;
+            cursor: col-resize;
+            z-index: 10;
+            transition: background-color 0.2s;
+        }
+        .splitter:hover, .splitter:active {
+            background-color: #94a3b8;
+        }
+        
+        /* Typography Improvements */
+        .reading-passage {
+            font-family: 'Merriweather', serif;
+            line-height: 1.9;
+            color: #334155;
+            text-align: justify;
+            margin-bottom: 2rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .reading-passage p {
+            margin-bottom: 1.5rem;
+            text-indent: 1.5rem; 
+        }
+        .reading-passage h3 {
+            font-family: 'Inter', sans-serif;
+            color: #0f172a;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+            font-size: 1.5em;
+            text-align: center;
+            text-indent: 0;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .reading-passage h4 {
+            font-family: 'Inter', sans-serif;
+            color: #475569;
+            margin-bottom: 2rem;
+            font-weight: 500;
+            font-size: 1.1em;
+            text-align: center;
+            text-indent: 0;
+        }
+        .paragraph-label {
+            float: left;
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+            font-size: 1.1em;
+            margin-right: 0.5rem;
+            color: #1e40af;
+            text-indent: 0;
+            background-color: #eff6ff;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            border: 1px solid #bfdbfe;
+            margin-top: 5px;
+        }
+
+        /* Question Styles */
+        .q-item {
+            padding: 1rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s;
+            background-color: white;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 0.75rem;
+        }
+        
+        .text-input {
+            border: 2px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 4px 8px;
+            font-weight: 600;
+            color: #1e293b;
+            transition: all 0.2s;
+            text-align: center;
+            background-color: #f8fafc;
+        }
+        .text-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            background-color: #ffffff;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+
+        .text-input-short {
+            width: 3rem;
+            text-transform: lowercase;
+        }
+
+        /* Custom Radio Button Styles */
+        .custom-radio-label {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            background-color: white;
+            flex: 1;
+            justify-content: center;
+            text-align: center;
+        }
+        .custom-radio-label.mcq-label {
+            justify-content: flex-start;
+            text-align: left;
+            flex: none;
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+        .custom-radio-label:hover {
+            background-color: #f8fafc;
+            border-color: #cbd5e1;
+        }
+        .custom-radio-label input:checked + span {
+            color: #1e40af;
+            font-weight: 700;
+        }
+
+        /* Custom Dropdown Styles */
+        select.text-input {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 0.25rem center;
+            background-size: 1em;
+            padding-right: 1.25rem;
+            padding-left: 0.5rem;
+            cursor: pointer;
+        }
+
+        select.text-input-short {
+            width: 4.5rem; 
+        }
+
+        /* Answer Feedback Animations & Styles */
+        .correct-answer {
+            border-color: #22c55e !important;
+            background-color: #f0fdf4 !important;
+            color: #166534 !important;
+        }
+        label.correct-answer {
+            box-shadow: 0 0 0 1px #22c55e;
+            color: #166534 !important;
+        }
+        label.correct-answer span { color: #166534 !important; }
+        
+        .incorrect-answer {
+            border-color: #ef4444 !important;
+            background-color: #fef2f2 !important;
+            color: #991b1b !important;
+        }
+        label.incorrect-answer {
+            box-shadow: 0 0 0 1px #ef4444;
+            color: #991b1b !important;
+        }
+        label.incorrect-answer span { color: #991b1b !important; }
+
+        .explanation-box {
+            animation: fadeIn 0.4s ease-out forwards;
+            margin-top: 0.75rem;
+            padding: 1rem;
+            background-color: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            border-radius: 0.5rem;
+            font-size: 0.95rem;
+            color: #1e3a8a;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            text-align: left;
+        }
+        .explanation-box .correct-badge {
+            display: inline-block;
+            background: #22c55e;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.85em;
+            margin-bottom: 0.5rem;
+            letter-spacing: 0.05em;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Vocabulary Styles */
+        .vocab-word {
+            color: #2563eb;
+            font-weight: 600;
+            cursor: pointer;
+            border-bottom: 2px dotted #93c5fd;
+            transition: all 0.2s ease-in-out;
+            padding: 0 2px;
+        }
+        .vocab-word:hover {
+            background-color: #dbeafe;
+            border-bottom-style: solid;
+            border-radius: 2px;
+        }
+
+        /* UI Elements */
+        .highlight-tooltip {
+            position: absolute;
+            background-color: #1e293b;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            z-index: 100;
+            cursor: pointer;
+            display: none;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        mark {
+            background-color: #fef08a;
+            border-radius: 3px;
+            padding: 2px 0;
+            cursor: pointer;
+            transition: background-color 0.2s, color 0.2s;
+            position: relative;
+        }
+        mark:hover {
+            background-color: #fca5a5;
+            color: #7f1d1d;
+        }
+        mark:hover::after {
+            content: ' ×';
+            font-weight: bold;
+            font-size: 0.8em;
+            opacity: 0.7;
+        }
+        
+        /* Responsive Design Overrides */
+        @media (max-width: 768px) {
+            .content-panes {
+                display: flex;
+                flex-direction: column;
+                overflow-y: auto;
+            }
+            .splitter {
+                display: none;
+            }
+            .pane {
+                padding: 1.25rem 1rem;
+                overflow-y: visible;
+                height: auto;
+            }
+            #left-pane {
+                border-bottom: 2px dashed #cbd5e1;
+                padding-bottom: 2rem;
+            }
+            .text-input {
+                max-width: 130px;
+                padding: 2px 6px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div id="test-container" class="ielts-container">
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 flex justify-between items-center z-20 shadow-sm flex-wrap gap-3">
+        <div class="flex items-center gap-2 sm:space-x-3">
+            <div class="bg-blue-600 text-white p-1.5 sm:p-2 rounded-lg shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+            </div>
+            <h1 class="text-xl font-bold text-gray-800 hidden sm:block">IELTS Simulator <span class="text-blue-600 font-medium">| The Steam Car</span></h1>
+            <h1 class="text-base font-bold text-gray-800 sm:hidden">IELTS <span class="text-blue-600">Steam Car</span></h1>
+        </div>
+        
+        <!-- Timer & Progress -->
+        <div class="flex items-center space-x-4">
+            <div class="hidden sm:flex flex-col items-end">
+                <span class="text-xs text-gray-500 font-bold uppercase tracking-wide">Progress</span>
+                <span id="progress-text" class="text-sm font-semibold text-blue-600">0 / 13 Answered</span>
+            </div>
+            <div class="flex items-center bg-gray-100 rounded-lg px-3 py-1.5 border border-gray-200">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span id="timer" class="font-mono font-bold text-gray-700 text-lg">20:00</span>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2 sm:space-x-3">
+            <button id="clear-highlights-btn" class="hidden sm:flex items-center justify-center px-3 py-1.5 rounded bg-amber-50 hover:bg-amber-100 text-amber-700 transition-colors focus:outline-none border border-amber-200 text-sm font-medium" title="Clear Highlights">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                Clear
+            </button>
+            <div class="flex items-center space-x-1 sm:space-x-2 bg-gray-50 p-1 rounded-lg border border-gray-200">
+                <button id="decrease-font-btn" class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded bg-white shadow-sm hover:bg-gray-100 text-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-400 font-bold text-sm sm:text-base" title="Decrease Font Size">A-</button>
+                <button id="increase-font-btn" class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded bg-white shadow-sm hover:bg-gray-100 text-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-400 font-bold text-sm sm:text-base" title="Increase Font Size">A+</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main id="content-panes" class="content-panes">
+        <!-- Left Pane: Passages -->
+        <div id="left-pane" class="pane relative">
+            <div class="reading-passage">
+                <h3>The steam car</h3>
+                <h4>The successes and failures of the Doble brothers and their steam cars</h4>
+                
+                <p><span class="paragraph-label">A</span> When primitive automobiles first began to appear in the 1800s, their engines were based on steam power. Steam had already enjoyed a long and successful career in the railways, so it was only natural that the technology evolved into a miniaturized version which was separate from the trains. But these early cars inherited steam’s weaknesses along with its strengths. The boilers had to be lit by hand, and they required about twenty minutes to build up pressure before they could be driven. Furthermore, their water reservoirs only lasted for about thirty miles before needing <span class="vocab-word" data-word="replenishment">replenishment</span>. Despite such shortcomings, these newly designed self-propelled carriages offered quick transportation, and by the early 1900s it was not uncommon to see such machines shuttling wealthy citizens around town.</p>
+
+                <p><span class="paragraph-label">B</span> But the glory days of steam cars were few. A new technology called the Internal Combustion Engine soon appeared, which offered the ability to drive down the road just moments after starting up. At first, these noisy gasoline cars were unpopular because they were more complicated to operate and they had difficult hand-crank starters, which were known to break arms when the engines backfired. But in 1912 General Motors introduced the electric starter, and over the following few years steam power was gradually phased out.</p>
+
+                <p><span class="paragraph-label">C</span> Even as the market was declining, four brothers made one last effort to <span class="vocab-word" data-word="rekindle">rekindle</span> the technology. Between 1906 and 1909, while still attending high school, Abner Doble and his three brothers built their first steam car in their parents’ basement. It comprised parts taken from a wrecked early steam car but reconfigured to drive an engine of their own design. Though it did not run well, the Doble brothers went on to build a second and third <span class="vocab-word" data-word="prototype">prototype</span> in the following years. Though the Doble boys’ third prototype, nicknamed the Model B, still lacked the convenience of an internal combustion engine, it drew the attention of automobile trade magazines due to its numerous improvements over previous steam cars. The Model B proved to be superior to gasoline automobiles in many ways. Its high-pressure steam drove the engine pistons in virtual silence, in contrast to clattering gas engines which emitted the aroma of burned <span class="vocab-word" data-word="hydrocarbons">hydrocarbons</span>. Perhaps most impressively, the Model B was amazingly swift. It could accelerate from zero to sixty miles per hour in just fifteen seconds, a feat described as ‘remarkable acceleration’ by <em>Automobile</em> magazine in 1914.</p>
+
+                <p><span class="paragraph-label">D</span> The following year Abner Doble drove the Model B from Massachusetts to Detroit in order to seek investment in his automobile design, which he used to open the General Engineering Company. He and his brothers immediately began working on the Model C, which was intended to expand upon the innovations of the Model B. The brothers added features such as a key-based ignition in the cabin, eliminating the need for the operator to manually ignite the boiler. With these enhancements, the Dobles’ new car company promised a steam vehicle which would provide all of the convenience of a gasoline car, but with much greater speed, much simpler driving controls, and a virtually silent powerplant. By the following April, the General Engineering Company had received 5,390 deposits for Doble Detroits, which were scheduled for delivery in early 1918.</p>
+
+                <p><span class="paragraph-label">E</span> Later that year Abner Doble delivered unhappy news to those eagerly awaiting the delivery of their modem new cars. Those buyers who received the handful of completed cars complained that the vehicles were <span class="vocab-word" data-word="sluggish">sluggish</span> and <span class="vocab-word" data-word="erratic">erratic</span>, sometimes going in reverse when they should go forward. The new engine design, though innovative, was still plagued with serious glitches.</p>
+
+                <p><span class="paragraph-label">F</span> The brothers made one final attempt to produce a viable steam automobile. In early 1924, the Doble brothers shipped a Model E to New York City to be road-tested by the Automobile Club of America. After sitting overnight in freezing temperatures, the car was pushed out into the road and left to sit for over an hour in the frosty morning air. At the turn of the key, the boiler lit and reached its operating pressure inside of forty seconds. As they drove the test vehicle further, they found that its evenly distributed weight lent it surprisingly good handling, even though it was so heavy. As the new Doble steamer was further developed and tested, its maximum speed was pushed to over a hundred miles per hour, and it achieved about fifteen miles per gallon of kerosene with negligible emissions.</p>
+
+                <p><span class="paragraph-label">G</span> Sadly, the Dobles’ brilliant steam car never was a financial success. Priced at around $18,000 in 1924, it was popular only among the very wealthy. Plus, it is said that no two Model Es were quite the same, because Abner Doble tinkered endlessly with the design. By the time the company folded in 1931, fewer than fifty of the amazing Model E steam cars had been produced. For his whole career, until his death in 1961, Abner Doble remained <span class="vocab-word" data-word="adamant">adamant</span> that steam-powered automobiles were at least equal to gasoline cars, if not superior. Given the evidence, he may have been right. Many of the Model E Dobles which have survived are still in good working condition, some having been driven over half a million miles with only normal maintenance. Astonishingly, an unmodified Doble Model E runs clean enough to pass the emissions laws in California today, and they are pretty strict. It is true that the technology poses some difficult problems, but you cannot help but wonder how efficient a steam car might be with the benefit of modem materials and computers. Under the current pressure to improve automotive performance and reduce emissions, it is not unthinkable that the steam car may rise again.</p>
+            </div>
+        </div>
+
+        <!-- Splitter -->
+        <div id="splitter" class="splitter relative flex items-center justify-center group">
+            <div class="w-1 h-8 bg-gray-400 rounded-full opacity-50 group-hover:bg-gray-600 transition-colors"></div>
+        </div>
+
+        <!-- Right Pane: Questions -->
+        <div id="right-pane" class="pane">
+            <div id="questions-section" class="max-w-3xl mx-auto space-y-8 pb-10">
+
+                <!-- Matching Headings -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-blue-100 text-blue-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 14-20</span>
+                        <h4 class="font-bold text-gray-800">Matching Headings</h4>
+                    </div>
+                    <p class="mb-5 text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100 text-sm">
+                        Reading Passage 2 has seven paragraphs, <strong>A-G</strong>.<br>
+                        Choose the correct heading for each paragraph from the list of headings below.<br>
+                        Select the correct number, <strong>i-viii</strong>, from the dropdowns below.
+                    </p>
+
+                    <div class="mb-6 p-5 border border-blue-200 bg-blue-50/50 rounded-xl text-gray-800 text-[0.95em]">
+                        <h5 class="font-bold text-blue-800 mb-3 uppercase tracking-wider text-sm border-b border-blue-200 pb-2">List of Headings</h5>
+                        <ul class="flex flex-col gap-2">
+                            <li class="flex items-start"><strong class="text-blue-700 w-8 shrink-0 mr-1 text-right">i</strong> <span>A period in cold conditions before the technology is assessed</span></li>
+                            <li class="flex items-start"><strong class="text-blue-700 w-8 shrink-0 mr-1 text-right">ii</strong> <span>Marketing issues lead to failure</span></li>
+                            <li class="flex items-start"><strong class="text-blue-700 w-8 shrink-0 mr-1 text-right">iii</strong> <span>Good and bad aspects of steam technology are passed on</span></li>
+                            <li class="flex items-start"><strong class="text-blue-700 w-8 shrink-0 mr-1 text-right">iv</strong> <span>A possible solution to the issues of today</span></li>
+                            <li class="flex items-start"><strong class="text-blue-700 w-8 shrink-0 mr-1 text-right">v</strong> <span>Further improvements lead to commercial orders</span></li>
+                            <li class="flex items-start"><strong class="text-blue-700 w-8 shrink-0 mr-1 text-right">vi</strong> <span>Positive publicity at last for this quiet, clean, fast vehicle</span></li>
+                            <li class="flex items-start"><strong class="text-blue-700 w-8 shrink-0 mr-1 text-right">vii</strong> <span>A disappointing outcome for customers</span></li>
+                            <li class="flex items-start"><strong class="text-blue-700 w-8 shrink-0 mr-1 text-right">viii</strong> <span>A better option than the steam car arises</span></li>
+                        </ul>
+                    </div>
+
+                    <div class="space-y-3">
+                        <div class="q-item flex items-center justify-between gap-3" id="container-q14">
+                            <span class="text-gray-800 font-bold"><strong class="text-blue-600 mr-2">14</strong> Paragraph A</span>
+                            <select name="q14" class="text-input w-24 text-center lowercase font-bold cursor-pointer bg-white">
+                                <option value="" disabled selected>-</option>
+                                <option value="i">i</option><option value="ii">ii</option><option value="iii">iii</option><option value="iv">iv</option><option value="v">v</option><option value="vi">vi</option><option value="vii">vii</option><option value="viii">viii</option>
+                            </select>
+                        </div>
+                        <div class="q-item flex items-center justify-between gap-3" id="container-q15">
+                            <span class="text-gray-800 font-bold"><strong class="text-blue-600 mr-2">15</strong> Paragraph B</span>
+                            <select name="q15" class="text-input w-24 text-center lowercase font-bold cursor-pointer bg-white">
+                                <option value="" disabled selected>-</option>
+                                <option value="i">i</option><option value="ii">ii</option><option value="iii">iii</option><option value="iv">iv</option><option value="v">v</option><option value="vi">vi</option><option value="vii">vii</option><option value="viii">viii</option>
+                            </select>
+                        </div>
+                        <div class="q-item flex items-center justify-between gap-3" id="container-q16">
+                            <span class="text-gray-800 font-bold"><strong class="text-blue-600 mr-2">16</strong> Paragraph C</span>
+                            <select name="q16" class="text-input w-24 text-center lowercase font-bold cursor-pointer bg-white">
+                                <option value="" disabled selected>-</option>
+                                <option value="i">i</option><option value="ii">ii</option><option value="iii">iii</option><option value="iv">iv</option><option value="v">v</option><option value="vi">vi</option><option value="vii">vii</option><option value="viii">viii</option>
+                            </select>
+                        </div>
+                        <div class="q-item flex items-center justify-between gap-3" id="container-q17">
+                            <span class="text-gray-800 font-bold"><strong class="text-blue-600 mr-2">17</strong> Paragraph D</span>
+                            <select name="q17" class="text-input w-24 text-center lowercase font-bold cursor-pointer bg-white">
+                                <option value="" disabled selected>-</option>
+                                <option value="i">i</option><option value="ii">ii</option><option value="iii">iii</option><option value="iv">iv</option><option value="v">v</option><option value="vi">vi</option><option value="vii">vii</option><option value="viii">viii</option>
+                            </select>
+                        </div>
+                        <div class="q-item flex items-center justify-between gap-3" id="container-q18">
+                            <span class="text-gray-800 font-bold"><strong class="text-blue-600 mr-2">18</strong> Paragraph E</span>
+                            <select name="q18" class="text-input w-24 text-center lowercase font-bold cursor-pointer bg-white">
+                                <option value="" disabled selected>-</option>
+                                <option value="i">i</option><option value="ii">ii</option><option value="iii">iii</option><option value="iv">iv</option><option value="v">v</option><option value="vi">vi</option><option value="vii">vii</option><option value="viii">viii</option>
+                            </select>
+                        </div>
+                        <div class="q-item flex items-center justify-between gap-3" id="container-q19">
+                            <span class="text-gray-800 font-bold"><strong class="text-blue-600 mr-2">19</strong> Paragraph F</span>
+                            <select name="q19" class="text-input w-24 text-center lowercase font-bold cursor-pointer bg-white">
+                                <option value="" disabled selected>-</option>
+                                <option value="i">i</option><option value="ii">ii</option><option value="iii">iii</option><option value="iv">iv</option><option value="v">v</option><option value="vi">vi</option><option value="vii">vii</option><option value="viii">viii</option>
+                            </select>
+                        </div>
+                        <div class="q-item flex items-center justify-between gap-3" id="container-q20">
+                            <span class="text-gray-800 font-bold"><strong class="text-blue-600 mr-2">20</strong> Paragraph G</span>
+                            <select name="q20" class="text-input w-24 text-center lowercase font-bold cursor-pointer bg-white">
+                                <option value="" disabled selected>-</option>
+                                <option value="i">i</option><option value="ii">ii</option><option value="iii">iii</option><option value="iv">iv</option><option value="v">v</option><option value="vi">vi</option><option value="vii">vii</option><option value="viii">viii</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="14-20">Check Answers</button>
+                    </div>
+                </div>
+
+                <!-- Multiple Choice -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-blue-100 text-blue-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 21-23</span>
+                        <h4 class="font-bold text-gray-800">Multiple Choice</h4>
+                    </div>
+                    <p class="mb-5 text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100 text-sm">
+                        Choose the correct letter, <strong>A, B, C,</strong> or <strong>D</strong>.
+                    </p>
+                    
+                    <div class="space-y-6">
+                        <div class="q-item border border-gray-100 p-4" id="container-q21">
+                            <p class="mb-3 text-gray-800 font-medium leading-snug"><span class="font-bold text-blue-600 mr-2">21</span> What point does the writer make about the steam car in Paragraph B?</p>
+                            <div class="flex flex-col gap-2">
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q21" value="a" class="mr-3 hidden"><span class="text-gray-700"><strong class="mr-2">A</strong> Its success was short-lived.</span></label>
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q21" value="b" class="mr-3 hidden"><span class="text-gray-700"><strong class="mr-2">B</strong> Not enough cars were made.</span></label>
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q21" value="c" class="mr-3 hidden"><span class="text-gray-700"><strong class="mr-2">C</strong> Car companies found them hard to sell.</span></label>
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q21" value="d" class="mr-3 hidden"><span class="text-gray-700"><strong class="mr-2">D</strong> People found them hard to drive.</span></label>
+                            </div>
+                        </div>
+
+                        <div class="q-item border border-gray-100 p-4" id="container-q22">
+                            <p class="mb-3 text-gray-800 font-medium leading-snug"><span class="font-bold text-blue-600 mr-2">22</span> When building their first steam car, the Doble brothers</p>
+                            <div class="flex flex-col gap-2">
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q22" value="a" class="mr-3 hidden"><span class="text-gray-700"><strong class="mr-2">A</strong> constructed all the parts themselves.</span></label>
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q22" value="b" class="mr-3 hidden"><span class="text-gray-700"><strong class="mr-2">B</strong> made written notes at each stage of the construction.</span></label>
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q22" value="c" class="mr-3 hidden"><span class="text-gray-700"><strong class="mr-2">C</strong> needed several attempts to achieve a competitive model.</span></label>
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q22" value="d" class="mr-3 hidden"><span class="text-gray-700"><strong class="mr-2">D</strong> sought the advice of experienced people in the car industry.</span></label>
+                            </div>
+                        </div>
+
+                        <div class="q-item border border-gray-100 p-4" id="container-q23">
+                            <p class="mb-3 text-gray-800 font-medium leading-snug"><span class="font-bold text-blue-600 mr-2">23</span> In order to produce the Model C, the Doble brothers</p>
+                            <div class="flex flex-col gap-2">
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q23" value="a" class="mr-3 hidden"><span class="text-gray-700"><strong class="mr-2">A</strong> moved production to a different city.</span></label>
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q23" value="b" class="mr-3 hidden"><span class="text-gray-700"><strong class="mr-2">B</strong> raised financial capital.</span></label>
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q23" value="c" class="mr-3 hidden"><span class="text-gray-700"><strong class="mr-2">C</strong> employed an additional worker.</span></label>
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q23" value="d" class="mr-3 hidden"><span class="text-gray-700"><strong class="mr-2">D</strong> abandoned their earlier designs.</span></label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="21-23">Check Answers</button>
+                    </div>
+                </div>
+
+                <!-- Summary Completion -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-blue-100 text-blue-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 24-26</span>
+                        <h4 class="font-bold text-gray-800">Summary Completion</h4>
+                    </div>
+                    <p class="mb-5 text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100 text-sm">
+                        Complete the summary below.<br>
+                        Choose <strong>ONE WORD AND/OR A NUMBER</strong> from the passage for each answer.
+                    </p>
+                    
+                    <div class="bg-yellow-50/40 p-5 sm:p-8 border border-yellow-100 rounded-xl">
+                        <h5 class="font-bold text-xl text-center mb-6 text-gray-900 uppercase tracking-wide">The Model E</h5>
+                        
+                        <div class="space-y-4 text-gray-800 text-[0.95em]">
+                            <p class="leading-relaxed">
+                                The Model E was road-tested in 1924 by the Automobile Club of America. They found it easy to drive, despite its weight, and it impressed the spectators. A later version of the Model E raised its 
+                                <span id="container-q24" class="inline-block mx-1 my-1"><strong class="text-blue-600 mr-1 text-sm">24</strong><input type="text" name="q24" class="text-input w-28"></span>, 
+                                while keeping its emissions extremely low.
+                            </p>
+                            <p class="leading-relaxed mt-4">
+                                The steam car was too expensive for many people and its design was constantly being altered. Under 
+                                <span id="container-q25" class="inline-block mx-1 my-1"><strong class="text-blue-600 mr-1 text-sm">25</strong><input type="text" name="q25" class="text-input w-24"></span> 
+                                cars were produced before the company went out of business. However, even today, there are Model Es on the road in the US. They are straightforward to maintain, and they satisfy California’s 
+                                <span id="container-q26" class="inline-block mx-1 my-1"><strong class="text-blue-600 mr-1 text-sm">26</strong><input type="text" name="q26" class="text-input w-24"></span> 
+                                emissions laws. Perhaps today’s technology and materials would help us revive the steam car.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="24-26">Check Answers</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Highlight Tooltip -->
+<div id="highlight-tooltip" class="highlight-tooltip">Highlight Text</div>
+
+<!-- Vocabulary Modal -->
+<div id="vocab-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50 transition-opacity">
+    <div class="bg-white rounded-2xl shadow-2xl p-5 sm:p-8 w-full max-w-md relative transform transition-all scale-95 opacity-0" id="vocab-modal-content">
+        <button id="close-vocab-modal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-full w-8 h-8 flex items-center justify-center transition-colors">&times;</button>
+        <div class="flex items-center mb-6 border-b pb-4 mt-2">
+            <h3 id="vocab-word" class="text-2xl sm:text-3xl font-extrabold text-gray-900 capitalize tracking-tight"></h3>
+        </div>
+        <div class="flex items-center mb-5">
+            <button id="play-audio-btn" class="flex items-center justify-center h-10 w-10 sm:h-12 sm:w-12 shrink-0 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white mr-4 transition-all shadow-sm border border-blue-100" title="Listen to pronunciation">
+                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>
+            </button>
+            <p id="vocab-pronunciation-text" class="text-gray-500 font-mono text-base sm:text-lg bg-gray-50 px-3 py-1 rounded-md border border-gray-100"></p>
+        </div>
+        <p id="vocab-meaning" class="text-gray-700 text-base sm:text-lg leading-relaxed"></p>
+    </div>
+</div>
+
+<!-- Alert Modal -->
+<div id="alert-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-[80] transition-opacity">
+    <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm relative transform transition-all scale-95 opacity-0 text-center" id="alert-modal-content">
+        <div id="alert-icon-container" class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+            <svg id="alert-icon" class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+        </div>
+        <h3 id="alert-title" class="text-lg leading-6 font-medium text-gray-900 mb-2">Notice</h3>
+        <p id="alert-message" class="text-sm text-gray-500 mb-6">Message goes here.</p>
+        <button id="close-alert-btn" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm transition-colors">
+            Got it
+        </button>
+    </div>
+</div>
+
+<script>
+    // --- DATA ---
+    const vocabulary = {
+        'replenishment': { meaning: 'The action of filling something up again.', phonetic: '/rɪˈplɛnɪʃmənt/' },
+        'rekindle': { meaning: 'Relight (a fire); revive (something that has been lost).', phonetic: '/riːˈkɪndl/' },
+        'prototype': { meaning: 'A first, typical or preliminary model of something, especially a machine.', phonetic: '/ˈprəʊtətaɪp/' },
+        'hydrocarbons': { meaning: 'Compounds of hydrogen and carbon, chief components of petroleum.', phonetic: '/ˌhaɪdrəˈkɑːbənz/' },
+        'sluggish': { meaning: 'Slow-moving or inactive.', phonetic: '/ˈslʌɡɪʃ/' },
+        'erratic': { meaning: 'Not even or regular in pattern or movement; unpredictable.', phonetic: '/ɪˈrætɪk/' },
+        'adamant': { meaning: 'Refusing to be persuaded or to change one\'s mind.', phonetic: '/ˈædəmənt/' }
+    };
+
+    const answers = {
+        q14: "iii",
+        q15: "viii",
+        q16: "vi",
+        q17: "v",
+        q18: "vii",
+        q19: "i",
+        q20: "iv",
+        q21: "a",
+        q22: "c",
+        q23: "b",
+        q24: "speed",
+        q25: "fifty|50",
+        q26: "strict"
+    };
+
+    const explanations = {
+        q14: "<b>Giải thích:</b> Đoạn văn A giới thiệu sự xuất hiện của các chiếc xe chạy bằng động cơ hơi nước. Những chiếc xe này thừa hưởng (“inherited” khớp với “pass on” trong tiêu đề) những điểm mạnh và điểm yếu của động cơ hơi nước (“weaknesses/ shortcomings” và “strengths” khớp với “good and bad aspects” trong tiêu đề). Đoạn văn còn liệt kê ra các điểm yếu và điểm mạnh. Đoạn văn này thể hiện các điểm mạnh và yếu của công nghệ hơi nước -> Vì vậy, đáp án là iii. Good and bad aspects of steam technology are passed on.",
+        q15: "<b>Giải thích:</b> Đoạn văn B đề cập về sự xuất hiện của một công nghệ mới có tên Internal Combustion Engine. Mặc dù ban đầu công nghệ này có một số bất lợi nhưng từ khi có một thế mạnh là “electric starter”, năng lượng hơi nước trở nên dần mờ nhạt. Đoạn văn này thể hiện có một sự thay thế tốt hơn so với xe hơi nước -> Vì vậy, đáp án là viii. A better option than the steam car arises.",
+        q16: "<b>Giải thích:</b> Đoạn văn C cho biết Model B thu hút sự chú ý của các tạp chí “drew the attention of automobile trade magazines” (publicity) vì sự có các sự cải tiến như “virtual silence” (quiet), “swift, remarkable acceleration” (fast). Đoạn văn này thể hiện sự phát triển vượt trội của mẫu xe đã nhận được sự quan tâm tích cực từ báo chí -> Vì vậy, đáp án là vi. Positive publicity at last for this quiet, clean, fast vehicle.",
+        q17: "<b>Giải thích:</b> Đoạn văn D đề cập về việc tạo ra Model C nhờ vào sự cải tiến bằng cách thêm vào các tính năng mới “ innovations, added features, enhancements” ( khớp với “further improvements” trong tiêu đề). Điều này giúp công ty nhận được tiền đặt cọc “deposits” cho các chiếc xe Doble Detroits (khớp với “commercial orders” trong đề). Đoạn văn thể hiện các sự cải tiến dẫn đến có nhiều đơn đặt hàng cho chiếc xe -> Vì vậy, đáp án là v. Further improvements lead to commercial orders.",
+        q18: "<b>Giải thích:</b> Đoạn văn E đề cập về một bất lợi (“unhappy news”, “complain”) đối với khách hàng mua xe (“those eagerly awaiting the delivery of their modern new cars” khớp với “customers” trong tiêu đề) vì xe có một số lỗi (sluggish, erratic, going in reverse when they should go forward, serious glitches). Đoạn văn thể hiện khách hàng nhận được một kết quả không tích cực khi mua xe -> Vì vậy, đáp án là vii. A disappointing outcome for customers.",
+        q19: "<b>Giải thích:</b> Đoạn văn F đề cập chiếc xe được để ngoài điều kiện lạnh “cold conditions” (freezing temperatures, frosty morning air) rồi sau đó sẽ được kiểm tra, đánh giá (“tested” khớp với “assessed” trong tiêu đề). Đoạn văn thể hiện một giai đoạn xe ở trong điều kiện lạnh trước khi được thử nghiệm, đánh giá -> Vì vậy, đáp án là i. A period in cold conditions before the technology is assessed.",
+        q20: "<b>Giải thích:</b> Đoạn văn G cho một phương án khả thi “possible solution” cho những vấn đề ở hiện tại (“pressure to improve automotive performance, reduce emissions”) là quay về việc sử dụng xe hơi nước (“the steam car may rise again”). Đoạn văn đưa ra một giải pháp để giải quyết các vấn đề hiện tại -> Vì vậy, đáp án là iv. A possible solution to the issues of today.",
+        q21: "<b>Giải thích:</b> Phương án A: đoạn văn B có nói thời kỳ rực rỡ của xe hơi nước rất ngắn (“glory days of steam cars were few”) và dần lụi tàn (“phased out”). Trùng với ý sự thành công của xe hơi nước thì ngắn ngủi (“its success was short-lived”) -> Chọn đáp án A.",
+        q22: "<b>Giải thích:</b> Phương án C: Mặc dù động cơ ban đầu hoạt động không tốt (“did not run well”), anh em nhà Doble vẫn tiếp tục chế tạo xe (“went on to build a second and third prototype”) để đạt được một mẫu cạnh tranh với công nghệ (“rekindle the technology”). Trùng khớp với thông tin “needed several attempts to achieve a competitive model” -> Chọn đáp án C.",
+        q23: "<b>Giải thích:</b> Phương án B: Để tạo ra Model C, anh em Dobles tìm kiếm sự đầu tư (“seek investment”) để thành lập công ty, trùng khớp với “raised financial capital” (quyên góp vốn) -> Chọn đáp án B.",
+        q24: "<b>Giải thích:</b> Đoạn văn F cho biết tốc độ tối đa của động cơ được đẩy lên (“pushed to…” khớp với “raised” trong đề) trong khi vẫn giữ lượng khí thải ở mức không đáng kể (“negligible emissions” khớp với “keeping its emissions extremely low”). Vì vậy đáp án là “speed”.",
+        q25: "<b>Giải thích:</b> Đoạn văn G đề cập khi công ty thất bại, có ít hơn 50 chiếc xe được sản xuất. (“the company folded” khớp với “the company went out of business”). Vì vậy đáp án là “fifty” hoặc “50”.",
+        q26: "<b>Giải thích:</b> Đoạn văn G cho biết mẫu Model E sạch đến mức có thể đạt yêu cầu (“pass” khớp với “satisfy” trong đề) về luật khí thải khá nghiêm ngặt (“strict”) ở California. Vì vậy đáp án là “strict”."
+    };
+
+    // --- APPLICATION LOGIC ---
+    document.addEventListener('DOMContentLoaded', () => {
+        const app = {
+            userAnswers: {},
+            answersChecked: {},
+            currentFontSize: 17,
+            totalQuestions: 13, // Q14 to Q26
+            timeRemaining: 20 * 60, // 20 minutes
+
+            // Elements
+            leftPane: document.getElementById('left-pane'),
+            rightPane: document.getElementById('right-pane'),
+            splitter: document.getElementById('splitter'),
+            highlightTooltip: document.getElementById('highlight-tooltip'),
+            vocabModal: document.getElementById('vocab-modal'),
+            vocabModalContent: document.getElementById('vocab-modal-content'),
+            closeVocabModalBtn: document.getElementById('close-vocab-modal'),
+            vocabWordEl: document.getElementById('vocab-word'),
+            vocabMeaningEl: document.getElementById('vocab-meaning'),
+            vocabPronunciationText: document.getElementById('vocab-pronunciation-text'),
+            playAudioBtn: document.getElementById('play-audio-btn'),
+            clearHighlightsBtn: document.getElementById('clear-highlights-btn'),
+            progressText: document.getElementById('progress-text'),
+            timerEl: document.getElementById('timer'),
+
+            // Alert Elements
+            alertModal: document.getElementById('alert-modal'),
+            alertModalContent: document.getElementById('alert-modal-content'),
+            closeAlertBtn: document.getElementById('close-alert-btn'),
+            alertTitleEl: document.getElementById('alert-title'),
+            alertMessageEl: document.getElementById('alert-message'),
+            alertIconContainer: document.getElementById('alert-icon-container'),
+
+            init() {
+                this.setupEventListeners();
+                this.initSplitter();
+                this.initHighlighter();
+                this.updateCheckButtonsState();
+                this.startTimer();
+                this.updateProgress();
+            },
+
+            startTimer() {
+                const interval = setInterval(() => {
+                    if (this.timeRemaining <= 0) {
+                        clearInterval(interval);
+                        this.timerEl.textContent = "00:00";
+                        this.timerEl.classList.add('text-red-600');
+                        this.showAlert("Time's Up!", "Your 20 minutes for this reading passage have expired.", "warning");
+                        return;
+                    }
+                    this.timeRemaining--;
+                    const m = Math.floor(this.timeRemaining / 60).toString().padStart(2, '0');
+                    const s = (this.timeRemaining % 60).toString().padStart(2, '0');
+                    this.timerEl.textContent = `${m}:${s}`;
+                    
+                    if (this.timeRemaining <= 300) { // last 5 minutes
+                        this.timerEl.classList.add('text-red-500');
+                    }
+                }, 1000);
+            },
+
+            setupEventListeners() {
+                document.getElementById('increase-font-btn').addEventListener('click', () => this.changeFontSize(1));
+                document.getElementById('decrease-font-btn').addEventListener('click', () => this.changeFontSize(-1));
+
+                this.clearHighlightsBtn.addEventListener('click', () => {
+                    const marks = this.leftPane.querySelectorAll('mark');
+                    marks.forEach(mark => {
+                        const text = document.createTextNode(mark.textContent);
+                        mark.replaceWith(text);
+                    });
+                });
+
+                this.closeVocabModalBtn.addEventListener('click', () => this.closeModal());
+                this.vocabModal.addEventListener('click', (e) => {
+                   if (e.target === this.vocabModal) this.closeModal();
+                });
+
+                // Keyboard accessibility: Close modals with Escape key & Disable Ctrl+F
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') {
+                        if (!this.vocabModal.classList.contains('hidden')) this.closeModal();
+                        if (!this.alertModal.classList.contains('hidden')) this.closeAlert();
+                    }
+                    
+                    // Disable Ctrl+F / Cmd+F (Find function)
+                    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
+                        e.preventDefault(); // Stop the browser's find box from opening
+                        this.showAlert("Action Disabled", "The 'Find' function is disabled to simulate real computer-delivered test conditions.", "warning");
+                    }
+
+                    // Disable F5 and Ctrl+R / Cmd+R (Refresh function)
+                    if (e.key === 'F5' || ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'r')) {
+                        e.preventDefault();
+                        this.showAlert("Action Disabled", "Refreshing the page is disabled during the test to prevent losing your progress.", "warning");
+                    }
+                });
+
+                // Detect Tab Switching or Window minimizing
+                document.addEventListener('visibilitychange', () => {
+                    if (document.hidden && this.timeRemaining > 0) {
+                        this.showAlert("Warning: Tab Switch Detected", "Please do not switch tabs or leave the test window during the exam. Continued tab switching may result in your test being invalidated.", "warning");
+                    }
+                });
+
+                // Warn user if they try to close or refresh the tab via browser buttons
+                window.addEventListener('beforeunload', (e) => {
+                    if (this.timeRemaining > 0 && this.timeRemaining < 20 * 60) {
+                        e.preventDefault();
+                        e.returnValue = ''; 
+                    }
+                });
+
+                // Alert Modal Events
+                this.closeAlertBtn.addEventListener('click', () => this.closeAlert());
+                this.alertModal.addEventListener('click', (e) => {
+                   if (e.target === this.alertModal) this.closeAlert();
+                });
+
+                // Track text inputs, dropdowns, and radios
+                document.body.addEventListener('input', (e) => {
+                    if ((e.target.tagName === 'INPUT' && e.target.type === 'text') || e.target.tagName === 'SELECT') {
+                        this.userAnswers[e.target.name] = e.target.value;
+                        e.target.classList.remove('correct-answer', 'incorrect-answer');
+                        if (e.target.tagName === 'INPUT') e.target.placeholder = '';
+                        const container = document.getElementById(`container-${e.target.name}`);
+                        if(container) container.classList.remove('bg-red-50', 'bg-green-50');
+                        
+                        this.updateCheckButtonsState();
+                        this.updateProgress();
+                    }
+                });
+                
+                document.body.addEventListener('change', (e) => {
+                    if (e.target.tagName === 'INPUT' && e.target.type === 'radio') {
+                        this.userAnswers[e.target.name] = e.target.value;
+                        
+                        const groupRadios = document.querySelectorAll(`input[name="${e.target.name}"]`);
+                        groupRadios.forEach(radio => {
+                            const label = radio.closest('label');
+                            if(label) label.classList.remove('correct-answer', 'incorrect-answer');
+                        });
+                        
+                        this.updateCheckButtonsState();
+                        this.updateProgress();
+                    }
+                });
+
+                // Vocab Words & Removable Highlights Event Delegation
+                this.leftPane.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('vocab-word')) {
+                        const wordKey = e.target.dataset.word;
+                        this.openVocabModal(wordKey);
+                    }
+                    
+                    // Allow clicking to remove highlight
+                    if (e.target.tagName === 'MARK') {
+                        const textNode = document.createTextNode(e.target.textContent);
+                        e.target.replaceWith(textNode);
+                    }
+                });
+
+                // Check Buttons Event Delegation
+                document.querySelectorAll('.check-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const range = e.target.dataset.range;
+                        this.checkAnswers(range, e.target);
+                    });
+                });
+                
+                // Real Audio Pronunciation Event
+                this.playAudioBtn.addEventListener('click', () => {
+                   const word = this.vocabWordEl.textContent;
+                   if (!word) return;
+                   if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+                   
+                   this.playAudioBtn.classList.remove('text-blue-600', 'bg-blue-50');
+                   this.playAudioBtn.classList.add('bg-green-500', 'text-white');
+                   
+                   if ('speechSynthesis' in window) {
+                       const utterance = new SpeechSynthesisUtterance(word);
+                       utterance.lang = 'en-GB'; 
+                       utterance.rate = 0.9; 
+                       utterance.onend = () => this.resetAudioBtn();
+                       utterance.onerror = () => this.resetAudioBtn();
+                       window.speechSynthesis.speak(utterance);
+                   } else {
+                       this.showAlert("Audio Error", "Sorry, your browser doesn't support text-to-speech audio.", "warning");
+                       setTimeout(() => this.resetAudioBtn(), 500);
+                   }
+                });
+            },
+
+            updateProgress() {
+                let answeredCount = 0;
+                for(let key in answers) {
+                    if(this.userAnswers[key] && this.userAnswers[key].trim() !== '') {
+                        answeredCount++;
+                    }
+                }
+                this.progressText.textContent = `${answeredCount} / ${this.totalQuestions} Answered`;
+            },
+
+            resetAudioBtn() {
+                this.playAudioBtn.classList.add('text-blue-600', 'bg-blue-50');
+                this.playAudioBtn.classList.remove('bg-green-500', 'text-white');
+            },
+            
+            changeFontSize(delta) {
+                this.currentFontSize += delta;
+                if (this.currentFontSize < 14) this.currentFontSize = 14;
+                if (this.currentFontSize > 26) this.currentFontSize = 26;
+                document.documentElement.style.setProperty('--app-font-size', `${this.currentFontSize}px`);
+            },
+
+            openVocabModal(wordKey) {
+                const data = vocabulary[wordKey];
+                if (data) {
+                    this.vocabWordEl.textContent = wordKey;
+                    this.vocabMeaningEl.textContent = data.meaning;
+                    this.vocabPronunciationText.textContent = data.phonetic || '';
+                    this.vocabModal.classList.remove('hidden');
+                    setTimeout(() => {
+                        this.vocabModalContent.classList.remove('scale-95', 'opacity-0');
+                        this.vocabModalContent.classList.add('scale-100', 'opacity-100');
+                    }, 10);
+                }
+            },
+
+            closeModal() {
+                if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+                this.vocabModalContent.classList.remove('scale-100', 'opacity-100');
+                this.vocabModalContent.classList.add('scale-95', 'opacity-0');
+                this.resetAudioBtn();
+                setTimeout(() => this.vocabModal.classList.add('hidden'), 200);
+            },
+
+            showAlert(title, message, type = 'error') {
+                this.alertTitleEl.textContent = title;
+                this.alertMessageEl.textContent = message;
+                
+                if (type === 'warning') {
+                    this.alertIconContainer.className = 'mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 mb-4';
+                    this.alertIconContainer.innerHTML = '<svg class="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>';
+                } else {
+                    this.alertIconContainer.className = 'mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4';
+                    this.alertIconContainer.innerHTML = '<svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>';
+                }
+                
+                this.alertModal.classList.remove('hidden');
+                setTimeout(() => {
+                    this.alertModalContent.classList.remove('scale-95', 'opacity-0');
+                    this.alertModalContent.classList.add('scale-100', 'opacity-100');
+                }, 10);
+            },
+
+            closeAlert() {
+                this.alertModalContent.classList.remove('scale-100', 'opacity-100');
+                this.alertModalContent.classList.add('scale-95', 'opacity-0');
+                setTimeout(() => {
+                    this.alertModal.classList.add('hidden');
+                }, 200);
+            },
+            
+            updateCheckButtonsState() {
+                document.querySelectorAll('.check-btn').forEach(btn => {
+                    const range = btn.dataset.range;
+                    if (this.answersChecked[range]) {
+                        btn.className = 'check-btn bg-gray-800 hover:bg-gray-900 text-white font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-pointer transform hover:-translate-y-0.5 hover:shadow-md active:scale-95';
+                        btn.textContent = 'Reset Answers';
+                        return;
+                    }
+
+                    const [start, end] = range.split('-').map(Number);
+                    let allAnswered = true;
+                    for (let i = start; i <= end; i++) {
+                        const qId = `q${i}`;
+                        const answer = (this.userAnswers[qId] || "").trim();
+                        if (!answer) {
+                            allAnswered = false;
+                            break;
+                        }
+                    }
+
+                    if (allAnswered) {
+                        btn.className = 'check-btn bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-pointer transform hover:-translate-y-0.5 hover:shadow-md active:scale-95';
+                    } else {
+                        btn.className = 'check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80';
+                    }
+                });
+            },
+
+            checkAnswers(range, btn) {
+                if (this.answersChecked[range]) {
+                    // Reset mode
+                    this.answersChecked[range] = false;
+                    
+                    const [start, end] = range.split('-').map(Number);
+                    for (let i = start; i <= end; i++) {
+                        const qId = `q${i}`;
+                        this.userAnswers[qId] = '';
+
+                        // Handle Radios
+                        const radios = document.querySelectorAll(`input[name="${qId}"][type="radio"]`);
+                        if (radios.length > 0) {
+                            radios.forEach(radio => {
+                                radio.checked = false;
+                                const label = radio.closest('label');
+                                if (label) label.classList.remove('correct-answer', 'incorrect-answer');
+                            });
+                        }
+
+                        // Handle Inputs and Selects
+                        const input = document.querySelector(`input[name="${qId}"][type="text"], select[name="${qId}"]`);
+                        if (input) {
+                            input.value = '';
+                            if (input.tagName === 'INPUT') input.placeholder = '';
+                            input.classList.remove('correct-answer', 'incorrect-answer');
+                        }
+
+                        const expl = document.getElementById(`expl-${qId}`);
+                        if (expl) expl.remove();
+                    }
+                    this.updateCheckButtonsState();
+                    this.updateProgress();
+                    return;
+                }
+
+                const [start, end] = range.split('-').map(Number);
+
+                // --- Validation: Ensure all questions are answered ---
+                let allAnswered = true;
+                for (let i = start; i <= end; i++) {
+                    const qId = `q${i}`;
+                    const answer = (this.userAnswers[qId] || "").trim();
+                    if (!answer) {
+                        allAnswered = false;
+                        break;
+                    }
+                }
+
+                if (!allAnswered) {
+                    this.showAlert("Incomplete Answers", "Please fill in an answer for all questions in this section before checking.", "warning");
+                    return;
+                }
+                // -----------------------------------------------------
+
+                // Check mode
+                this.answersChecked[range] = true;
+                this.updateCheckButtonsState();
+
+                for (let i = start; i <= end; i++) {
+                    const qId = `q${i}`;
+                    let userAnswer = (this.userAnswers[qId] || "").toLowerCase().trim();
+                    
+                    let correctAnswersList = answers[qId].toLowerCase().split('|');
+                    let isCorrect = correctAnswersList.includes(userAnswer);
+
+                    let correctFeedbackHTML = '';
+
+                    // Check Radios
+                    const radios = document.querySelectorAll(`input[name="${qId}"][type="radio"]`);
+                    if (radios.length > 0) {
+                        radios.forEach(radio => {
+                            const label = radio.closest('label');
+                            if (label) label.classList.remove('correct-answer', 'incorrect-answer');
+                            
+                            if (correctAnswersList.includes(radio.value.toLowerCase())) {
+                                if (label) label.classList.add('correct-answer');
+                            } else if (radio.value.toLowerCase() === userAnswer) {
+                                if (label) label.classList.add('incorrect-answer');
+                            }
+                        });
+                        
+                        if (!isCorrect) {
+                            const correctAnsFormatted = correctAnswersList[0]
+                                .split(' ')
+                                .map(w => w.length === 1 ? w.toUpperCase() : w.charAt(0).toUpperCase() + w.slice(1))
+                                .join(' ');
+                            correctFeedbackHTML = `<span class="correct-badge">Correct Answer: ${correctAnsFormatted}</span><br>`;
+                        }
+                    }
+
+                    // Check Inputs and Selects
+                    const input = document.querySelector(`input[name="${qId}"][type="text"], select[name="${qId}"]`);
+                    if (input) {
+                        input.classList.remove('correct-answer', 'incorrect-answer');
+                        
+                        if (isCorrect) {
+                            input.classList.add('correct-answer');
+                        } else {
+                            input.classList.add('incorrect-answer');
+                            const correctAnsFormatted = correctAnswersList[0]
+                                .split(' ')
+                                .map(w => w.length === 1 ? w.toUpperCase() : w.charAt(0).toUpperCase() + w.slice(1)) 
+                                .join(' ');
+                                
+                            if (input.tagName === 'INPUT') {
+                                input.value = '';
+                                input.placeholder = correctAnsFormatted;
+                            }
+                            
+                            correctFeedbackHTML = `<span class="correct-badge">Correct Answer: ${correctAnsFormatted}</span><br>`;
+                        }
+                    }
+
+                    // Add Explanation Box
+                    if (explanations[qId]) {
+                        const existingExpl = document.getElementById(`expl-${qId}`);
+                        if (!existingExpl) {
+                            const explDiv = document.createElement('div');
+                            explDiv.id = `expl-${qId}`;
+                            explDiv.className = 'explanation-box';
+                            explDiv.innerHTML = `${correctFeedbackHTML}${explanations[qId]}`;
+                            
+                            const container = document.getElementById(`container-${qId}`);
+                            if (container) {
+                                // For select elements in a text flow, append below the parent block
+                                if(container.tagName === "SPAN" || container.tagName === "P" && container.style.display === "inline") {
+                                    // Need to find the wrapper to prevent breaking inline flow badly
+                                    const wrap = container.closest('div.leading-loose') || container.parentElement;
+                                    wrap.insertAdjacentElement('afterend', explDiv);
+                                } else {
+                                    container.insertAdjacentElement('afterend', explDiv);
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+
+            initSplitter() {
+                let isDragging = false;
+                const contentPanes = document.getElementById('content-panes');
+
+                this.splitter.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    isDragging = true;
+                    document.body.style.cursor = 'col-resize';
+                });
+
+                document.addEventListener('mousemove', (e) => {
+                    if (!isDragging) return;
+                    e.preventDefault();
+                    if (window.innerWidth <= 768) return; 
+                    
+                    const containerRect = contentPanes.getBoundingClientRect();
+                    const newLeftWidth = e.clientX - containerRect.left;
+                    if (newLeftWidth > 200 && newLeftWidth < containerRect.width - 200) {
+                        const newLeftPercent = (newLeftWidth / containerRect.width) * 100;
+                        contentPanes.style.gridTemplateColumns = `${newLeftPercent}% 5px 1fr`;
+                    }
+                });
+
+                document.addEventListener('mouseup', () => {
+                    if (isDragging) {
+                        isDragging = false;
+                        document.body.style.cursor = 'default';
+                    }
+                });
+            },
+
+            initHighlighter() {
+                document.body.addEventListener('mouseup', (e) => {
+                    const selection = window.getSelection();
+                    const selectedText = selection.toString().trim();
+
+                    if (selectedText.length > 0) {
+                        const range = selection.getRangeAt(0);
+                        if (!this.leftPane.contains(range.commonAncestorContainer) && !this.rightPane.contains(range.commonAncestorContainer)) {
+                           this.highlightTooltip.style.display = 'none';
+                           return;
+                        }
+
+                        this.highlightTooltip.style.left = `${e.pageX - 30}px`;
+                        this.highlightTooltip.style.top = `${e.pageY - 40}px`;
+                        this.highlightTooltip.style.display = 'block';
+
+                        this.highlightTooltip.onclick = () => {
+                            const container = range.commonAncestorContainer;
+                            if (container.nodeType === 3) { 
+                                if (range.startContainer.parentElement !== range.endContainer.parentElement) {
+                                    this.highlightTooltip.style.display = 'none';
+                                    this.showAlert("Highlight Error", "Please select text within a single paragraph to highlight.", "warning");
+                                    selection.removeAllRanges();
+                                    return;
+                                }
+                            }
+                            
+                            const mark = document.createElement('mark');
+                            try {
+                                range.surroundContents(mark);
+                            } catch (ex) {
+                                this.showAlert("Highlight Error", "Please select plain text to highlight. Highlighting across different formatting is restricted.", "warning");
+                            } 
+                            finally {
+                                selection.removeAllRanges();
+                                this.highlightTooltip.style.display = 'none';
+                            }
+                        };
+                    } else {
+                        this.highlightTooltip.style.display = 'none';
+                    }
+                });
+
+                document.body.addEventListener('mousedown', (e) => {
+                   if (e.target !== this.highlightTooltip && window.getSelection().toString().length === 0) {
+                        this.highlightTooltip.style.display = 'none';
+                   }
+                });
+            }
+        };
+
+        app.init();
+    });
+</script>
+
+</body>
+</html>

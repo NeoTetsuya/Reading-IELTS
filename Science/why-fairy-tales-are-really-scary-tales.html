@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IELTS Simulator - Why Fairy Tales Are Really Scary Tales</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --app-font-size: 17px; }
+        body { font-family: 'Inter', sans-serif; overscroll-behavior: none; background-color: #f3f4f6; }
+        .ielts-container { display: grid; grid-template-rows: auto 1fr; height: 100vh; }
+        .content-panes { display: grid; grid-template-columns: 1fr 5px 1fr; overflow: hidden; }
+        .pane { overflow-y: auto; padding: 2rem 3rem; font-size: var(--app-font-size); scroll-behavior: smooth; }
+        #left-pane { background-color: #fdfdfd; }
+        #right-pane { background-color: #f8fafc; }
+        .splitter { background-color: #cbd5e1; cursor: col-resize; z-index: 10; transition: background-color 0.2s; }
+        .splitter:hover, .splitter:active { background-color: #94a3b8; }
+        .reading-passage { font-family: 'Merriweather', serif; line-height: 1.9; color: #334155; text-align: justify; max-width: 800px; margin: 0 auto; }
+        .reading-passage p { margin-bottom: 1.5rem; text-indent: 1.5rem; }
+        .reading-passage h3 { font-family: 'Inter', sans-serif; color: #0f172a; margin-bottom: 0.25rem; font-weight: 700; font-size: 1.5em; text-align: center; text-indent: 0; text-transform: uppercase; letter-spacing: 0.05em; }
+        .reading-passage .subtitle { font-family: 'Inter', sans-serif; color: #64748b; font-size: 0.95em; text-align: center; text-indent: 0; margin-bottom: 1.5rem; font-style: italic; }
+        .reading-passage .footnote { font-family: 'Inter', sans-serif; font-size: 0.85em; color: #64748b; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e2e8f0; text-indent: 0; font-style: italic; }
+        .q-item { padding: 1rem; border-radius: 0.5rem; transition: all 0.2s; background-color: white; border: 1px solid #e2e8f0; margin-bottom: 0.75rem; }
+        .select-input { border: 2px solid #cbd5e1; border-radius: 6px; padding: 4px 8px; font-weight: 600; color: #1e293b; transition: all 0.2s; background-color: #f8fafc; cursor: pointer; }
+        .select-input:focus { outline: none; border-color: #7e22ce; background-color: #fff; box-shadow: 0 0 0 3px rgba(126,34,206,0.12); }
+        .correct-answer { border-color: #22c55e !important; background-color: #f0fdf4 !important; color: #166534 !important; }
+        .incorrect-answer { border-color: #ef4444 !important; background-color: #fef2f2 !important; color: #991b1b !important; }
+        .explanation-box { animation: fadeIn 0.4s ease-out forwards; margin-top: 0.75rem; padding: 1rem; background-color: #faf5ff; border-left: 4px solid #7e22ce; border-radius: 0.5rem; font-size: 0.95rem; color: #3b0764; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .explanation-box .correct-badge { display: inline-block; background: #22c55e; color: white; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85em; margin-bottom: 0.5rem; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+        .vocab-word { color: #6b21a8; font-weight: 600; cursor: pointer; border-bottom: 2px dotted #d8b4fe; transition: all 0.2s ease-in-out; padding: 0 2px; }
+        .vocab-word:hover { background-color: #f3e8ff; border-bottom-style: solid; border-radius: 2px; }
+        .highlight-tooltip { position: absolute; background-color: #1e293b; color: white; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 500; z-index: 100; cursor: pointer; display: none; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        mark { background-color: #fef08a; border-radius: 3px; padding: 2px 0; cursor: pointer; }
+        mark:hover { background-color: #fca5a5; color: #7f1d1d; }
+        mark:hover::after { content: ' x'; font-weight: bold; font-size: 0.8em; opacity: 0.7; }
+        .word-bank { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; }
+        .word-bank-item { padding: 0.35rem 0.75rem; border: 2px solid #e9d5ff; border-radius: 0.5rem; background: #faf5ff; font-weight: 700; color: #6b21a8; font-size: 0.9em; }
+        .mc-label { display: flex; align-items: flex-start; padding: 0.75rem 1rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s; background-color: white; margin-bottom: 0.4rem; }
+        .mc-label:hover { background: #faf5ff; border-color: #d8b4fe; }
+        .mc-label input { margin-right: 0.75rem; margin-top: 3px; width: 1.1em; height: 1.1em; accent-color: #7e22ce; flex-shrink: 0; }
+        label.correct-answer { border-color: #22c55e !important; background-color: #f0fdf4 !important; }
+        label.correct-answer span { color: #166534 !important; }
+        label.incorrect-answer { border-color: #ef4444 !important; background-color: #fef2f2 !important; }
+        label.incorrect-answer span { color: #991b1b !important; }
+        @media (max-width: 768px) {
+            .content-panes { display: flex; flex-direction: column; overflow-y: auto; }
+            .splitter { display: none; }
+            .pane { padding: 1.25rem 1rem; overflow-y: visible; height: auto; }
+            #left-pane { border-bottom: 2px dashed #cbd5e1; padding-bottom: 2rem; }
+        }
+    </style>
+</head>
+<body>
+<div id="test-container" class="ielts-container">
+    <header class="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 flex justify-between items-center z-20 shadow-sm flex-wrap gap-3">
+        <div class="flex items-center gap-2 sm:space-x-3">
+            <div class="bg-purple-800 text-white p-1.5 sm:p-2 rounded-lg shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                </svg>
+            </div>
+            <h1 class="text-xl font-bold text-gray-800 hidden sm:block">IELTS Simulator <span class="text-purple-800 font-medium">| Why Fairy Tales Are Really Scary Tales</span></h1>
+            <h1 class="text-base font-bold text-gray-800 sm:hidden">IELTS <span class="text-purple-800">Fairy Tales</span></h1>
+        </div>
+        <div class="flex items-center space-x-4">
+            <div class="hidden sm:flex flex-col items-end">
+                <span class="text-xs text-gray-500 font-bold uppercase tracking-wide">Progress</span>
+                <span id="progress-text" class="text-sm font-semibold text-purple-800">0 / 14 Answered</span>
+            </div>
+            <div class="flex items-center bg-gray-100 rounded-lg px-3 py-1.5 border border-gray-200">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span id="timer" class="font-mono font-bold text-gray-700 text-lg">20:00</span>
+            </div>
+        </div>
+        <div class="flex items-center gap-2 sm:space-x-3">
+            <button id="clear-highlights-btn" class="hidden sm:flex items-center justify-center px-3 py-1.5 rounded bg-purple-50 hover:bg-purple-100 text-purple-800 transition-colors focus:outline-none border border-purple-200 text-sm font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                Clear
+            </button>
+            <div class="flex items-center space-x-1 sm:space-x-2 bg-gray-50 p-1 rounded-lg border border-gray-200">
+                <button id="decrease-font-btn" class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded bg-white shadow-sm hover:bg-gray-100 text-gray-700 transition-colors focus:outline-none font-bold text-sm sm:text-base">A-</button>
+                <button id="increase-font-btn" class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded bg-white shadow-sm hover:bg-gray-100 text-gray-700 transition-colors focus:outline-none font-bold text-sm sm:text-base">A+</button>
+            </div>
+        </div>
+    </header>
+
+    <main id="content-panes" class="content-panes">
+        <div id="left-pane" class="pane relative">
+            <div class="reading-passage">
+                <h3>Why Fairy Tales Are Really Scary Tales</h3>
+                <p class="subtitle">Some people think that fairy tales are just stories to amuse children, but their universal and enduring appeal may be due to more serious reasons</p>
+
+                <p>People of every culture tell each other fairy tales but the same story often takes a variety of forms in different parts of the world. In the story of <em>Little Red Riding Hood</em> that European children are familiar with, a young girl on the way to see her grandmother meets a wolf and tells him where she is going. The wolf runs on ahead and <span class="vocab-word" data-word="disposes of">disposes of</span> the grandmother, then gets into bed dressed in the grandmother's clothes to wait for Little Red Riding Hood. You may think you know the story — but which version? In some versions, the wolf swallows up the grandmother, while in others it locks her in a cupboard. In some stories Red Riding Hood gets the better of the wolf on her own, while in others a hunter or a <span class="vocab-word" data-word="woodcutter">woodcutter</span> hears her cries and comes to her rescue.</p>
+
+                <p>The universal appeal of these tales is frequently <span class="vocab-word" data-word="attributed to">attributed to</span> the idea that they contain <span class="vocab-word" data-word="cautionary">cautionary</span> messages: in the case of <em>Little Red Riding Hood</em>, to listen to your mother, and avoid talking to strangers. 'It might be what we find interesting about this story is that it's got this survival-relevant information in it,' says <span class="vocab-word" data-word="anthropologist">anthropologist</span> Jamie Tehrani at Durham University in the UK. But his research suggests otherwise. 'We have this huge gap in our knowledge about the history and prehistory of storytelling, despite the fact that we know this genre is an incredibly ancient one,' he says. That hasn't stopped anthropologists, folklorists* and other academics <span class="vocab-word" data-word="devising">devising</span> theories to explain the importance of fairy tales in human society. Now Tehrani has found a way to test these ideas, borrowing a technique from <span class="vocab-word" data-word="evolutionary">evolutionary</span> biologists.</p>
+
+                <p>To work out the evolutionary history, development and relationships among groups of organisms, biologists compare the characteristics of living species in a process called '<span class="vocab-word" data-word="phylogenetic analysis">phylogenetic analysis</span>'. Tehrani has used the same approach to compare related versions of fairy tales to discover how they have <span class="vocab-word" data-word="evolved">evolved</span> and which elements have survived longest.</p>
+
+                <p>Tehrani's analysis focused on <em>Little Red Riding Hood</em> in its many forms, which include another Western fairy tale known as <em>The Wolf and the Kids</em>. Checking for <span class="vocab-word" data-word="variants">variants</span> of these two tales and similar stories from Africa, East Asia and other regions, he ended up with 58 stories recorded from <span class="vocab-word" data-word="oral traditions">oral traditions</span>. Once his phylogenetic analysis had established that they were indeed related, he used the same methods to explore how they have developed and altered over time.</p>
+
+                <p>First he tested some assumptions about which aspects of the story alter least as it evolves, indicating their importance. <span class="vocab-word" data-word="Folklorists">Folklorists</span> believe that what happens in a story is more central to the story than the characters in it — that visiting a relative, only to be met by a scary animal in disguise, is more fundamental than whether the visitor is a little girl or three siblings, or the animal is a tiger instead of a wolf.</p>
+
+                <p>However, Tehrani found no significant difference in the rate of evolution of incidents compared with that of characters. 'Certain episodes are very stable because they are crucial to the story, but there are lots of other details that can evolve quite freely,' he says. Neither did his analysis support the theory that the central section of a story is the most <span class="vocab-word" data-word="conserved">conserved</span> part. He found no significant difference in the flexibility of events there compared with the beginning or the end.</p>
+
+                <p>But the really big surprise came when he looked at the cautionary elements of the story. 'Studies on hunter-gatherer folk tales suggest that these narratives include really important information about the environment and the possible dangers that may be faced there — stuff that's relevant to survival,' he says. Yet in his analysis such elements were just as flexible as seemingly <span class="vocab-word" data-word="trivial">trivial</span> details. What, then, is important enough to be reproduced from generation to generation?</p>
+
+                <p>The answer, it would appear, is fear — blood-thirsty and <span class="vocab-word" data-word="gruesome">gruesome</span> aspects of the story, such as the eating of the grandmother by the wolf, turned out to be the best preserved of all. Why are these details retained by generations of storytellers, when other features are not? Tehrani has an idea: 'In an oral context, a story won't survive because of one great teller. It also needs to be interesting when it's told by someone who's not necessarily a great storyteller.' Maybe being swallowed whole by a wolf, then cut out of its stomach alive is so <span class="vocab-word" data-word="gripping">gripping</span> that it helps the story remain popular, no matter how badly it's told.</p>
+
+                <p>Jack Zipes at the University of Minnesota, Minneapolis, is <span class="vocab-word" data-word="unconvinced">unconvinced</span> by Tehrani's views on fairy tales. 'Even if they're gruesome, they won't stick unless they matter,' he says. He believes the <span class="vocab-word" data-word="perennial">perennial</span> theme of women as victims in stories like <em>Little Red Riding Hood</em> explains why they continue to feel relevant. But Tehrani points out that although this is often the case in Western versions, it is not always true elsewhere. In Chinese and Japanese versions, often known as <em>The Tiger Grandmother</em>, the villain is a woman, and in both Iran and Nigeria, the victim is a boy.</p>
+
+                <p>Mathias Clasen at Aarhus University in Denmark isn't surprised by Tehrani's findings. 'Habits and morals change, but the things that scare us, and the fact that we seek out entertainment that's designed to scare us — those are constant,' he says. Clasen believes that scary stories teach us what it feels like to be afraid without having to experience real danger, and so build up <span class="vocab-word" data-word="resistance">resistance</span> to negative emotions.</p>
+
+                <p class="footnote">* <strong>Folklorists</strong>: those who study traditional stories</p>
+            </div>
+        </div>
+
+        <div id="splitter" class="splitter relative flex items-center justify-center group">
+            <div class="w-1 h-8 bg-gray-400 rounded-full opacity-50 group-hover:bg-gray-600 transition-colors"></div>
+        </div>
+
+        <div id="right-pane" class="pane">
+            <div id="questions-section" class="max-w-3xl mx-auto space-y-8 pb-10">
+
+                <!-- Q27-31: Sentence Endings -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-purple-100 text-purple-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 27–31</span>
+                        <h4 class="font-bold text-gray-800">Matching Sentence Endings</h4>
+                    </div>
+                    <p class="mb-4 text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100 text-sm">
+                        Complete each sentence with the correct ending <strong class="text-purple-800">A–F</strong> below.
+                    </p>
+                    <div class="word-bank mb-5">
+                        <div class="word-bank-item">A — may be provided through methods used in biological research.</div>
+                        <div class="word-bank-item">B — are the reason for their survival.</div>
+                        <div class="word-bank-item">C — show considerable global variation.</div>
+                        <div class="word-bank-item">D — contain animals which transform to become humans.</div>
+                        <div class="word-bank-item">E — were originally spoken rather than written.</div>
+                        <div class="word-bank-item">F — have been developed without factual basis.</div>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="q-item" id="container-q27">
+                            <p class="text-gray-800 font-medium"><span class="font-bold text-purple-800 mr-2">27</span> In fairy tales, details of the plot …
+                                <select name="q27" class="select-input ml-2">
+                                    <option value="">-- Select --</option>
+                                    <option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option><option value="e">E</option><option value="f">F</option>
+                                </select>
+                            </p>
+                        </div>
+                        <div class="q-item" id="container-q28">
+                            <p class="text-gray-800 font-medium"><span class="font-bold text-purple-800 mr-2">28</span> Tehrani rejects the idea that the useful lessons for life in fairy tales …
+                                <select name="q28" class="select-input ml-2">
+                                    <option value="">-- Select --</option>
+                                    <option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option><option value="e">E</option><option value="f">F</option>
+                                </select>
+                            </p>
+                        </div>
+                        <div class="q-item" id="container-q29">
+                            <p class="text-gray-800 font-medium"><span class="font-bold text-purple-800 mr-2">29</span> Various theories about the social significance of fairy tales …
+                                <select name="q29" class="select-input ml-2">
+                                    <option value="">-- Select --</option>
+                                    <option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option><option value="e">E</option><option value="f">F</option>
+                                </select>
+                            </p>
+                        </div>
+                        <div class="q-item" id="container-q30">
+                            <p class="text-gray-800 font-medium"><span class="font-bold text-purple-800 mr-2">30</span> Insights into the development of fairy tales …
+                                <select name="q30" class="select-input ml-2">
+                                    <option value="">-- Select --</option>
+                                    <option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option><option value="e">E</option><option value="f">F</option>
+                                </select>
+                            </p>
+                        </div>
+                        <div class="q-item" id="container-q31">
+                            <p class="text-gray-800 font-medium"><span class="font-bold text-purple-800 mr-2">31</span> All the fairy tales analysed by Tehrani …
+                                <select name="q31" class="select-input ml-2">
+                                    <option value="">-- Select --</option>
+                                    <option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option><option value="e">E</option><option value="f">F</option>
+                                </select>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="27-31">Check Answers</button>
+                    </div>
+                </div>
+
+                <!-- Q32-36: Summary with Word Bank -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-purple-100 text-purple-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 32–36</span>
+                        <h4 class="font-bold text-gray-800">Summary Completion (Word Bank)</h4>
+                    </div>
+                    <p class="mb-4 text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100 text-sm">
+                        Complete the summary using the list of words <strong class="text-purple-800">A–I</strong> below. Write the correct letter.
+                    </p>
+                    <div class="word-bank mb-5">
+                        <span class="word-bank-item">A ending</span>
+                        <span class="word-bank-item">B events</span>
+                        <span class="word-bank-item">C warning</span>
+                        <span class="word-bank-item">D links</span>
+                        <span class="word-bank-item">E records</span>
+                        <span class="word-bank-item">F variations</span>
+                        <span class="word-bank-item">G horror</span>
+                        <span class="word-bank-item">H people</span>
+                        <span class="word-bank-item">I plot</span>
+                    </div>
+                    <div class="bg-purple-50 border border-purple-200 rounded-xl p-5 leading-loose text-gray-800 font-serif text-base space-y-3">
+                        <p class="font-sans font-bold text-purple-800 text-sm uppercase tracking-wide mb-2">Phylogenetic analysis of <em>Little Red Riding Hood</em></p>
+                        <p>Tehrani used techniques from evolutionary biology to find out if
+                            <span id="container-q32" class="inline-block mx-1"><strong class="text-purple-800 text-sm mr-1">32</strong>
+                            <select name="q32" class="select-input"><option value="">--</option><option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option><option value="e">E</option><option value="f">F</option><option value="g">G</option><option value="h">H</option><option value="i">I</option></select></span>
+                            existed among 58 stories from around the world. He also wanted to know which aspects of the stories had fewest
+                            <span id="container-q33" class="inline-block mx-1"><strong class="text-purple-800 text-sm mr-1">33</strong>
+                            <select name="q33" class="select-input"><option value="">--</option><option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option><option value="e">E</option><option value="f">F</option><option value="g">G</option><option value="h">H</option><option value="i">I</option></select></span>,
+                            as he believed these aspects would be the most important ones. Contrary to other beliefs, he found that some
+                            <span id="container-q34" class="inline-block mx-1"><strong class="text-purple-800 text-sm mr-1">34</strong>
+                            <select name="q34" class="select-input"><option value="">--</option><option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option><option value="e">E</option><option value="f">F</option><option value="g">G</option><option value="h">H</option><option value="i">I</option></select></span>
+                            that were included in a story tended to change over time, and that the middle of a story seemed no more important than the other parts. He was also surprised that parts of a story which seemed to provide some sort of
+                            <span id="container-q35" class="inline-block mx-1"><strong class="text-purple-800 text-sm mr-1">35</strong>
+                            <select name="q35" class="select-input"><option value="">--</option><option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option><option value="e">E</option><option value="f">F</option><option value="g">G</option><option value="h">H</option><option value="i">I</option></select></span>
+                            were unimportant. The aspect that he found most important in a story's survival was
+                            <span id="container-q36" class="inline-block mx-1"><strong class="text-purple-800 text-sm mr-1">36</strong>
+                            <select name="q36" class="select-input"><option value="">--</option><option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option><option value="e">E</option><option value="f">F</option><option value="g">G</option><option value="h">H</option><option value="i">I</option></select></span>.
+                        </p>
+                    </div>
+                    <div class="mt-4 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="32-36">Check Answers</button>
+                    </div>
+                </div>
+
+                <!-- Q37-40: Multiple Choice -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-purple-100 text-purple-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 37–40</span>
+                        <h4 class="font-bold text-gray-800">Multiple Choice</h4>
+                    </div>
+                    <p class="mb-5 text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100 text-sm">
+                        Choose the correct letter <strong class="text-purple-800">A, B, C or D</strong>.
+                    </p>
+
+                    <!-- Q37 -->
+                    <div class="q-item mb-6" id="container-q37-group">
+                        <p class="font-semibold text-gray-800 mb-3"><span class="font-bold text-purple-800 mr-2">37</span> What method did Jamie Tehrani use to test his ideas about fairy tales?</p>
+                        <div id="container-q37">
+                            <label class="mc-label"><input type="radio" name="q37" value="a"><span><strong class="text-purple-800">A</strong> &nbsp; He compared oral and written forms of the same stories.</span></label>
+                            <label class="mc-label"><input type="radio" name="q37" value="b"><span><strong class="text-purple-800">B</strong> &nbsp; He looked at many different forms of the same basic story.</span></label>
+                            <label class="mc-label"><input type="radio" name="q37" value="c"><span><strong class="text-purple-800">C</strong> &nbsp; He looked at unrelated stories from many different countries.</span></label>
+                            <label class="mc-label"><input type="radio" name="q37" value="d"><span><strong class="text-purple-800">D</strong> &nbsp; He contrasted the development of fairy tales with that of living creatures.</span></label>
+                        </div>
+                    </div>
+
+                    <!-- Q38 -->
+                    <div class="q-item mb-6" id="container-q38-group">
+                        <p class="font-semibold text-gray-800 mb-3"><span class="font-bold text-purple-800 mr-2">38</span> When discussing Tehrani's views, Jack Zipes suggests that</p>
+                        <div id="container-q38">
+                            <label class="mc-label"><input type="radio" name="q38" value="a"><span><strong class="text-purple-800">A</strong> &nbsp; Tehrani ignores key changes in the role of women.</span></label>
+                            <label class="mc-label"><input type="radio" name="q38" value="b"><span><strong class="text-purple-800">B</strong> &nbsp; stories which are too horrific are not always taken seriously.</span></label>
+                            <label class="mc-label"><input type="radio" name="q38" value="c"><span><strong class="text-purple-800">C</strong> &nbsp; Tehrani overemphasises the importance of violence in stories.</span></label>
+                            <label class="mc-label"><input type="radio" name="q38" value="d"><span><strong class="text-purple-800">D</strong> &nbsp; features of stories only survive if they have a deeper significance.</span></label>
+                        </div>
+                    </div>
+
+                    <!-- Q39 -->
+                    <div class="q-item mb-6" id="container-q39-group">
+                        <p class="font-semibold text-gray-800 mb-3"><span class="font-bold text-purple-800 mr-2">39</span> Why does Tehrani refer to Chinese and Japanese fairy tales?</p>
+                        <div id="container-q39">
+                            <label class="mc-label"><input type="radio" name="q39" value="a"><span><strong class="text-purple-800">A</strong> &nbsp; to indicate that Jack Zipes' theory is incorrect</span></label>
+                            <label class="mc-label"><input type="radio" name="q39" value="b"><span><strong class="text-purple-800">B</strong> &nbsp; to suggest that crime is a global problem</span></label>
+                            <label class="mc-label"><input type="radio" name="q39" value="c"><span><strong class="text-purple-800">C</strong> &nbsp; to imply that all fairy tales have a similar meaning</span></label>
+                            <label class="mc-label"><input type="radio" name="q39" value="d"><span><strong class="text-purple-800">D</strong> &nbsp; to add more evidence for Jack Zipes' ideas</span></label>
+                        </div>
+                    </div>
+
+                    <!-- Q40 -->
+                    <div class="q-item mb-4" id="container-q40-group">
+                        <p class="font-semibold text-gray-800 mb-3"><span class="font-bold text-purple-800 mr-2">40</span> What does Mathias Clasen believe about fairy tales?</p>
+                        <div id="container-q40">
+                            <label class="mc-label"><input type="radio" name="q40" value="a"><span><strong class="text-purple-800">A</strong> &nbsp; They are a safe way of learning to deal with fear.</span></label>
+                            <label class="mc-label"><input type="radio" name="q40" value="b"><span><strong class="text-purple-800">B</strong> &nbsp; They are a type of entertainment that some people avoid.</span></label>
+                            <label class="mc-label"><input type="radio" name="q40" value="c"><span><strong class="text-purple-800">C</strong> &nbsp; They reflect the changing values of our society.</span></label>
+                            <label class="mc-label"><input type="radio" name="q40" value="d"><span><strong class="text-purple-800">D</strong> &nbsp; They reduce our ability to deal with real-world problems.</span></label>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="37-40">Check Answers</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<div id="highlight-tooltip" class="highlight-tooltip">Highlight Text</div>
+
+<!-- Vocab Modal -->
+<div id="vocab-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
+    <div class="bg-white rounded-2xl shadow-2xl p-5 sm:p-8 w-full max-w-md relative transform transition-all scale-95 opacity-0" id="vocab-modal-content">
+        <button id="close-vocab-modal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-full w-8 h-8 flex items-center justify-center">&times;</button>
+        <div class="flex items-center mb-6 border-b pb-4 mt-2">
+            <h3 id="vocab-word" class="text-2xl sm:text-3xl font-extrabold text-gray-900 capitalize tracking-tight"></h3>
+        </div>
+        <div class="flex items-center mb-5">
+            <button id="play-audio-btn" class="flex items-center justify-center h-10 w-10 sm:h-12 sm:w-12 shrink-0 rounded-full bg-purple-50 text-purple-700 hover:bg-purple-600 hover:text-white mr-4 transition-all shadow-sm border border-purple-200">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>
+            </button>
+            <p id="vocab-pronunciation-text" class="text-gray-500 font-mono text-base sm:text-lg bg-gray-50 px-3 py-1 rounded-md border border-gray-100"></p>
+        </div>
+        <p id="vocab-meaning" class="text-gray-700 text-base sm:text-lg leading-relaxed"></p>
+    </div>
+</div>
+
+<!-- Alert Modal -->
+<div id="alert-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-[80]">
+    <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm relative transform transition-all scale-95 opacity-0 text-center" id="alert-modal-content">
+        <div id="alert-icon-container" class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 mb-4">
+            <svg class="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        </div>
+        <h3 id="alert-title" class="text-lg font-medium text-gray-900 mb-2">Notice</h3>
+        <p id="alert-message" class="text-sm text-gray-500 mb-6"></p>
+        <button id="close-alert-btn" class="w-full inline-flex justify-center rounded-md px-4 py-2 bg-purple-800 text-white font-medium hover:bg-purple-900 text-sm transition-colors">Got it</button>
+    </div>
+</div>
+
+<script>
+const vocabulary = {
+    'disposes of': { meaning: 'Gets rid of; deals with or kills someone in a ruthless manner.', phonetic: '/dɪˈspəʊzɪz ɒv/' },
+    'woodcutter': { meaning: 'A person who cuts down trees or chops wood, especially one who lives in a forest.', phonetic: '/ˈwʊdˌkʌt.ər/' },
+    'attributed to': { meaning: 'Regarded as being caused by or resulting from a particular thing; credited to.', phonetic: '/əˈtrɪb.juː.tɪd tuː/' },
+    'cautionary': { meaning: 'Serving as a warning; intended to give advice about possible dangers.', phonetic: '/ˈkɔː.ʃən.ər.i/' },
+    'anthropologist': { meaning: 'A person who studies human societies, cultures, and their development.', phonetic: '/ˌæn.θrəˈpɒl.ə.dʒɪst/' },
+    'devising': { meaning: 'Planning or inventing a complex procedure, system, or mechanism.', phonetic: '/dɪˈvaɪ.zɪŋ/' },
+    'evolutionary': { meaning: 'Relating to the gradual development of something, especially from simple to more complex forms.', phonetic: '/ˌiː.vəˈluː.ʃən.ər.i/' },
+    'phylogenetic analysis': { meaning: 'A method used to determine the evolutionary relationships between organisms (or, in this case, stories) based on their shared characteristics.', phonetic: '/ˌfaɪ.ləʊ.dʒɪˈnet.ɪk əˈnæl.ɪ.sɪs/' },
+    'evolved': { meaning: 'Developed gradually, especially from a simple to a more complex form.', phonetic: '/ɪˈvɒlvd/' },
+    'variants': { meaning: 'Different forms or versions of something; variations of a story or item.', phonetic: '/ˈveər.i.ənts/' },
+    'oral traditions': { meaning: 'Cultural material and traditions passed down through spoken word from one generation to the next.', phonetic: '/ˈɔː.rəl trəˈdɪʃ.ənz/' },
+    'Folklorists': { meaning: 'Scholars who study folklore — the traditional beliefs, customs, and stories of a community.', phonetic: '/ˈfəʊk.lɔː.rɪsts/' },
+    'conserved': { meaning: 'Preserved or kept unchanged over time; protected from alteration.', phonetic: '/kənˈsɜːvd/' },
+    'trivial': { meaning: 'Of little value or importance; insignificant.', phonetic: '/ˈtrɪv.i.əl/' },
+    'gruesome': { meaning: 'Causing repulsion or horror; grisly and shocking.', phonetic: '/ˈɡruː.səm/' },
+    'gripping': { meaning: 'Firmly holding one\'s attention; exciting and compelling.', phonetic: '/ˈɡrɪp.ɪŋ/' },
+    'unconvinced': { meaning: 'Not persuaded that something is true or reliable; sceptical.', phonetic: '/ˌʌn.kənˈvɪnst/' },
+    'perennial': { meaning: 'Lasting or existing for a long or apparently infinite time; enduring or continually recurring.', phonetic: '/pəˈren.i.əl/' },
+    'resistance': { meaning: 'The ability to withstand or not be affected by something; the refusal to accept or comply with something.', phonetic: '/rɪˈzɪs.təns/' }
+};
+
+const WORD_BANK_LABELS = { a:'ending', b:'events', c:'warning', d:'links', e:'records', f:'variations', g:'horror', h:'people', i:'plot' };
+const ENDINGS_LABELS = { a:'A – may be provided through methods used in biological research.', b:'B – are the reason for their survival.', c:'C – show considerable global variation.', d:'D – contain animals which transform to become humans.', e:'E – were originally spoken rather than written.', f:'F – have been developed without factual basis.' };
+
+const ANSWERS = {
+    q27:'c', q28:'b', q29:'f', q30:'a', q31:'e',
+    q32:'d', q33:'f', q34:'b', q35:'c', q36:'g',
+    q37:'b', q38:'d', q39:'a', q40:'a'
+};
+
+const explanations = {
+    q27: "Paragraph 1: Little Red Riding Hood exists in multiple versions — wolf swallows or locks away the grandmother, Red Riding Hood escapes alone or is rescued. These are variations = 'considerable global variation.' Answer: C.",
+    q28: "Paragraph 2: Tehrani's research 'suggests otherwise' when it comes to cautionary/survival messages being the reason tales survive. He rejects the idea that useful life lessons are the reason for their survival. Answer: B.",
+    q29: "Paragraph 2: Academic theories to explain fairy tales' social importance have been 'devised' despite a 'huge gap in our knowledge' — i.e., developed without a factual basis. Answer: F.",
+    q30: "Paragraph 3: Tehrani used phylogenetic analysis — a method from biological research — to understand how fairy tales developed. Answer: A.",
+    q31: "Paragraph 4: All 58 stories were 'recorded from oral traditions' — originally spoken rather than written. Answer: E.",
+    q32: "Paragraph 4: '…phylogenetic analysis had established that they were indeed related.' The word meaning 'related connections' = links (D). Answer: D.",
+    q33: "Paragraph 4: He wanted to know which aspects had altered least; 'variations' = changes/alterations. He believed aspects with fewest variations were most important. Answer: F.",
+    q34: "Paragraph 6: 'Tehrani found no significant difference in the rate of evolution of incidents compared with characters.' Incidents = events. Contrary to beliefs, events tend to change too. Answer: B.",
+    q35: "Paragraph 7: Cautionary elements (= warning) were 'just as flexible as seemingly trivial details' — surprisingly unimportant for survival. Answer: C.",
+    q36: "Paragraph 8: 'The answer… is fear — blood-thirsty and gruesome aspects.' Horror (G) = fear/gruesome is the most important aspect for survival. Answer: G.",
+    q37: "Paragraph 4: 'Tehrani's analysis focused on Little Red Riding Hood in its many forms.' He looked at many different forms of the same story. Answer: B.",
+    q38: "Paragraph 9: Jack Zipes says 'Even if they're gruesome, they won't stick unless they matter.' = features only survive if they have a deeper significance. Answer: D.",
+    q39: "Paragraph 9: Tehrani uses Chinese/Japanese versions (where villain is female, victim is male) to counter Zipes' claim that women-as-victims explains the stories' relevance. Answer: A.",
+    q40: "Paragraph 10: Clasen believes 'scary stories teach us what it feels like to be afraid without having to experience real danger, and so build up resistance to negative emotions.' = a safe way of learning to deal with fear. Answer: A."
+};
+
+const TOTAL_QUESTIONS = 14;
+
+document.addEventListener('DOMContentLoaded', () => {
+    const app = {
+        userAnswers: {}, answersChecked: {}, currentFontSize: 17, timeRemaining: 20*60,
+        leftPane: document.getElementById('left-pane'),
+        rightPane: document.getElementById('right-pane'),
+        highlightTooltip: document.getElementById('highlight-tooltip'),
+        vocabModal: document.getElementById('vocab-modal'),
+        vocabModalContent: document.getElementById('vocab-modal-content'),
+        closeVocabModalBtn: document.getElementById('close-vocab-modal'),
+        vocabWordEl: document.getElementById('vocab-word'),
+        vocabMeaningEl: document.getElementById('vocab-meaning'),
+        vocabPronunciationText: document.getElementById('vocab-pronunciation-text'),
+        playAudioBtn: document.getElementById('play-audio-btn'),
+        progressText: document.getElementById('progress-text'),
+        timerEl: document.getElementById('timer'),
+        alertModal: document.getElementById('alert-modal'),
+        alertModalContent: document.getElementById('alert-modal-content'),
+        closeAlertBtn: document.getElementById('close-alert-btn'),
+        alertTitleEl: document.getElementById('alert-title'),
+        alertMessageEl: document.getElementById('alert-message'),
+        alertIconContainer: document.getElementById('alert-icon-container'),
+
+        init() { this.setupEventListeners(); this.initSplitter(); this.initHighlighter(); this.updateCheckButtonsState(); this.startTimer(); },
+
+        startTimer() {
+            const interval = setInterval(() => {
+                if (this.timeRemaining <= 0) { clearInterval(interval); this.timerEl.textContent="00:00"; this.showAlert("Time's Up!","Your 20 minutes have expired.","warning"); return; }
+                this.timeRemaining--;
+                const m=Math.floor(this.timeRemaining/60).toString().padStart(2,'0');
+                const s=(this.timeRemaining%60).toString().padStart(2,'0');
+                this.timerEl.textContent=`${m}:${s}`;
+                if(this.timeRemaining<=300) this.timerEl.classList.add('text-red-500');
+            }, 1000);
+        },
+
+        setupEventListeners() {
+            document.getElementById('increase-font-btn').addEventListener('click',()=>this.changeFontSize(1));
+            document.getElementById('decrease-font-btn').addEventListener('click',()=>this.changeFontSize(-1));
+            document.getElementById('clear-highlights-btn').addEventListener('click',()=>this.leftPane.querySelectorAll('mark').forEach(m=>m.replaceWith(document.createTextNode(m.textContent))));
+            this.closeVocabModalBtn.addEventListener('click',()=>this.closeModal());
+            this.vocabModal.addEventListener('click',(e)=>{if(e.target===this.vocabModal)this.closeModal();});
+            document.addEventListener('keydown',(e)=>{
+                if(e.key==='Escape'){if(!this.vocabModal.classList.contains('hidden'))this.closeModal();if(!this.alertModal.classList.contains('hidden'))this.closeAlert();}
+                if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='f'){e.preventDefault();this.showAlert("Action Disabled","The 'Find' function is disabled to simulate real test conditions.","warning");}
+            });
+            document.addEventListener('visibilitychange',()=>{if(document.hidden&&this.timeRemaining>0)this.showAlert("Warning","Please do not switch tabs during the exam.","warning");});
+            window.addEventListener('beforeunload',(e)=>{if(this.timeRemaining>0&&this.timeRemaining<20*60){e.preventDefault();e.returnValue='';}});
+            this.closeAlertBtn.addEventListener('click',()=>this.closeAlert());
+            this.alertModal.addEventListener('click',(e)=>{if(e.target===this.alertModal)this.closeAlert();});
+            document.body.addEventListener('change',(e)=>{
+                if(e.target.tagName==='SELECT'){this.userAnswers[e.target.name]=e.target.value;e.target.classList.remove('correct-answer','incorrect-answer');this.updateCheckButtonsState();this.updateProgress();}
+                if(e.target.type==='radio'){this.userAnswers[e.target.name]=e.target.value;this.updateCheckButtonsState();this.updateProgress();}
+            });
+            this.leftPane.addEventListener('click',(e)=>{
+                if(e.target.classList.contains('vocab-word'))this.openVocabModal(e.target.dataset.word);
+                if(e.target.tagName==='MARK')e.target.replaceWith(document.createTextNode(e.target.textContent));
+            });
+            document.querySelectorAll('.check-btn').forEach(btn=>btn.addEventListener('click',(e)=>this.checkAnswers(e.target.dataset.range,e.target)));
+            this.playAudioBtn.addEventListener('click',()=>{
+                const word=this.vocabWordEl.textContent;if(!word)return;
+                if('speechSynthesis' in window)window.speechSynthesis.cancel();
+                this.playAudioBtn.classList.remove('text-purple-700','bg-purple-50');this.playAudioBtn.classList.add('bg-purple-600','text-white');
+                if('speechSynthesis' in window){const u=new SpeechSynthesisUtterance(word);u.lang='en-GB';u.rate=0.9;u.onend=()=>this.resetAudioBtn();u.onerror=()=>this.resetAudioBtn();window.speechSynthesis.speak(u);}
+                else setTimeout(()=>this.resetAudioBtn(),500);
+            });
+        },
+
+        updateProgress(){let c=0;for(let k in ANSWERS){if((this.userAnswers[k]||"").trim())c++;}this.progressText.textContent=`${Math.min(c,TOTAL_QUESTIONS)} / ${TOTAL_QUESTIONS} Answered`;},
+        resetAudioBtn(){this.playAudioBtn.classList.add('text-purple-700','bg-purple-50');this.playAudioBtn.classList.remove('bg-purple-600','text-white');},
+        changeFontSize(d){this.currentFontSize=Math.max(14,Math.min(26,this.currentFontSize+d));document.documentElement.style.setProperty('--app-font-size',`${this.currentFontSize}px`);},
+
+        openVocabModal(w){
+            const d=vocabulary[w];if(!d)return;
+            this.vocabWordEl.textContent=w;this.vocabMeaningEl.textContent=d.meaning;this.vocabPronunciationText.textContent=d.phonetic||'';
+            this.vocabModal.classList.remove('hidden');
+            setTimeout(()=>{this.vocabModalContent.classList.remove('scale-95','opacity-0');this.vocabModalContent.classList.add('scale-100','opacity-100');},10);
+        },
+        closeModal(){
+            if('speechSynthesis' in window)window.speechSynthesis.cancel();
+            this.vocabModalContent.classList.remove('scale-100','opacity-100');this.vocabModalContent.classList.add('scale-95','opacity-0');
+            this.resetAudioBtn();setTimeout(()=>this.vocabModal.classList.add('hidden'),200);
+        },
+        showAlert(title,message,type='error'){
+            this.alertTitleEl.textContent=title;this.alertMessageEl.textContent=message;
+            const c=type==='warning'?'yellow':'red';
+            this.alertIconContainer.className=`mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-${c}-100 mb-4`;
+            this.alertIconContainer.innerHTML=`<svg class="h-6 w-6 text-${c}-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>`;
+            this.alertModal.classList.remove('hidden');
+            setTimeout(()=>{this.alertModalContent.classList.remove('scale-95','opacity-0');this.alertModalContent.classList.add('scale-100','opacity-100');},10);
+        },
+        closeAlert(){
+            this.alertModalContent.classList.remove('scale-100','opacity-100');this.alertModalContent.classList.add('scale-95','opacity-0');
+            setTimeout(()=>this.alertModal.classList.add('hidden'),200);
+        },
+
+        isRangeAnswered(range){
+            const [s,e]=range.split('-').map(Number);
+            for(let i=s;i<=e;i++){if(!(this.userAnswers[`q${i}`]||"").trim())return false;}
+            return true;
+        },
+
+        updateCheckButtonsState(){
+            document.querySelectorAll('.check-btn').forEach(btn=>{
+                const range=btn.dataset.range;
+                if(this.answersChecked[range]){btn.className='check-btn bg-gray-800 hover:bg-gray-900 text-white font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-pointer';btn.textContent='Reset Answers';return;}
+                const allDone=this.isRangeAnswered(range);
+                btn.className=allDone?'check-btn bg-purple-800 hover:bg-purple-900 text-white font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-pointer transform hover:-translate-y-0.5':'check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80';
+                btn.textContent='Check Answers';
+            });
+        },
+
+        checkAnswers(range,btn){
+            if(this.answersChecked[range]){
+                this.answersChecked[range]=false;
+                const [s,e]=range.split('-').map(Number);
+                for(let i=s;i<=e;i++){
+                    const qId=`q${i}`;this.userAnswers[qId]='';
+                    const sel=document.querySelector(`select[name="${qId}"]`);if(sel){sel.value='';sel.classList.remove('correct-answer','incorrect-answer');}
+                    document.querySelectorAll(`input[name="${qId}"]`).forEach(r=>{r.checked=false;const lbl=r.closest('label');if(lbl)lbl.classList.remove('correct-answer','incorrect-answer');});
+                    document.getElementById(`expl-${qId}`)?.remove();
+                }
+                this.updateCheckButtonsState();this.updateProgress();return;
+            }
+            if(!this.isRangeAnswered(range)){this.showAlert("Incomplete Answers","Please answer all questions in this section before checking.","warning");return;}
+            this.answersChecked[range]=true;this.updateCheckButtonsState();
+
+            const [s,e]=range.split('-').map(Number);
+            for(let i=s;i<=e;i++){
+                const qId=`q${i}`;
+                const userAns=(this.userAnswers[qId]||"").toLowerCase().trim();
+                const correctAns=ANSWERS[qId].toLowerCase();
+                const isCorrect=userAns===correctAns;
+                let feedbackHTML='';
+
+                // select elements
+                const sel=document.querySelector(`select[name="${qId}"]`);
+                if(sel){
+                    sel.classList.remove('correct-answer','incorrect-answer');
+                    sel.classList.add(isCorrect?'correct-answer':'incorrect-answer');
+                    if(!isCorrect){
+                        let dispVal=correctAns.toUpperCase();
+                        // label for word bank (32-36)
+                        if(i>=32&&i<=36&&WORD_BANK_LABELS[correctAns])dispVal+=` (${WORD_BANK_LABELS[correctAns]})`;
+                        feedbackHTML=`<span class="correct-badge">Correct Answer: ${dispVal}</span><br>`;
+                    }
+                }
+                // radio elements
+                const radios=document.querySelectorAll(`input[name="${qId}"]`);
+                if(radios.length>0){
+                    radios.forEach(r=>{
+                        const lbl=r.closest('label');if(!lbl)return;
+                        lbl.classList.remove('correct-answer','incorrect-answer');
+                        if(r.value===correctAns)lbl.classList.add('correct-answer');
+                        else if(r.checked&&r.value!==correctAns)lbl.classList.add('incorrect-answer');
+                    });
+                    if(!isCorrect)feedbackHTML=`<span class="correct-badge">Correct Answer: ${correctAns.toUpperCase()}</span><br>`;
+                }
+
+                if(explanations[qId]&&!document.getElementById(`expl-${qId}`)){
+                    const div=document.createElement('div');div.id=`expl-${qId}`;div.className='explanation-box mt-3';
+                    div.innerHTML=`${feedbackHTML}<strong>Explanation:</strong> ${explanations[qId]}`;
+                    // find correct container
+                    const grpContainer=document.getElementById(`container-${qId}-group`)||document.getElementById(`container-${qId}`);
+                    if(grpContainer){
+                        const wrap=grpContainer.closest('.q-item')||grpContainer;
+                        wrap.insertAdjacentElement('afterend',div);
+                    }
+                }
+            }
+        },
+
+        initSplitter(){
+            let isDragging=false;const panes=document.getElementById('content-panes');
+            this.splitter.addEventListener('mousedown',(e)=>{e.preventDefault();isDragging=true;document.body.style.cursor='col-resize';});
+            document.addEventListener('mousemove',(e)=>{
+                if(!isDragging||window.innerWidth<=768)return;
+                const rect=panes.getBoundingClientRect();const newLeft=e.clientX-rect.left;
+                if(newLeft>200&&newLeft<rect.width-200)panes.style.gridTemplateColumns=`${(newLeft/rect.width)*100}% 5px 1fr`;
+            });
+            document.addEventListener('mouseup',()=>{if(isDragging){isDragging=false;document.body.style.cursor='default';}});
+        },
+
+        initHighlighter(){
+            document.body.addEventListener('mouseup',(e)=>{
+                const sel=window.getSelection();const text=sel.toString().trim();
+                if(text.length>0){
+                    const range=sel.getRangeAt(0);
+                    if(!this.leftPane.contains(range.commonAncestorContainer)&&!this.rightPane.contains(range.commonAncestorContainer)){this.highlightTooltip.style.display='none';return;}
+                    this.highlightTooltip.style.left=`${e.pageX-30}px`;this.highlightTooltip.style.top=`${e.pageY-40}px`;this.highlightTooltip.style.display='block';
+                    this.highlightTooltip.onclick=()=>{
+                        const mark=document.createElement('mark');
+                        try{range.surroundContents(mark);}catch(ex){this.showAlert("Highlight Error","Please select text within a single element.","warning");}
+                        finally{sel.removeAllRanges();this.highlightTooltip.style.display='none';}
+                    };
+                }else{this.highlightTooltip.style.display='none';}
+            });
+            document.body.addEventListener('mousedown',()=>{if(window.getSelection().toString().length===0)this.highlightTooltip.style.display='none';});
+        },
+
+        get splitter(){return document.getElementById('splitter');}
+    };
+    app.init();
+});
+</script>
+</body>
+</html>

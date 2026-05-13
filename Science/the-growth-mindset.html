@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IELTS Academic Simulator - The Growth Mindset</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --app-font-size: 17px; }
+        body { font-family: 'Inter', sans-serif; overscroll-behavior: none; background-color: #f3f4f6; }
+        .ielts-container { display: grid; grid-template-rows: auto 1fr; height: 100vh; }
+        .content-panes { display: grid; grid-template-columns: 1fr 5px 1fr; overflow: hidden; }
+        .pane { overflow-y: auto; padding: 2rem 3rem; font-size: var(--app-font-size); scroll-behavior: smooth; }
+        #left-pane { background-color: #fdfdfd; }
+        #right-pane { background-color: #f8fafc; }
+        .splitter { background-color: #cbd5e1; cursor: col-resize; z-index: 10; transition: background-color 0.2s; }
+        .splitter:hover, .splitter:active { background-color: #94a3b8; }
+        .reading-passage { font-family: 'Merriweather', serif; line-height: 1.9; color: #334155; text-align: justify; margin-bottom: 2rem; max-width: 800px; margin: 0 auto; }
+        .reading-passage p { margin-bottom: 1.5rem; text-indent: 1.5rem; }
+        .reading-passage h3 { font-family: 'Inter', sans-serif; color: #0f172a; margin-bottom: 0.5rem; font-weight: 700; font-size: 1.5em; text-align: center; text-indent: 0; text-transform: uppercase; letter-spacing: 0.05em; }
+        .reading-passage h4 { font-family: 'Inter', sans-serif; color: #475569; margin-bottom: 1.5rem; font-weight: 500; font-size: 1.1em; text-align: center; text-indent: 0; font-style: italic; }
+        .q-item { padding: 1rem; border-radius: 0.5rem; transition: all 0.2s; background-color: white; border: 1px solid #e2e8f0; margin-bottom: 0.75rem; }
+        .text-input { border: 2px solid #cbd5e1; border-radius: 6px; padding: 4px 8px; font-weight: 600; color: #1e293b; transition: all 0.2s; text-align: center; background-color: #f8fafc; }
+        .text-input:focus { outline: none; border-color: #3b82f6; background-color: #ffffff; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); }
+        .text-input-short { width: 3rem; text-transform: uppercase; }
+        select.text-input { appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 0.25rem center; background-size: 1em; padding-right: 1.25rem; padding-left: 0.5rem; cursor: pointer; }
+        select.text-input-short { width: 4.5rem; }
+        .custom-radio-label { display: flex; align-items: center; padding: 0.75rem 1rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s ease-in-out; background-color: white; flex: 1; justify-content: center; text-align: center; }
+        .custom-radio-label.mcq-label { justify-content: flex-start; text-align: left; flex: none; width: 100%; margin-bottom: 0.5rem; }
+        .custom-radio-label:hover { background-color: #f8fafc; border-color: #cbd5e1; }
+        .custom-radio-label input:checked + span { color: #1e40af; font-weight: 700; }
+        .correct-answer { border-color: #22c55e !important; background-color: #f0fdf4 !important; color: #166534 !important; }
+        label.correct-answer { box-shadow: 0 0 0 1px #22c55e; color: #166534 !important; }
+        label.correct-answer span { color: #166534 !important; }
+        .incorrect-answer { border-color: #ef4444 !important; background-color: #fef2f2 !important; color: #991b1b !important; }
+        label.incorrect-answer { box-shadow: 0 0 0 1px #ef4444; color: #991b1b !important; }
+        label.incorrect-answer span { color: #991b1b !important; }
+        .explanation-box { animation: fadeIn 0.4s ease-out forwards; margin-top: 0.75rem; padding: 1rem; background-color: #eff6ff; border-left: 4px solid #3b82f6; border-radius: 0.5rem; font-size: 0.95rem; color: #1e3a8a; box-shadow: 0 2px 4px rgba(0,0,0,0.05); text-align: left; }
+        .explanation-box .correct-badge { display: inline-block; background: #22c55e; color: white; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85em; margin-bottom: 0.5rem; letter-spacing: 0.05em; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+        .vocab-word { color: #2563eb; font-weight: 600; cursor: pointer; border-bottom: 2px dotted #93c5fd; transition: all 0.2s ease-in-out; padding: 0 2px; }
+        .vocab-word:hover { background-color: #dbeafe; border-bottom-style: solid; border-radius: 2px; }
+        .highlight-tooltip { position: absolute; background-color: #1e293b; color: white; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 500; z-index: 100; cursor: pointer; display: none; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        mark { background-color: #fef08a; border-radius: 3px; padding: 2px 0; cursor: pointer; transition: background-color 0.2s, color 0.2s; position: relative; }
+        mark:hover { background-color: #fca5a5; color: #7f1d1d; }
+        mark:hover::after { content: ' ×'; font-weight: bold; font-size: 0.8em; opacity: 0.7; }
+        .ielts-table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
+        .ielts-table th, .ielts-table td { border: 1px solid #cbd5e1; padding: 1rem; vertical-align: top; }
+        .ielts-table th { background-color: #f8fafc; font-weight: 700; color: #1e293b; text-align: left; }
+        @media (max-width: 768px) {
+            .content-panes { display: flex; flex-direction: column; overflow-y: auto; }
+            .splitter { display: none; }
+            .pane { padding: 1.25rem 1rem; overflow-y: visible; height: auto; }
+            #left-pane { border-bottom: 2px dashed #cbd5e1; padding-bottom: 2rem; }
+            .text-input { max-width: 130px; padding: 2px 6px; }
+            .ielts-table th, .ielts-table td { padding: 0.75rem 0.5rem; font-size: 0.9em; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="test-container" class="ielts-container">
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 flex justify-between items-center z-20 shadow-sm flex-wrap gap-3">
+        <div class="flex items-center gap-2 sm:space-x-3">
+            <div class="bg-emerald-600 text-white p-1.5 sm:p-2 rounded-lg shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+            </div>
+            <h1 class="text-xl font-bold text-gray-800 hidden sm:block">IELTS Simulator <span class="text-emerald-600 font-medium">| The Growth Mindset</span></h1>
+            <h1 class="text-base font-bold text-gray-800 sm:hidden">IELTS <span class="text-emerald-600">Growth Mindset</span></h1>
+        </div>
+
+        <div class="flex items-center space-x-4">
+            <div class="hidden sm:flex flex-col items-end">
+                <span class="text-xs text-gray-500 font-bold uppercase tracking-wide">Progress</span>
+                <span id="progress-text" class="text-sm font-semibold text-emerald-600">0 / 13 Answered</span>
+            </div>
+            <div class="flex items-center bg-gray-100 rounded-lg px-3 py-1.5 border border-gray-200">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span id="timer" class="font-mono font-bold text-gray-700 text-lg">20:00</span>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2 sm:space-x-3">
+            <button id="clear-highlights-btn" class="hidden sm:flex items-center justify-center px-3 py-1.5 rounded bg-amber-50 hover:bg-amber-100 text-amber-700 transition-colors focus:outline-none border border-amber-200 text-sm font-medium" title="Clear Highlights">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                Clear
+            </button>
+            <div class="flex items-center space-x-1 sm:space-x-2 bg-gray-50 p-1 rounded-lg border border-gray-200">
+                <button id="decrease-font-btn" class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded bg-white shadow-sm hover:bg-gray-100 text-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-400 font-bold text-sm sm:text-base" title="Decrease Font Size">A-</button>
+                <button id="increase-font-btn" class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded bg-white shadow-sm hover:bg-gray-100 text-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-400 font-bold text-sm sm:text-base" title="Increase Font Size">A+</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main id="content-panes" class="content-panes">
+        <!-- Left Pane: Passage -->
+        <div id="left-pane" class="pane relative">
+            <div class="reading-passage">
+                <h3>The growth mindset</h3>
+
+                <p>Over the past century, a powerful idea has taken root in the educational landscape. The concept of intelligence as something <span class="vocab-word" data-word="innate">innate</span> has been supplanted by the idea that intelligence is not fixed, and that, with the right training, we can be the authors of our own cognitive capabilities. Psychologist Alfred Binet, the developer of the first intelligence tests, was one of many 19th-century scientists who held that earlier view and sought to <span class="vocab-word" data-word="quantify">quantify</span> cognitive ability. Then, in the early 20th century, progressive thinkers revolted against the notion that inherent ability is destiny. Instead, educators such as John Dewey argued that every child's intelligence could be developed, given the right environment.</p>
+
+                <p>'Growth mindset theory' is a relatively new — and extremely popular — version of this idea. In many schools today you will see hallways covered in motivational posters and hear speeches on the mindset of great sporting heroes who simply <em>believed</em> their way to the top. A major focus of the growth mindset in schools is <span class="vocab-word" data-word="coaxing">coaxing</span> students away from seeing failure as an indication of their ability, and towards seeing it as a chance to improve that ability. As educationalist Jeff Howard noted several decades ago: 'Smart is not something that you just are, smart is something that you can get.'</p>
+
+                <p>The idea of the growth mindset is based on the work of psychologist Carol Dweck in California in the 1990s. In one key experiment, Dweck divided a group of 10- to 12-year-olds into two groups. All were told that they had achieved a high score on a test but the first group were praised for their intelligence in achieving this, while the others were praised for their effort. The second group — those who had been <span class="vocab-word" data-word="instilled">instilled</span> with a 'growth mindset' — were subsequently far more likely to put effort into future tasks. Meanwhile, the former took on only those tasks that would not risk their sense of worth. This group had <span class="vocab-word" data-word="inferred">inferred</span> that success or failure is due to innate ability, and this 'fixed mindset' had led them to fear of failure and lack of effort. Praising ability actually made the students perform worse, while praising effort emphasised that change was possible.</p>
+
+                <p>One of the greatest <span class="vocab-word" data-word="impediments">impediments</span> to successfully implementing a growth mindset, however, is the education system itself: in many parts of the world, the school climate is obsessed with performance in the form of constant testing, analysing and ranking of students — a key characteristic of the fixed mindset. Nor is it unusual for schools to create a certain <span class="vocab-word" data-word="cognitive dissonance">cognitive dissonance</span>, when they applaud the benefits of a growth mindset but then hand out fixed target grades in lessons based on performance.</p>
+
+                <p>Aside from the implementation problem, the original growth mindset research has also received harsh criticism. The statistician Andrew Gelman claims that 'their research designs have enough degrees of freedom that they could take their data to support just about any theory at all'. Professor of Psychology Timothy Bates, who has been trying to <span class="vocab-word" data-word="replicate">replicate</span> Dweck's work, is finding that the results are repeatedly null. He notes that: 'People with a growth mindset don't cope any better with failure … Kids with the growth mindset aren't getting better grades, either before or after our intervention study.'</p>
+
+                <p>Much of this criticism is not lost on Dweck, and she deserves great credit for responding to it and adapting her work accordingly. In fact, she argues that her work has been misunderstood and <span class="vocab-word" data-word="misapplied">misapplied</span> in a range of ways. She has also expressed concerns that her theories are being <span class="vocab-word" data-word="misappropriated">misappropriated</span> in schools by being conflated with the self-esteem movement: 'For me the growth mindset is a tool for learning and improvement. It's not just a vehicle for making children feel good.'</p>
+
+                <p>But there is another factor at work here. The failure to translate the growth mindset into the classroom might reflect a misunderstanding of the nature of teaching and learning itself. Growth mindset supporters David Yeager and Gregory Walton claim that interventions should be delivered in a subtle way to maximise their effectiveness. They say that if adolescents perceive a teacher's intervention as conveying that they are in need of help, this could undo its intended effects.</p>
+
+                <p>A lot of what drives students is their innate beliefs and how they perceive themselves. There is a strong <span class="vocab-word" data-word="correlation">correlation</span> between self-perception and achievement, but there is evidence to suggest that the actual effect of achievement on self-perception is stronger than the other way round. To stand up in a classroom and successfully deliver a good speech is a genuine achievement, and that is likely to be more powerfully motivating than vague notions of 'motivation' itself.</p>
+
+                <p>Recent evidence would suggest that growth mindset interventions are not the <span class="vocab-word" data-word="elixir">elixir</span> of student learning that its proponents claim it to be. The growth mindset appears to be a viable construct in the lab, which, when administered in the classroom via targeted interventions, doesn't seem to work. It is hard to dispute that having faith in the capacity to change is a good attribute for students. <span class="vocab-word" data-word="paradoxically">Paradoxically</span>, however, that aspiration is not well served by direct interventions that try to instil it.</p>
+
+                <p>Motivational posters and talks are often a waste of time, and might well give students a deluded notion of what success actually means. Teaching concrete skills such as how to write an effective introduction to an essay then praising students' effort in getting there is probably a far better way of improving confidence than telling them how unique they are, or indeed how capable they are of changing their own brains. Perhaps growth mindset works best as a philosophy and not an intervention.</p>
+            </div>
+        </div>
+
+        <!-- Splitter -->
+        <div id="splitter" class="splitter relative flex items-center justify-center group">
+            <div class="w-1 h-8 bg-gray-400 rounded-full opacity-50 group-hover:bg-gray-600 transition-colors"></div>
+        </div>
+
+        <!-- Right Pane: Questions -->
+        <div id="right-pane" class="pane">
+            <div id="questions-section" class="max-w-3xl mx-auto space-y-8 pb-10">
+
+                <!-- Questions 14-16: Multiple Choice -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-emerald-100 text-emerald-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 14–16</span>
+                        <h4 class="font-bold text-gray-800">Multiple Choice</h4>
+                    </div>
+                    <p class="mb-5 text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100 text-sm">
+                        Choose the correct letter, <strong class="text-emerald-700">A</strong>, <strong class="text-emerald-700">B</strong>, <strong class="text-emerald-700">C</strong> or <strong class="text-emerald-700">D</strong>.<br><br>
+                        Write the correct letter in the boxes below.
+                    </p>
+
+                    <div class="space-y-6">
+                        <!-- Q14 -->
+                        <div class="q-item border border-gray-100 p-4" id="container-q14">
+                            <p class="mb-3 text-gray-800 font-medium leading-snug"><span class="font-bold text-emerald-600 mr-2">14</span> What can we learn from the first paragraph?</p>
+                            <div class="flex flex-col gap-2">
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q14" value="A" class="mr-2 hidden"><span class="font-semibold text-gray-600"><strong class="text-emerald-600 mr-2">A</strong> where the notion of innate intelligence first began</span></label>
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q14" value="B" class="mr-2 hidden"><span class="font-semibold text-gray-600"><strong class="text-emerald-600 mr-2">B</strong> when ideas about the nature of intelligence began to shift</span></label>
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q14" value="C" class="mr-2 hidden"><span class="font-semibold text-gray-600"><strong class="text-emerald-600 mr-2">C</strong> how scientists have responded to changing views of intelligence</span></label>
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q14" value="D" class="mr-2 hidden"><span class="font-semibold text-gray-600"><strong class="text-emerald-600 mr-2">D</strong> why thinkers turned away from the idea of intelligence being fixed</span></label>
+                            </div>
+                        </div>
+
+                        <!-- Q15 -->
+                        <div class="q-item border border-gray-100 p-4" id="container-q15">
+                            <p class="mb-3 text-gray-800 font-medium leading-snug"><span class="font-bold text-emerald-600 mr-2">15</span> The second paragraph describes how schools encourage students to</p>
+                            <div class="flex flex-col gap-2">
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q15" value="A" class="mr-2 hidden"><span class="font-semibold text-gray-600"><strong class="text-emerald-600 mr-2">A</strong> identify their personal ambitions.</span></label>
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q15" value="B" class="mr-2 hidden"><span class="font-semibold text-gray-600"><strong class="text-emerald-600 mr-2">B</strong> help each other to realise their goals.</span></label>
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q15" value="C" class="mr-2 hidden"><span class="font-semibold text-gray-600"><strong class="text-emerald-600 mr-2">C</strong> have confidence in their potential to succeed.</span></label>
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q15" value="D" class="mr-2 hidden"><span class="font-semibold text-gray-600"><strong class="text-emerald-600 mr-2">D</strong> concentrate on where their particular strengths lie.</span></label>
+                            </div>
+                        </div>
+
+                        <!-- Q16 -->
+                        <div class="q-item border border-gray-100 p-4" id="container-q16">
+                            <p class="mb-3 text-gray-800 font-medium leading-snug"><span class="font-bold text-emerald-600 mr-2">16</span> In the third paragraph, the writer suggests that students with a fixed mindset</p>
+                            <div class="flex flex-col gap-2">
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q16" value="A" class="mr-2 hidden"><span class="font-semibold text-gray-600"><strong class="text-emerald-600 mr-2">A</strong> tend to be less competitive.</span></label>
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q16" value="B" class="mr-2 hidden"><span class="font-semibold text-gray-600"><strong class="text-emerald-600 mr-2">B</strong> generally have a low sense of self-esteem.</span></label>
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q16" value="C" class="mr-2 hidden"><span class="font-semibold text-gray-600"><strong class="text-emerald-600 mr-2">C</strong> will only work hard if they are given constant encouragement.</span></label>
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q16" value="D" class="mr-2 hidden"><span class="font-semibold text-gray-600"><strong class="text-emerald-600 mr-2">D</strong> are afraid to push themselves beyond what they see as their limitations.</span></label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="14-16">Check Answers</button>
+                    </div>
+                </div>
+
+                <!-- Questions 17-22: Matching -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-emerald-100 text-emerald-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 17–22</span>
+                        <h4 class="font-bold text-gray-800">Matching People</h4>
+                    </div>
+                    <p class="mb-5 text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100 text-sm">
+                        Look at the following statements and the list of people below.<br><br>
+                        Match each statement with the correct person or people, <strong class="text-emerald-700">A–E</strong>.<br>
+                        Write the correct letter in the boxes below.<br><br>
+                        <em class="text-gray-500"><strong>NB</strong> You may use any letter more than once.</em>
+                    </p>
+
+                    <!-- People list -->
+                    <div class="overflow-x-auto mb-6">
+                        <table class="ielts-table min-w-full text-sm">
+                            <thead>
+                                <tr>
+                                    <th colspan="2" class="bg-emerald-50 text-emerald-900 text-center">List of People</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-gray-800">
+                                <tr><td class="text-center font-bold w-12">A</td><td>Alfred Binet</td></tr>
+                                <tr><td class="text-center font-bold">B</td><td>Carol Dweck</td></tr>
+                                <tr><td class="text-center font-bold">C</td><td>Andrew Gelman</td></tr>
+                                <tr><td class="text-center font-bold">D</td><td>Timothy Bates</td></tr>
+                                <tr><td class="text-center font-bold">E</td><td>David Yeager and Gregory Walton</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="space-y-4">
+                        <!-- Q17 -->
+                        <div class="q-item border border-gray-100 p-4 flex flex-wrap items-center justify-between gap-3" id="container-q17">
+                            <p class="text-gray-800 font-medium leading-snug flex-1 min-w-0"><span class="font-bold text-emerald-600 mr-2">17</span> The methodology behind the growth mindset studies was not strict enough.</p>
+                            <select name="q17" class="text-input text-input-short shrink-0">
+                                <option value="">--</option>
+                                <option value="A">A</option>
+                                <option value="B">B</option>
+                                <option value="C">C</option>
+                                <option value="D">D</option>
+                                <option value="E">E</option>
+                            </select>
+                        </div>
+
+                        <!-- Q18 -->
+                        <div class="q-item border border-gray-100 p-4 flex flex-wrap items-center justify-between gap-3" id="container-q18">
+                            <p class="text-gray-800 font-medium leading-snug flex-1 min-w-0"><span class="font-bold text-emerald-600 mr-2">18</span> The idea of the growth mindset has been incorrectly interpreted.</p>
+                            <select name="q18" class="text-input text-input-short shrink-0">
+                                <option value="">--</option>
+                                <option value="A">A</option>
+                                <option value="B">B</option>
+                                <option value="C">C</option>
+                                <option value="D">D</option>
+                                <option value="E">E</option>
+                            </select>
+                        </div>
+
+                        <!-- Q19 -->
+                        <div class="q-item border border-gray-100 p-4 flex flex-wrap items-center justify-between gap-3" id="container-q19">
+                            <p class="text-gray-800 font-medium leading-snug flex-1 min-w-0"><span class="font-bold text-emerald-600 mr-2">19</span> Intellectual ability is an unchangeable feature of each individual.</p>
+                            <select name="q19" class="text-input text-input-short shrink-0">
+                                <option value="">--</option>
+                                <option value="A">A</option>
+                                <option value="B">B</option>
+                                <option value="C">C</option>
+                                <option value="D">D</option>
+                                <option value="E">E</option>
+                            </select>
+                        </div>
+
+                        <!-- Q20 -->
+                        <div class="q-item border border-gray-100 p-4 flex flex-wrap items-center justify-between gap-3" id="container-q20">
+                            <p class="text-gray-800 font-medium leading-snug flex-1 min-w-0"><span class="font-bold text-emerald-600 mr-2">20</span> The growth mindset should be promoted without students being aware of it.</p>
+                            <select name="q20" class="text-input text-input-short shrink-0">
+                                <option value="">--</option>
+                                <option value="A">A</option>
+                                <option value="B">B</option>
+                                <option value="C">C</option>
+                                <option value="D">D</option>
+                                <option value="E">E</option>
+                            </select>
+                        </div>
+
+                        <!-- Q21 -->
+                        <div class="q-item border border-gray-100 p-4 flex flex-wrap items-center justify-between gap-3" id="container-q21">
+                            <p class="text-gray-800 font-medium leading-snug flex-1 min-w-0"><span class="font-bold text-emerald-600 mr-2">21</span> The growth mindset is not simply about boosting students' morale.</p>
+                            <select name="q21" class="text-input text-input-short shrink-0">
+                                <option value="">--</option>
+                                <option value="A">A</option>
+                                <option value="B">B</option>
+                                <option value="C">C</option>
+                                <option value="D">D</option>
+                                <option value="E">E</option>
+                            </select>
+                        </div>
+
+                        <!-- Q22 -->
+                        <div class="q-item border border-gray-100 p-4 flex flex-wrap items-center justify-between gap-3" id="container-q22">
+                            <p class="text-gray-800 font-medium leading-snug flex-1 min-w-0"><span class="font-bold text-emerald-600 mr-2">22</span> Research shows that the growth mindset has no effect on academic achievement.</p>
+                            <select name="q22" class="text-input text-input-short shrink-0">
+                                <option value="">--</option>
+                                <option value="A">A</option>
+                                <option value="B">B</option>
+                                <option value="C">C</option>
+                                <option value="D">D</option>
+                                <option value="E">E</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="17-22">Check Answers</button>
+                    </div>
+                </div>
+
+                <!-- Questions 23-26: YES / NO / NOT GIVEN -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-emerald-100 text-emerald-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 23–26</span>
+                        <h4 class="font-bold text-gray-800">YES / NO / NOT GIVEN</h4>
+                    </div>
+                    <p class="mb-5 text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100 text-sm">
+                        Do the following statements agree with the views of the writer?<br><br>
+                        <strong class="text-emerald-700">YES</strong> &nbsp;&nbsp;&nbsp;&nbsp; if the statement agrees with the views of the writer<br>
+                        <strong class="text-emerald-700">NO</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if the statement contradicts the views of the writer<br>
+                        <strong class="text-emerald-700">NOT GIVEN</strong> &nbsp; if it is impossible to say what the writer thinks about this
+                    </p>
+
+                    <div class="space-y-6">
+                        <div class="q-item border border-gray-100 p-4" id="container-q23">
+                            <p class="mb-3 text-gray-800 font-medium leading-snug"><span class="font-bold text-emerald-600 mr-2">23</span> Dweck has handled criticisms of her work in an admirable way.</p>
+                            <div class="flex flex-wrap gap-3">
+                                <label class="custom-radio-label"><input type="radio" name="q23" value="yes" class="mr-2 hidden"><span class="font-semibold text-gray-600">Yes</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q23" value="no" class="mr-2 hidden"><span class="font-semibold text-gray-600">No</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q23" value="not given" class="mr-2 hidden"><span class="font-semibold text-gray-600">Not Given</span></label>
+                            </div>
+                        </div>
+
+                        <div class="q-item border border-gray-100 p-4" id="container-q24">
+                            <p class="mb-3 text-gray-800 font-medium leading-snug"><span class="font-bold text-emerald-600 mr-2">24</span> Students' self-perception is a more effective driver of self-confidence than actual achievement is.</p>
+                            <div class="flex flex-wrap gap-3">
+                                <label class="custom-radio-label"><input type="radio" name="q24" value="yes" class="mr-2 hidden"><span class="font-semibold text-gray-600">Yes</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q24" value="no" class="mr-2 hidden"><span class="font-semibold text-gray-600">No</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q24" value="not given" class="mr-2 hidden"><span class="font-semibold text-gray-600">Not Given</span></label>
+                            </div>
+                        </div>
+
+                        <div class="q-item border border-gray-100 p-4" id="container-q25">
+                            <p class="mb-3 text-gray-800 font-medium leading-snug"><span class="font-bold text-emerald-600 mr-2">25</span> Recent evidence about growth mindset interventions has attracted unfair coverage in the media.</p>
+                            <div class="flex flex-wrap gap-3">
+                                <label class="custom-radio-label"><input type="radio" name="q25" value="yes" class="mr-2 hidden"><span class="font-semibold text-gray-600">Yes</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q25" value="no" class="mr-2 hidden"><span class="font-semibold text-gray-600">No</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q25" value="not given" class="mr-2 hidden"><span class="font-semibold text-gray-600">Not Given</span></label>
+                            </div>
+                        </div>
+
+                        <div class="q-item border border-gray-100 p-4" id="container-q26">
+                            <p class="mb-3 text-gray-800 font-medium leading-snug"><span class="font-bold text-emerald-600 mr-2">26</span> Deliberate attempts to encourage students to strive for high achievement may have a negative effect.</p>
+                            <div class="flex flex-wrap gap-3">
+                                <label class="custom-radio-label"><input type="radio" name="q26" value="yes" class="mr-2 hidden"><span class="font-semibold text-gray-600">Yes</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q26" value="no" class="mr-2 hidden"><span class="font-semibold text-gray-600">No</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q26" value="not given" class="mr-2 hidden"><span class="font-semibold text-gray-600">Not Given</span></label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="23-26">Check Answers</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Highlight Tooltip -->
+<div id="highlight-tooltip" class="highlight-tooltip">Highlight Text</div>
+
+<!-- Vocabulary Modal -->
+<div id="vocab-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50 transition-opacity">
+    <div class="bg-white rounded-2xl shadow-2xl p-5 sm:p-8 w-full max-w-md relative transform transition-all scale-95 opacity-0" id="vocab-modal-content">
+        <button id="close-vocab-modal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-full w-8 h-8 flex items-center justify-center transition-colors">&times;</button>
+        <div class="flex items-center mb-6 border-b pb-4 mt-2">
+            <h3 id="vocab-word" class="text-2xl sm:text-3xl font-extrabold text-gray-900 capitalize tracking-tight"></h3>
+        </div>
+        <div class="flex items-center mb-5">
+            <button id="play-audio-btn" class="flex items-center justify-center h-10 w-10 sm:h-12 sm:w-12 shrink-0 rounded-full bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white mr-4 transition-all shadow-sm border border-emerald-100" title="Listen to pronunciation">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>
+            </button>
+            <p id="vocab-pronunciation-text" class="text-gray-500 font-mono text-base sm:text-lg bg-gray-50 px-3 py-1 rounded-md border border-gray-100"></p>
+        </div>
+        <p id="vocab-meaning" class="text-gray-700 text-base sm:text-lg leading-relaxed"></p>
+    </div>
+</div>
+
+<!-- Alert Modal -->
+<div id="alert-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-[80] transition-opacity">
+    <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm relative transform transition-all scale-95 opacity-0 text-center" id="alert-modal-content">
+        <div id="alert-icon-container" class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 mb-4">
+            <svg class="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+        </div>
+        <h3 id="alert-title" class="text-lg leading-6 font-medium text-gray-900 mb-2">Notice</h3>
+        <p id="alert-message" class="text-sm text-gray-500 mb-6">Message goes here.</p>
+        <button id="close-alert-btn" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-emerald-600 text-base font-medium text-white hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 sm:text-sm transition-colors">
+            Got it
+        </button>
+    </div>
+</div>
+
+<script>
+    const vocabulary = {
+        'innate': { meaning: 'Inborn; natural; existing from birth rather than acquired through experience.', phonetic: '/ɪˈneɪt/' },
+        'quantify': { meaning: 'Express or measure the quantity of something; assign a numerical value to.', phonetic: '/ˈkwɒn.tɪ.faɪ/' },
+        'coaxing': { meaning: 'Gently persuading someone to do something; using soft encouragement to change behaviour.', phonetic: '/ˈkəʊk.sɪŋ/' },
+        'instilled': { meaning: 'Gradually but firmly established (an idea or attitude) in someone\'s mind.', phonetic: '/ɪnˈstɪld/' },
+        'inferred': { meaning: 'Concluded something from evidence and reasoning rather than from explicit statements.', phonetic: '/ɪnˈfɜːd/' },
+        'impediments': { meaning: 'Things that hinder or obstruct progress; obstacles.', phonetic: '/ɪmˈped.ɪ.mənts/' },
+        'cognitive dissonance': { meaning: 'The mental discomfort experienced when holding two contradictory beliefs or acting against one\'s beliefs.', phonetic: '/ˈkɒɡ.nɪ.tɪv ˈdɪs.ə.nəns/' },
+        'replicate': { meaning: 'Make an exact copy of; repeat (a scientific experiment) to verify results.', phonetic: '/ˈrep.lɪ.keɪt/' },
+        'misapplied': { meaning: 'Used incorrectly or in a wrong context; applied in an inappropriate way.', phonetic: '/ˌmɪs.əˈplaɪd/' },
+        'misappropriated': { meaning: 'Dishonestly or wrongly used for one\'s own purposes; taken or used improperly.', phonetic: '/ˌmɪs.əˈprəʊ.pri.eɪ.tɪd/' },
+        'correlation': { meaning: 'A mutual relationship or connection between two or more things; a statistical measure of how closely two variables move together.', phonetic: '/ˌkɒr.əˈleɪ.ʃən/' },
+        'elixir': { meaning: 'A magical or medicinal potion; figuratively, a cure-all or perfect solution.', phonetic: '/ɪˈlɪk.sər/' },
+        'paradoxically': { meaning: 'In a way that seems contradictory but may nonetheless be true.', phonetic: '/ˌpær.əˈdɒk.sɪ.kli/' }
+    };
+
+    const answers = {
+        q14: "B", q15: "C", q16: "D",
+        q17: "C", q18: "B", q19: "A", q20: "E", q21: "B", q22: "D",
+        q23: "yes", q24: "no", q25: "not given", q26: "yes"
+    };
+
+    const explanations = {
+        q14: "Paragraph 1 traces the shift from 19th-century views (Binet) that intelligence is innate and fixed, to early 20th-century progressive thinkers (Dewey) who argued it could be developed. This shows when ideas about the nature of intelligence began to shift. Answer: B.",
+        q15: "Paragraph 2 explains that schools focus on 'coaxing students away from seeing failure as an indication of their ability, and towards seeing it as a chance to improve' — this means encouraging students to have confidence in their potential to succeed. Answer: C.",
+        q16: "Paragraph 3 states that the fixed mindset 'had led them to fear of failure and lack of effort' and that students 'took on only those tasks that would not risk their sense of worth' — meaning they are afraid to push themselves beyond their perceived limitations. Answer: D.",
+        q17: "Andrew Gelman claims the research designs 'have enough degrees of freedom that they could take their data to support just about any theory at all' — meaning the methodology was not strict enough. Answer: C.",
+        q18: "Paragraph 6 states that Carol Dweck 'argues that her work has been misunderstood and misapplied' — i.e., the idea has been incorrectly interpreted. Answer: B.",
+        q19: "Alfred Binet is described as one of the 19th-century scientists who held the view that intelligence is 'innate' (something you are born with and cannot change). Answer: A.",
+        q20: "Yeager and Gregory Walton claim 'interventions should be delivered in a subtle way' and that if students 'perceive a teacher's intervention as conveying that they are in need of help, this could undo its intended effects' — meaning it should be promoted without students being aware of it. Answer: E.",
+        q21: "Carol Dweck states: 'For me the growth mindset is a tool for learning and improvement. It's not just a vehicle for making children feel good.' — meaning it is not simply about boosting morale. Answer: B.",
+        q22: "Timothy Bates states: 'Kids with the growth mindset aren't getting better grades, either before or after our intervention study' — meaning the growth mindset has no effect on academic achievement. Answer: D.",
+        q23: "Paragraph 6 states: 'she deserves great credit for responding to it and adapting her work accordingly' — which means she handled criticisms in an admirable way. Answer: YES.",
+        q24: "Paragraph 8 states: 'the actual effect of achievement on self-perception is stronger than the other way round' — meaning achievement drives self-perception more than self-perception drives achievement. This contradicts the statement. Answer: NO.",
+        q25: "The passage discusses recent evidence against growth mindset interventions but does not mention media coverage of this evidence at all. Answer: NOT GIVEN.",
+        q26: "Paragraph 9 states: 'that aspiration is not well served by direct interventions that try to instil it' — deliberate attempts to push students toward growth can paradoxically undermine the goal. Answer: YES."
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const app = {
+            userAnswers: {},
+            answersChecked: {},
+            currentFontSize: 17,
+            totalQuestions: Object.keys(answers).length,
+            timeRemaining: 20 * 60,
+
+            leftPane: document.getElementById('left-pane'),
+            rightPane: document.getElementById('right-pane'),
+            splitter: document.getElementById('splitter'),
+            highlightTooltip: document.getElementById('highlight-tooltip'),
+            vocabModal: document.getElementById('vocab-modal'),
+            vocabModalContent: document.getElementById('vocab-modal-content'),
+            closeVocabModalBtn: document.getElementById('close-vocab-modal'),
+            vocabWordEl: document.getElementById('vocab-word'),
+            vocabMeaningEl: document.getElementById('vocab-meaning'),
+            vocabPronunciationText: document.getElementById('vocab-pronunciation-text'),
+            playAudioBtn: document.getElementById('play-audio-btn'),
+            clearHighlightsBtn: document.getElementById('clear-highlights-btn'),
+            progressText: document.getElementById('progress-text'),
+            timerEl: document.getElementById('timer'),
+            alertModal: document.getElementById('alert-modal'),
+            alertModalContent: document.getElementById('alert-modal-content'),
+            closeAlertBtn: document.getElementById('close-alert-btn'),
+            alertTitleEl: document.getElementById('alert-title'),
+            alertMessageEl: document.getElementById('alert-message'),
+            alertIconContainer: document.getElementById('alert-icon-container'),
+
+            init() {
+                this.setupEventListeners();
+                this.initSplitter();
+                this.initHighlighter();
+                this.updateCheckButtonsState();
+                this.startTimer();
+            },
+
+            startTimer() {
+                const interval = setInterval(() => {
+                    if (this.timeRemaining <= 0) {
+                        clearInterval(interval);
+                        this.timerEl.textContent = "00:00";
+                        this.timerEl.classList.add('text-red-600');
+                        this.showAlert("Time's Up!", "Your 20 minutes for this reading passage have expired.", "warning");
+                        return;
+                    }
+                    this.timeRemaining--;
+                    const m = Math.floor(this.timeRemaining / 60).toString().padStart(2, '0');
+                    const s = (this.timeRemaining % 60).toString().padStart(2, '0');
+                    this.timerEl.textContent = `${m}:${s}`;
+                    if (this.timeRemaining <= 300) this.timerEl.classList.add('text-red-500');
+                }, 1000);
+            },
+
+            setupEventListeners() {
+                document.getElementById('increase-font-btn').addEventListener('click', () => this.changeFontSize(1));
+                document.getElementById('decrease-font-btn').addEventListener('click', () => this.changeFontSize(-1));
+
+                this.clearHighlightsBtn.addEventListener('click', () => {
+                    this.leftPane.querySelectorAll('mark').forEach(mark => mark.replaceWith(document.createTextNode(mark.textContent)));
+                });
+
+                this.closeVocabModalBtn.addEventListener('click', () => this.closeModal());
+                this.vocabModal.addEventListener('click', (e) => { if (e.target === this.vocabModal) this.closeModal(); });
+
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') {
+                        if (!this.vocabModal.classList.contains('hidden')) this.closeModal();
+                        if (!this.alertModal.classList.contains('hidden')) this.closeAlert();
+                    }
+                    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
+                        e.preventDefault();
+                        this.showAlert("Action Disabled", "The 'Find' function is disabled to simulate real computer-delivered test conditions.", "warning");
+                    }
+                });
+
+                document.addEventListener('visibilitychange', () => {
+                    if (document.hidden && this.timeRemaining > 0) {
+                        this.showAlert("Warning: Tab Switch Detected", "Please do not switch tabs or leave the test window during the exam.", "warning");
+                    }
+                });
+
+                window.addEventListener('beforeunload', (e) => {
+                    if (this.timeRemaining > 0 && this.timeRemaining < 20 * 60) { e.preventDefault(); e.returnValue = ''; }
+                });
+
+                this.closeAlertBtn.addEventListener('click', () => this.closeAlert());
+                this.alertModal.addEventListener('click', (e) => { if (e.target === this.alertModal) this.closeAlert(); });
+
+                document.body.addEventListener('input', (e) => {
+                    if (e.target.tagName === 'SELECT') {
+                        this.userAnswers[e.target.name] = e.target.value;
+                        e.target.classList.remove('correct-answer', 'incorrect-answer');
+                        const container = document.getElementById(`container-${e.target.name}`);
+                        if (container) container.classList.remove('bg-red-50', 'bg-green-50');
+                        this.updateCheckButtonsState();
+                        this.updateProgress();
+                    }
+                });
+
+                document.body.addEventListener('change', (e) => {
+                    if (e.target.type === 'radio') {
+                        this.userAnswers[e.target.name] = e.target.value;
+                        document.querySelectorAll(`input[name="${e.target.name}"]`).forEach(r => r.closest('label').classList.remove('correct-answer', 'incorrect-answer'));
+                        this.updateCheckButtonsState();
+                        this.updateProgress();
+                    }
+                    if (e.target.tagName === 'SELECT') {
+                        this.userAnswers[e.target.name] = e.target.value;
+                        e.target.classList.remove('correct-answer', 'incorrect-answer');
+                        this.updateCheckButtonsState();
+                        this.updateProgress();
+                    }
+                });
+
+                this.leftPane.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('vocab-word')) this.openVocabModal(e.target.dataset.word);
+                    if (e.target.tagName === 'MARK') e.target.replaceWith(document.createTextNode(e.target.textContent));
+                });
+
+                document.querySelectorAll('.check-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => this.checkAnswers(e.target.dataset.range, e.target));
+                });
+
+                this.playAudioBtn.addEventListener('click', () => {
+                    const word = this.vocabWordEl.textContent;
+                    if (!word) return;
+                    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+                    this.playAudioBtn.classList.remove('text-emerald-600', 'bg-emerald-50');
+                    this.playAudioBtn.classList.add('bg-green-500', 'text-white');
+                    if ('speechSynthesis' in window) {
+                        const utterance = new SpeechSynthesisUtterance(word);
+                        utterance.lang = 'en-GB'; utterance.rate = 0.9;
+                        utterance.onend = () => this.resetAudioBtn();
+                        utterance.onerror = () => this.resetAudioBtn();
+                        window.speechSynthesis.speak(utterance);
+                    } else {
+                        setTimeout(() => this.resetAudioBtn(), 500);
+                    }
+                });
+            },
+
+            updateProgress() {
+                let count = 0;
+                for (let key in answers) { if (this.userAnswers[key] && this.userAnswers[key].trim() !== '') count++; }
+                this.progressText.textContent = `${count} / ${this.totalQuestions} Answered`;
+            },
+
+            resetAudioBtn() {
+                this.playAudioBtn.classList.add('text-emerald-600', 'bg-emerald-50');
+                this.playAudioBtn.classList.remove('bg-green-500', 'text-white');
+            },
+
+            changeFontSize(delta) {
+                this.currentFontSize = Math.max(14, Math.min(26, this.currentFontSize + delta));
+                document.documentElement.style.setProperty('--app-font-size', `${this.currentFontSize}px`);
+            },
+
+            openVocabModal(wordKey) {
+                const data = vocabulary[wordKey];
+                if (data) {
+                    this.vocabWordEl.textContent = wordKey;
+                    this.vocabMeaningEl.textContent = data.meaning;
+                    this.vocabPronunciationText.textContent = data.phonetic || '';
+                    this.vocabModal.classList.remove('hidden');
+                    setTimeout(() => { this.vocabModalContent.classList.remove('scale-95', 'opacity-0'); this.vocabModalContent.classList.add('scale-100', 'opacity-100'); }, 10);
+                }
+            },
+
+            closeModal() {
+                if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+                this.vocabModalContent.classList.remove('scale-100', 'opacity-100');
+                this.vocabModalContent.classList.add('scale-95', 'opacity-0');
+                this.resetAudioBtn();
+                setTimeout(() => this.vocabModal.classList.add('hidden'), 200);
+            },
+
+            showAlert(title, message, type = 'error') {
+                this.alertTitleEl.textContent = title;
+                this.alertMessageEl.textContent = message;
+                const iconColor = type === 'warning' ? 'yellow' : 'red';
+                this.alertIconContainer.className = `mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-${iconColor}-100 mb-4`;
+                this.alertIconContainer.innerHTML = `<svg class="h-6 w-6 text-${iconColor}-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>`;
+                this.alertModal.classList.remove('hidden');
+                setTimeout(() => { this.alertModalContent.classList.remove('scale-95', 'opacity-0'); this.alertModalContent.classList.add('scale-100', 'opacity-100'); }, 10);
+            },
+
+            closeAlert() {
+                this.alertModalContent.classList.remove('scale-100', 'opacity-100');
+                this.alertModalContent.classList.add('scale-95', 'opacity-0');
+                setTimeout(() => this.alertModal.classList.add('hidden'), 200);
+            },
+
+            updateCheckButtonsState() {
+                document.querySelectorAll('.check-btn').forEach(btn => {
+                    const range = btn.dataset.range;
+                    if (this.answersChecked[range]) {
+                        btn.className = 'check-btn bg-gray-800 hover:bg-gray-900 text-white font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-pointer transform hover:-translate-y-0.5 hover:shadow-md active:scale-95';
+                        btn.textContent = 'Reset Answers';
+                        return;
+                    }
+                    const [start, end] = range.split('-').map(Number);
+                    let allAnswered = true;
+                    for (let i = start; i <= end; i++) {
+                        if (!(this.userAnswers[`q${i}`] || "").trim()) { allAnswered = false; break; }
+                    }
+                    btn.className = allAnswered
+                        ? 'check-btn bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-pointer transform hover:-translate-y-0.5 hover:shadow-md active:scale-95'
+                        : 'check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80';
+                    btn.textContent = 'Check Answers';
+                });
+            },
+
+            checkAnswers(range, btn) {
+                if (this.answersChecked[range]) {
+                    this.answersChecked[range] = false;
+                    const [start, end] = range.split('-').map(Number);
+                    for (let i = start; i <= end; i++) {
+                        const qId = `q${i}`;
+                        this.userAnswers[qId] = '';
+                        document.querySelectorAll(`input[name="${qId}"][type="radio"]`).forEach(r => {
+                            r.checked = false;
+                            r.closest('label')?.classList.remove('correct-answer', 'incorrect-answer');
+                        });
+                        const sel = document.querySelector(`select[name="${qId}"]`);
+                        if (sel) { sel.value = ''; sel.classList.remove('correct-answer', 'incorrect-answer'); }
+                        document.getElementById(`expl-${qId}`)?.remove();
+                    }
+                    this.updateCheckButtonsState();
+                    this.updateProgress();
+                    return;
+                }
+
+                const [start, end] = range.split('-').map(Number);
+                let allAnswered = true;
+                for (let i = start; i <= end; i++) {
+                    if (!(this.userAnswers[`q${i}`] || "").trim()) { allAnswered = false; break; }
+                }
+                if (!allAnswered) { this.showAlert("Incomplete Answers", "Please fill in or select an answer for all questions in this section before checking.", "warning"); return; }
+
+                this.answersChecked[range] = true;
+                this.updateCheckButtonsState();
+
+                for (let i = start; i <= end; i++) {
+                    const qId = `q${i}`;
+                    let userAnswer = (this.userAnswers[qId] || "").toLowerCase().trim();
+                    let correctList = answers[qId].toLowerCase().split('|');
+                    let isCorrect = correctList.includes(userAnswer);
+                    let correctFeedbackHTML = '';
+
+                    const radios = document.querySelectorAll(`input[name="${qId}"][type="radio"]`);
+                    if (radios.length > 0) {
+                        radios.forEach(radio => {
+                            const label = radio.closest('label');
+                            label?.classList.remove('correct-answer', 'incorrect-answer');
+                            if (correctList.includes(radio.value.toLowerCase())) label?.classList.add('correct-answer');
+                            else if (radio.value.toLowerCase() === userAnswer) label?.classList.add('incorrect-answer');
+                        });
+                        if (!isCorrect) {
+                            const fmt = correctList[0].split(' ').map(w => w.length === 1 ? w.toUpperCase() : w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+                            correctFeedbackHTML = `<span class="correct-badge">Correct Answer: ${fmt}</span><br>`;
+                        }
+                    }
+
+                    const sel = document.querySelector(`select[name="${qId}"]`);
+                    if (sel) {
+                        sel.classList.remove('correct-answer', 'incorrect-answer');
+                        if (isCorrect) { sel.classList.add('correct-answer'); }
+                        else {
+                            sel.classList.add('incorrect-answer');
+                            const fmt = correctList[0].toUpperCase();
+                            correctFeedbackHTML = `<span class="correct-badge">Correct Answer: ${fmt}</span><br>`;
+                        }
+                    }
+
+                    if (explanations[qId] && !document.getElementById(`expl-${qId}`)) {
+                        const explDiv = document.createElement('div');
+                        explDiv.id = `expl-${qId}`;
+                        explDiv.className = 'explanation-box';
+                        explDiv.innerHTML = `${correctFeedbackHTML}<strong>Explanation:</strong> ${explanations[qId]}`;
+                        const container = document.getElementById(`container-${qId}`);
+                        if (container) {
+                            const wrap = container.closest('div.q-item') || container;
+                            wrap.insertAdjacentElement('afterend', explDiv);
+                        }
+                    }
+                }
+            },
+
+            initSplitter() {
+                let isDragging = false;
+                const contentPanes = document.getElementById('content-panes');
+                this.splitter.addEventListener('mousedown', (e) => { e.preventDefault(); isDragging = true; document.body.style.cursor = 'col-resize'; });
+                document.addEventListener('mousemove', (e) => {
+                    if (!isDragging || window.innerWidth <= 768) return;
+                    e.preventDefault();
+                    const rect = contentPanes.getBoundingClientRect();
+                    const newLeft = e.clientX - rect.left;
+                    if (newLeft > 200 && newLeft < rect.width - 200) {
+                        contentPanes.style.gridTemplateColumns = `${(newLeft / rect.width) * 100}% 5px 1fr`;
+                    }
+                });
+                document.addEventListener('mouseup', () => { if (isDragging) { isDragging = false; document.body.style.cursor = 'default'; } });
+            },
+
+            initHighlighter() {
+                document.body.addEventListener('mouseup', (e) => {
+                    const selection = window.getSelection();
+                    const selectedText = selection.toString().trim();
+                    if (selectedText.length > 0) {
+                        const range = selection.getRangeAt(0);
+                        if (!this.leftPane.contains(range.commonAncestorContainer) && !this.rightPane.contains(range.commonAncestorContainer)) {
+                            this.highlightTooltip.style.display = 'none'; return;
+                        }
+                        this.highlightTooltip.style.left = `${e.pageX - 30}px`;
+                        this.highlightTooltip.style.top = `${e.pageY - 40}px`;
+                        this.highlightTooltip.style.display = 'block';
+                        this.highlightTooltip.onclick = () => {
+                            const mark = document.createElement('mark');
+                            try { range.surroundContents(mark); }
+                            catch (ex) { this.showAlert("Highlight Error", "Please select plain text within a single element to highlight.", "warning"); }
+                            finally { selection.removeAllRanges(); this.highlightTooltip.style.display = 'none'; }
+                        };
+                    } else {
+                        this.highlightTooltip.style.display = 'none';
+                    }
+                });
+                document.body.addEventListener('mousedown', (e) => {
+                    if (e.target !== this.highlightTooltip && window.getSelection().toString().length === 0) this.highlightTooltip.style.display = 'none';
+                });
+            }
+        };
+
+        app.init();
+    });
+</script>
+</body>
+</html>

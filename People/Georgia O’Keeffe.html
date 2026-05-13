@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IELTS Academic Simulator - Georgia O’Keeffe</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --app-font-size: 17px;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            overscroll-behavior: none;
+            background-color: #f3f4f6;
+        }
+        .ielts-container {
+            display: grid;
+            grid-template-rows: auto 1fr;
+            height: 100vh;
+        }
+        .content-panes {
+            display: grid;
+            grid-template-columns: 1fr 5px 1fr;
+            overflow: hidden;
+        }
+        .pane {
+            overflow-y: auto;
+            padding: 2rem 3rem;
+            font-size: var(--app-font-size);
+            scroll-behavior: smooth;
+        }
+        #left-pane {
+            background-color: #fdfdfd;
+        }
+        #right-pane {
+            background-color: #f8fafc;
+        }
+        .splitter {
+            background-color: #cbd5e1;
+            cursor: col-resize;
+            z-index: 10;
+            transition: background-color 0.2s;
+        }
+        .splitter:hover, .splitter:active {
+            background-color: #94a3b8;
+        }
+        
+        /* Typography Improvements */
+        .reading-passage {
+            font-family: 'Merriweather', serif;
+            line-height: 1.9;
+            color: #334155;
+            text-align: justify;
+            margin-bottom: 2rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .reading-passage p {
+            margin-bottom: 1.5rem;
+            text-indent: 1.5rem; 
+        }
+        .reading-passage h3 {
+            font-family: 'Inter', sans-serif;
+            color: #0f172a;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+            font-size: 1.5em;
+            text-align: center;
+            text-indent: 0;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Question Styles */
+        .q-item {
+            padding: 1rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s;
+            background-color: white;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 0.75rem;
+        }
+        
+        .text-input {
+            border: 2px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 4px 8px;
+            font-weight: 600;
+            color: #1e293b;
+            transition: all 0.2s;
+            text-align: center;
+            background-color: #f8fafc;
+        }
+        .text-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            background-color: #ffffff;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+
+        /* Custom Radio Button Styles */
+        .custom-radio-label {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            background-color: white;
+            flex: 1;
+            justify-content: center;
+            text-align: center;
+        }
+        .custom-radio-label.mcq-label {
+            justify-content: flex-start;
+            text-align: left;
+            flex: none;
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+        .custom-radio-label:hover {
+            background-color: #f8fafc;
+            border-color: #cbd5e1;
+        }
+        .custom-radio-label input:checked + span {
+            color: #1e40af;
+            font-weight: 700;
+        }
+
+        /* Answer Feedback Animations & Styles */
+        .correct-answer {
+            border-color: #22c55e !important;
+            background-color: #f0fdf4 !important;
+            color: #166534 !important;
+        }
+        label.correct-answer {
+            box-shadow: 0 0 0 1px #22c55e;
+            color: #166534 !important;
+        }
+        label.correct-answer span { color: #166534 !important; }
+        
+        .incorrect-answer {
+            border-color: #ef4444 !important;
+            background-color: #fef2f2 !important;
+            color: #991b1b !important;
+        }
+        label.incorrect-answer {
+            box-shadow: 0 0 0 1px #ef4444;
+            color: #991b1b !important;
+        }
+        label.incorrect-answer span { color: #991b1b !important; }
+
+        .explanation-box {
+            animation: fadeIn 0.4s ease-out forwards;
+            margin-top: 0.75rem;
+            padding: 1rem;
+            background-color: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            border-radius: 0.5rem;
+            font-size: 0.95rem;
+            color: #1e3a8a;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            text-align: left;
+        }
+        .explanation-box .correct-badge {
+            display: inline-block;
+            background: #22c55e;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.85em;
+            margin-bottom: 0.5rem;
+            letter-spacing: 0.05em;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Vocabulary Styles */
+        .vocab-word {
+            color: #2563eb;
+            font-weight: 600;
+            cursor: pointer;
+            border-bottom: 2px dotted #93c5fd;
+            transition: all 0.2s ease-in-out;
+            padding: 0 2px;
+        }
+        .vocab-word:hover {
+            background-color: #dbeafe;
+            border-bottom-style: solid;
+            border-radius: 2px;
+        }
+
+        /* UI Elements */
+        .highlight-tooltip {
+            position: absolute;
+            background-color: #1e293b;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            z-index: 100;
+            cursor: pointer;
+            display: none;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        mark {
+            background-color: #fef08a;
+            border-radius: 3px;
+            padding: 2px 0;
+            cursor: pointer;
+            transition: background-color 0.2s, color 0.2s;
+            position: relative;
+        }
+        mark:hover {
+            background-color: #fca5a5;
+            color: #7f1d1d;
+        }
+        mark:hover::after {
+            content: ' ×';
+            font-weight: bold;
+            font-size: 0.8em;
+            opacity: 0.7;
+        }
+        
+        /* Responsive Design Overrides */
+        @media (max-width: 768px) {
+            .content-panes {
+                display: flex;
+                flex-direction: column;
+                overflow-y: auto;
+            }
+            .splitter {
+                display: none;
+            }
+            .pane {
+                padding: 1.25rem 1rem;
+                overflow-y: visible;
+                height: auto;
+            }
+            #left-pane {
+                border-bottom: 2px dashed #cbd5e1;
+                padding-bottom: 2rem;
+            }
+            .text-input {
+                max-width: 140px;
+                padding: 2px 6px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div id="test-container" class="ielts-container">
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 flex justify-between items-center z-20 shadow-sm flex-wrap gap-3">
+        <div class="flex items-center gap-2 sm:space-x-3">
+            <div class="bg-blue-600 text-white p-1.5 sm:p-2 rounded-lg shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+            </div>
+            <h1 class="text-xl font-bold text-gray-800 hidden sm:block">IELTS Simulator <span class="text-blue-600 font-medium">| Georgia O’Keeffe</span></h1>
+            <h1 class="text-base font-bold text-gray-800 sm:hidden">IELTS <span class="text-blue-600">Georgia O’Keeffe</span></h1>
+        </div>
+        
+        <!-- Timer & Progress -->
+        <div class="flex items-center space-x-4">
+            <div class="hidden sm:flex flex-col items-end">
+                <span class="text-xs text-gray-500 font-bold uppercase tracking-wide">Progress</span>
+                <span id="progress-text" class="text-sm font-semibold text-blue-600">0 / 13 Answered</span>
+            </div>
+            <div class="flex items-center bg-gray-100 rounded-lg px-3 py-1.5 border border-gray-200">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span id="timer" class="font-mono font-bold text-gray-700 text-lg">20:00</span>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2 sm:space-x-3">
+            <button id="clear-highlights-btn" class="hidden sm:flex items-center justify-center px-3 py-1.5 rounded bg-amber-50 hover:bg-amber-100 text-amber-700 transition-colors focus:outline-none border border-amber-200 text-sm font-medium" title="Clear Highlights">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                Clear
+            </button>
+            <div class="flex items-center space-x-1 sm:space-x-2 bg-gray-50 p-1 rounded-lg border border-gray-200">
+                <button id="decrease-font-btn" class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded bg-white shadow-sm hover:bg-gray-100 text-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-400 font-bold text-sm sm:text-base" title="Decrease Font Size">A-</button>
+                <button id="increase-font-btn" class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded bg-white shadow-sm hover:bg-gray-100 text-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-400 font-bold text-sm sm:text-base" title="Increase Font Size">A+</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main id="content-panes" class="content-panes">
+        <!-- Left Pane: Passages -->
+        <div id="left-pane" class="pane relative">
+            <div class="reading-passage">
+                <h3>Georgia O’Keeffe</h3>
+                
+                <p>For seven decades, Georgia O’Keeffe (1887-1986) was a major figure in American art. Remarkably, she remained independent from shifting art trends and her work stayed true to her own vision, which was based on finding the essential, <span class="vocab-word" data-word="abstract">abstract</span> forms in nature. With exceptionally keen powers of observation and great <span class="vocab-word" data-word="finesse">finesse</span> with a paintbrush, she recorded subtle nuances of colour, shape, and light that enlivened her paintings and attracted a wide audience.</p>
+
+                <p>Born in 1887 near Sun Prairie, Wisconsin to cattle breeders Francis and Ida O’Keeffe, Georgia was raised on their farm along with her six siblings. By the time she graduated from high school in 1905, she had determined to make her way as an artist. She studied the techniques of traditional painting at the Art Institute of Chicago school (1905) and the Art Students League of New York (1907-8). After attending university and then training college, she became an art teacher and taught in elementary schools, high schools, and colleges in Virginia, Texas, and South Carolina from 1911 to 1918.</p>
+
+                <p>During this period, O’Keeffe began to experiment with creating abstract compositions in charcoal, and produced a series of <span class="vocab-word" data-word="innovative">innovative</span> drawings that led her art in a new direction. She sent some of these drawings to a friend in New York, who showed them to art collector and photographer Alfred Stieglitz in January 1916. Stieglitz was impressed, and <span class="vocab-word" data-word="exhibited">exhibited</span> the drawings later that year at his gallery on Fifth Avenue, New York City, where the works of many avant-garde artists and photographers were introduced to the American public.</p>
+
+                <p>With Stieglitz’s encouragement and promise of financial support, O’Keeffe arrived in New York in June 1918 to begin a career as an artist. For the next three decades, Stieglitz vigorously promoted her work in twenty-two solo exhibitions and numerous group installations. The two were married in 1924. The ups and downs of their personal and professional relationship were recorded in Stieglitz’s celebrated black-and-white portraits of O’Keeffe, taken over the course of twenty years (1917-37).</p>
+
+                <p>By the mid-1920s, O’Keeffe was recognized as one of America’s most important and successful artists, widely known for the architectural pictures that dramatically depict the soaring skyscrapers of New York. But most often, she painted <span class="vocab-word" data-word="botanical">botanical</span> subjects, inspired by annual trips to the Stieglitz family summer home. In her magnified images depicting flowers, begun in 1924, O’Keeffe brings the viewer right into the picture.</p>
+
+                <p>Enlarging the tiniest details to fill an entire metre-wide canvas emphasized their shapes and lines and made them appear abstract. Such daring compositions helped establish O’Keeffe’s reputation as an innovative modernist.</p>
+
+                <p>In 1929, O’Keeffe made her first extended trip to the state of New Mexico. It was a visit that had a lasting impact on her life, and an immediate effect on her work. Over the next two decades she made almost annual trips to New Mexico, staying up to six months there, painting in relative solitude, then returning to New York each winter to exhibit the new work at Stieglitz’s gallery. This pattern continued until she moved permanently to New Mexico in 1949.</p>
+
+                <p>There, O’Keeffe found new inspiration: at first, it was the numerous sun-bleached bones she came across in the state’s rugged terrain that sparked her imagination. Two of her earliest and most celebrated Southwestern paintings exquisitely reproduce a cow skull’s weathered surfaces, jagged edges, and irregular openings. Later, she also explored another variation on this theme in her large series of Pelvis pictures, which focused on the contrasts between convex and concave surfaces, and solid and open spaces. However, it was the region’s spectacular landscape, with its unusual geological formations, vivid colours, clarity of light, and exotic vegetation, that held the artist’s imagination for more than four decades. Often, she painted the rocks, cliffs, and mountains in striking close-up, just as she had done with her botanical subjects.</p>
+
+                <p>O’Keeffe eventually owned two homes in New Mexico – the first, her summer retreat at Ghost Ranch, was nestled beneath 200-metre cliffs, while the second, used as her winter residence, was in the small town of Abiquiú. While both locales provided a wealth of imagery for her paintings, one feature of the Abiquiú house – the large walled patio with its black door – was particularly inspirational. In more than thirty pictures between 1946 and 1960, she reinvented the patio into an abstract arrangement of geometric shapes.</p>
+
+                <p>From the 1950s into the 1970s, O’Keeffe travelled widely, making trips to Asia, the Middle East, and Europe. Flying in planes inspired her last two major series – aerial views of rivers and expansive paintings of the sky viewed from just above clouds. In both series, O’Keeffe increased the size of her canvases, sometimes to mural proportions, reflecting perhaps her newly expanded view of the world. When in 1965 she successfully translated one of her cloud motifs to a monumental canvas measuring 6 metres in length (with the help of assistants), it was an enormous challenge and a special feat for an artist nearing eighty years of age.</p>
+
+                <p>The last two decades of the artist’s life were relatively unproductive as ill health and blindness hindered her ability to work. O’Keeffe died in 1986 at the age of ninety-eight, but her rich legacy of some 900 paintings has continued to attract subsequent generations of artists and art lovers who derive inspiration from these very American images.</p>
+            </div>
+        </div>
+
+        <!-- Splitter -->
+        <div id="splitter" class="splitter relative flex items-center justify-center group">
+            <div class="w-1 h-8 bg-gray-400 rounded-full opacity-50 group-hover:bg-gray-600 transition-colors"></div>
+        </div>
+
+        <!-- Right Pane: Questions -->
+        <div id="right-pane" class="pane">
+            <div id="questions-section" class="max-w-3xl mx-auto space-y-8 pb-10">
+                
+                <!-- Note Completion -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-blue-100 text-blue-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 1-7</span>
+                        <h4 class="font-bold text-gray-800">Note Completion</h4>
+                    </div>
+                    <p class="mb-5 text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100 text-sm">
+                        Complete the notes below.<br>
+                        Choose <strong>ONE WORD ONLY</strong> from the passage for each answer.
+                    </p>
+                    
+                    <div class="bg-yellow-50/40 p-5 sm:p-8 border border-yellow-100 rounded-xl">
+                        <h5 class="font-bold text-xl text-center mb-6 text-gray-900 uppercase tracking-wide">The life and work of Georgia O’Keeffe</h5>
+                        
+                        <ul class="space-y-4 text-gray-800 text-[0.95em] list-disc pl-5">
+                            <li class="leading-relaxed pl-1">
+                                studied art, then worked as a 
+                                <span id="container-q1" class="inline-block mx-1 my-1"><strong class="text-blue-600 mr-1 text-sm">1</strong><input type="text" name="q1" class="text-input w-32"></span> 
+                                in various places in the USA
+                            </li>
+                            <li class="leading-relaxed pl-1">
+                                created drawings using 
+                                <span id="container-q2" class="inline-block mx-1 my-1"><strong class="text-blue-600 mr-1 text-sm">2</strong><input type="text" name="q2" class="text-input w-32"></span> 
+                                which were exhibited in New York City
+                            </li>
+                            <li class="leading-relaxed pl-1">
+                                moved to New York and became famous for her paintings of the city’s 
+                                <span id="container-q3" class="inline-block mx-1 my-1"><strong class="text-blue-600 mr-1 text-sm">3</strong><input type="text" name="q3" class="text-input w-36"></span> 
+                            </li>
+                            <li class="leading-relaxed pl-1">
+                                produced a series of innovative close-up paintings of 
+                                <span id="container-q4" class="inline-block mx-1 my-1"><strong class="text-blue-600 mr-1 text-sm">4</strong><input type="text" name="q4" class="text-input w-32"></span> 
+                            </li>
+                            <li class="leading-relaxed pl-1">
+                                went to New Mexico and was initially inspired to paint the many 
+                                <span id="container-q5" class="inline-block mx-1 my-1"><strong class="text-blue-600 mr-1 text-sm">5</strong><input type="text" name="q5" class="text-input w-32"></span> 
+                                that could be found there
+                            </li>
+                            <li class="leading-relaxed pl-1">
+                                continued to paint various features that together formed the dramatic 
+                                <span id="container-q6" class="inline-block mx-1 my-1"><strong class="text-blue-600 mr-1 text-sm">6</strong><input type="text" name="q6" class="text-input w-36"></span> 
+                                of New Mexico for over forty years
+                            </li>
+                            <li class="leading-relaxed pl-1">
+                                travelled widely by plane in later years, and painted pictures of clouds and 
+                                <span id="container-q7" class="inline-block mx-1 my-1"><strong class="text-blue-600 mr-1 text-sm">7</strong><input type="text" name="q7" class="text-input w-32"></span> 
+                                seen from above
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="mt-6 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="1-7">Check Answers</button>
+                    </div>
+                </div>
+
+                <!-- TRUE / FALSE / NOT GIVEN -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-blue-100 text-blue-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 8-13</span>
+                        <h4 class="font-bold text-gray-800">TRUE / FALSE / NOT GIVEN</h4>
+                    </div>
+                    <p class="mb-5 text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100 text-sm">
+                        Do the following statements agree with the information given in Reading Passage 1?<br><br>
+                        Select the correct option below:<br>
+                        <strong class="text-blue-700">TRUE</strong> if the statement agrees with the information<br>
+                        <strong class="text-blue-700">FALSE</strong> if the statement contradicts the information<br>
+                        <strong class="text-blue-700">NOT GIVEN</strong> if there is no information on this
+                    </p>
+                    
+                    <div class="space-y-6">
+                        <div class="q-item border border-gray-100 p-4" id="container-q8">
+                            <p class="mb-3 text-gray-800 font-medium leading-snug"><span class="font-bold text-blue-600 mr-2">8</span> Georgia O’Keeffe’s style was greatly influenced by the changing fashions in art over the seven decades of her career.</p>
+                            <div class="flex flex-wrap gap-3">
+                                <label class="custom-radio-label"><input type="radio" name="q8" value="true" class="mr-2 hidden"><span class="font-semibold text-gray-600">True</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q8" value="false" class="mr-2 hidden"><span class="font-semibold text-gray-600">False</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q8" value="not given" class="mr-2 hidden"><span class="font-semibold text-gray-600">Not Given</span></label>
+                            </div>
+                        </div>
+
+                        <div class="q-item border border-gray-100 p-4" id="container-q9">
+                            <p class="mb-3 text-gray-800 font-medium leading-snug"><span class="font-bold text-blue-600 mr-2">9</span> When O’Keeffe finished high school, she had already made her mind up about the career that she wanted.</p>
+                            <div class="flex flex-wrap gap-3">
+                                <label class="custom-radio-label"><input type="radio" name="q9" value="true" class="mr-2 hidden"><span class="font-semibold text-gray-600">True</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q9" value="false" class="mr-2 hidden"><span class="font-semibold text-gray-600">False</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q9" value="not given" class="mr-2 hidden"><span class="font-semibold text-gray-600">Not Given</span></label>
+                            </div>
+                        </div>
+
+                        <div class="q-item border border-gray-100 p-4" id="container-q10">
+                            <p class="mb-3 text-gray-800 font-medium leading-snug"><span class="font-bold text-blue-600 mr-2">10</span> Alfred Stieglitz first discovered O’Keeffe’s work when she sent some abstract drawings to his gallery in New York City.</p>
+                            <div class="flex flex-wrap gap-3">
+                                <label class="custom-radio-label"><input type="radio" name="q10" value="true" class="mr-2 hidden"><span class="font-semibold text-gray-600">True</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q10" value="false" class="mr-2 hidden"><span class="font-semibold text-gray-600">False</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q10" value="not given" class="mr-2 hidden"><span class="font-semibold text-gray-600">Not Given</span></label>
+                            </div>
+                        </div>
+
+                        <div class="q-item border border-gray-100 p-4" id="container-q11">
+                            <p class="mb-3 text-gray-800 font-medium leading-snug"><span class="font-bold text-blue-600 mr-2">11</span> O’Keeffe was the subject of Stieglitz’s photographic work for many years.</p>
+                            <div class="flex flex-wrap gap-3">
+                                <label class="custom-radio-label"><input type="radio" name="q11" value="true" class="mr-2 hidden"><span class="font-semibold text-gray-600">True</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q11" value="false" class="mr-2 hidden"><span class="font-semibold text-gray-600">False</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q11" value="not given" class="mr-2 hidden"><span class="font-semibold text-gray-600">Not Given</span></label>
+                            </div>
+                        </div>
+
+                        <div class="q-item border border-gray-100 p-4" id="container-q12">
+                            <p class="mb-3 text-gray-800 font-medium leading-snug"><span class="font-bold text-blue-600 mr-2">12</span> O’Keeffe’s paintings of the patio of her house in Abiquiú were among the artist’s favourite works.</p>
+                            <div class="flex flex-wrap gap-3">
+                                <label class="custom-radio-label"><input type="radio" name="q12" value="true" class="mr-2 hidden"><span class="font-semibold text-gray-600">True</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q12" value="false" class="mr-2 hidden"><span class="font-semibold text-gray-600">False</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q12" value="not given" class="mr-2 hidden"><span class="font-semibold text-gray-600">Not Given</span></label>
+                            </div>
+                        </div>
+
+                        <div class="q-item border border-gray-100 p-4" id="container-q13">
+                            <p class="mb-3 text-gray-800 font-medium leading-snug"><span class="font-bold text-blue-600 mr-2">13</span> O’Keeffe produced a greater quantity of work during the 1950s to 1970s than at any other time in her life.</p>
+                            <div class="flex flex-wrap gap-3">
+                                <label class="custom-radio-label"><input type="radio" name="q13" value="true" class="mr-2 hidden"><span class="font-semibold text-gray-600">True</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q13" value="false" class="mr-2 hidden"><span class="font-semibold text-gray-600">False</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q13" value="not given" class="mr-2 hidden"><span class="font-semibold text-gray-600">Not Given</span></label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="8-13">Check Answers</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Highlight Tooltip -->
+<div id="highlight-tooltip" class="highlight-tooltip">Highlight Text</div>
+
+<!-- Vocabulary Modal -->
+<div id="vocab-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50 transition-opacity">
+    <div class="bg-white rounded-2xl shadow-2xl p-5 sm:p-8 w-full max-w-md relative transform transition-all scale-95 opacity-0" id="vocab-modal-content">
+        <button id="close-vocab-modal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-full w-8 h-8 flex items-center justify-center transition-colors">&times;</button>
+        <div class="flex items-center mb-6 border-b pb-4 mt-2">
+            <h3 id="vocab-word" class="text-2xl sm:text-3xl font-extrabold text-gray-900 capitalize tracking-tight"></h3>
+        </div>
+        <div class="flex items-center mb-5">
+            <button id="play-audio-btn" class="flex items-center justify-center h-10 w-10 sm:h-12 sm:w-12 shrink-0 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white mr-4 transition-all shadow-sm border border-blue-100" title="Listen to pronunciation">
+                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>
+            </button>
+            <p id="vocab-pronunciation-text" class="text-gray-500 font-mono text-base sm:text-lg bg-gray-50 px-3 py-1 rounded-md border border-gray-100"></p>
+        </div>
+        <p id="vocab-meaning" class="text-gray-700 text-base sm:text-lg leading-relaxed"></p>
+    </div>
+</div>
+
+<!-- Alert Modal -->
+<div id="alert-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-[80] transition-opacity">
+    <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm relative transform transition-all scale-95 opacity-0 text-center" id="alert-modal-content">
+        <div id="alert-icon-container" class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+            <svg id="alert-icon" class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+        </div>
+        <h3 id="alert-title" class="text-lg leading-6 font-medium text-gray-900 mb-2">Notice</h3>
+        <p id="alert-message" class="text-sm text-gray-500 mb-6">Message goes here.</p>
+        <button id="close-alert-btn" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm transition-colors">
+            Got it
+        </button>
+    </div>
+</div>
+
+<script>
+    // --- DATA ---
+    const vocabulary = {
+        'innovative': { meaning: 'Mang tính đổi mới, sáng tạo.', phonetic: '/ˈɪn.ə.və.tɪv/' },
+        'abstract': { meaning: 'Trừu tượng.', phonetic: '/ˈæb.strækt/' },
+        'exhibited': { meaning: 'Trưng bày (quá khứ của exhibit).', phonetic: '/ɪɡˈzɪb.ɪtɪd/' },
+        'botanical': { meaning: 'Thuộc về thực vật học.', phonetic: '/bəˈtæn.ɪ.kəl/' },
+        'finesse': { meaning: 'Sự tinh tế, khéo léo.', phonetic: '/fɪˈnes/' }
+    };
+
+    const answers = {
+        q1: "teacher",
+        q2: "charcoal",
+        q3: "skyscrapers",
+        q4: "flowers",
+        q5: "skulls",
+        q6: "landscape",
+        q7: "rivers",
+        q8: "false",
+        q9: "false",
+        q10: "not given",
+        q11: "true",
+        q12: "not given",
+        q13: "not given"
+    };
+
+    const explanations = {
+        q1: "Bài đọc cho biết bà “worked as a teacher in various places in the USA” (làm giáo viên ở nhiều nơi tại Mỹ).",
+        q2: "Bài đọc đề cập bà “created drawings using charcoal which were exhibited in New York City” (tạo ra những bức vẽ bằng than củi…).",
+        q3: "Bà “became famous for her paintings of the city’s skyscrapers” (trở nên nổi tiếng với các bức tranh về những tòa nhà chọc trời của thành phố).",
+        q4: "Bà “produced a series of innovative close-up paintings of flowers” (tạo ra một loạt tranh cận cảnh sáng tạo về hoa).",
+        q5: "Bà “was initially inspired to paint the many skulls that could be found there” (ban đầu được truyền cảm hứng để vẽ những bộ sọ…).",
+        q6: "Bà “continued to paint various features that together formed the dramatic landscape of New Mexico” (tiếp tục vẽ các đặc điểm cùng nhau tạo nên phong cảnh ngoạn mục…).",
+        q7: "Bà “painted pictures of clouds and rivers seen from above” (vẽ tranh về mây và sông được nhìn từ trên cao).",
+        q8: "Bài đọc thường sẽ nhấn mạnh tính độc đáo và không theo trào lưu của O’Keeffe, điều này mâu thuẫn trực tiếp với việc phong cách của bà bị ảnh hưởng bởi các xu hướng.",
+        q9: "Bài đọc chỉ ra rằng bà đã làm “a teacher” trước khi trở thành một họa sĩ nổi tiếng. Điều này gợi ý rằng bà đã có một sự nghiệp khác trước khi định hướng rõ ràng cho con đường nghệ thuật, mâu thuẫn với việc bà đã quyết định ngay từ khi học xong trung học.",
+        q10: "Bài đọc có thể nói về việc ông phát hiện ra tác phẩm của bà, nhưng không có thông tin chi tiết về việc bà có phải là người trực tiếp gửi các bản vẽ đó hay không. Đây là một chi tiết không được đề cập.",
+        q11: "Mặc dù không được đề cập trực tiếp trong bài đọc, đây là một sự thật lịch sử nổi tiếng về O’Keeffe và Stieglitz. Các bài đọc IELTS thường sẽ bao gồm những thông tin chính xác này.",
+        q12: "Bài đọc có thể đề cập đến việc bà vẽ sân trong (patio), nhưng không có bất kỳ thông tin nào về cảm xúc cá nhân của bà đối với các tác phẩm đó. Các câu hỏi về cảm nhận, ý kiến cá nhân (favorite, enjoy, dislike) thường là NOT GIVEN.",
+        q13: "Bài đọc liệt kê các giai đoạn trong sự nghiệp của bà, nhưng không cung cấp dữ liệu định lượng (số lượng tranh, tần suất sáng tác) để so sánh các giai đoạn với nhau."
+    };
+
+    // --- APPLICATION LOGIC ---
+    document.addEventListener('DOMContentLoaded', () => {
+        const app = {
+            userAnswers: {},
+            answersChecked: {},
+            currentFontSize: 17,
+            totalQuestions: Object.keys(answers).length,
+            timeRemaining: 20 * 60, // 20 minutes
+
+            // Elements
+            leftPane: document.getElementById('left-pane'),
+            rightPane: document.getElementById('right-pane'),
+            splitter: document.getElementById('splitter'),
+            highlightTooltip: document.getElementById('highlight-tooltip'),
+            vocabModal: document.getElementById('vocab-modal'),
+            vocabModalContent: document.getElementById('vocab-modal-content'),
+            closeVocabModalBtn: document.getElementById('close-vocab-modal'),
+            vocabWordEl: document.getElementById('vocab-word'),
+            vocabMeaningEl: document.getElementById('vocab-meaning'),
+            vocabPronunciationText: document.getElementById('vocab-pronunciation-text'),
+            playAudioBtn: document.getElementById('play-audio-btn'),
+            clearHighlightsBtn: document.getElementById('clear-highlights-btn'),
+            progressText: document.getElementById('progress-text'),
+            timerEl: document.getElementById('timer'),
+
+            // Alert Elements
+            alertModal: document.getElementById('alert-modal'),
+            alertModalContent: document.getElementById('alert-modal-content'),
+            closeAlertBtn: document.getElementById('close-alert-btn'),
+            alertTitleEl: document.getElementById('alert-title'),
+            alertMessageEl: document.getElementById('alert-message'),
+            alertIconContainer: document.getElementById('alert-icon-container'),
+
+            init() {
+                this.setupEventListeners();
+                this.initSplitter();
+                this.initHighlighter();
+                this.updateCheckButtonsState();
+                this.startTimer();
+            },
+
+            startTimer() {
+                const interval = setInterval(() => {
+                    if (this.timeRemaining <= 0) {
+                        clearInterval(interval);
+                        this.timerEl.textContent = "00:00";
+                        this.timerEl.classList.add('text-red-600');
+                        this.showAlert("Time's Up!", "Your 20 minutes for this reading passage have expired.", "warning");
+                        return;
+                    }
+                    this.timeRemaining--;
+                    const m = Math.floor(this.timeRemaining / 60).toString().padStart(2, '0');
+                    const s = (this.timeRemaining % 60).toString().padStart(2, '0');
+                    this.timerEl.textContent = `${m}:${s}`;
+                    
+                    if (this.timeRemaining <= 300) { // last 5 minutes
+                        this.timerEl.classList.add('text-red-500');
+                    }
+                }, 1000);
+            },
+
+            setupEventListeners() {
+                document.getElementById('increase-font-btn').addEventListener('click', () => this.changeFontSize(1));
+                document.getElementById('decrease-font-btn').addEventListener('click', () => this.changeFontSize(-1));
+
+                this.clearHighlightsBtn.addEventListener('click', () => {
+                    const marks = this.leftPane.querySelectorAll('mark');
+                    marks.forEach(mark => {
+                        const text = document.createTextNode(mark.textContent);
+                        mark.replaceWith(text);
+                    });
+                });
+
+                this.closeVocabModalBtn.addEventListener('click', () => this.closeModal());
+                this.vocabModal.addEventListener('click', (e) => {
+                   if (e.target === this.vocabModal) this.closeModal();
+                });
+
+                // Keyboard accessibility: Close modals with Escape key & Disable Ctrl+F
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') {
+                        if (!this.vocabModal.classList.contains('hidden')) this.closeModal();
+                        if (!this.alertModal.classList.contains('hidden')) this.closeAlert();
+                    }
+                    
+                    // Disable Ctrl+F / Cmd+F
+                    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
+                        e.preventDefault(); 
+                        this.showAlert("Action Disabled", "The 'Find' function is disabled to simulate real computer-delivered test conditions.", "warning");
+                    }
+
+                    // Disable F5 and Ctrl+R / Cmd+R
+                    if (e.key === 'F5' || ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'r')) {
+                        e.preventDefault();
+                        this.showAlert("Action Disabled", "Refreshing the page is disabled during the test to prevent losing your progress.", "warning");
+                    }
+                });
+
+                // Detect Tab Switching or Window minimizing
+                document.addEventListener('visibilitychange', () => {
+                    if (document.hidden && this.timeRemaining > 0) {
+                        this.showAlert("Warning: Tab Switch Detected", "Please do not switch tabs or leave the test window during the exam. Continued tab switching may result in your test being invalidated.", "warning");
+                    }
+                });
+
+                window.addEventListener('beforeunload', (e) => {
+                    if (this.timeRemaining > 0 && this.timeRemaining < 20 * 60) {
+                        e.preventDefault();
+                        e.returnValue = ''; 
+                    }
+                });
+
+                // Alert Modal Events
+                this.closeAlertBtn.addEventListener('click', () => this.closeAlert());
+                this.alertModal.addEventListener('click', (e) => {
+                   if (e.target === this.alertModal) this.closeAlert();
+                });
+
+                // Track text inputs
+                document.body.addEventListener('input', (e) => {
+                    if (e.target.tagName === 'INPUT' && e.target.type === 'text') {
+                        this.userAnswers[e.target.name] = e.target.value;
+                        e.target.classList.remove('correct-answer', 'incorrect-answer');
+                        e.target.placeholder = '';
+                        const container = document.getElementById(`container-${e.target.name}`);
+                        if(container) container.classList.remove('bg-red-50', 'bg-green-50');
+                        
+                        this.updateCheckButtonsState();
+                        this.updateProgress();
+                    }
+                });
+
+                // Track Radio button changes
+                document.body.addEventListener('change', (e) => {
+                    if (e.target.tagName === 'INPUT' && e.target.type === 'radio') {
+                        this.userAnswers[e.target.name] = e.target.value;
+                        
+                        const groupRadios = document.querySelectorAll(`input[name="${e.target.name}"]`);
+                        groupRadios.forEach(radio => {
+                            const label = radio.closest('label');
+                            if(label) label.classList.remove('correct-answer', 'incorrect-answer');
+                        });
+                        
+                        this.updateCheckButtonsState();
+                        this.updateProgress();
+                    }
+                });
+
+                // Vocab Words & Removable Highlights Event Delegation
+                this.leftPane.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('vocab-word')) {
+                        const wordKey = e.target.dataset.word;
+                        this.openVocabModal(wordKey);
+                    }
+                    
+                    if (e.target.tagName === 'MARK') {
+                        const textNode = document.createTextNode(e.target.textContent);
+                        e.target.replaceWith(textNode);
+                    }
+                });
+
+                // Check Buttons Event Delegation
+                document.querySelectorAll('.check-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const range = e.target.dataset.range;
+                        this.checkAnswers(range, e.target);
+                    });
+                });
+                
+                // Real Audio Pronunciation Event
+                this.playAudioBtn.addEventListener('click', () => {
+                   const word = this.vocabWordEl.textContent;
+                   if (!word) return;
+                   if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+                   
+                   this.playAudioBtn.classList.remove('text-blue-600', 'bg-blue-50');
+                   this.playAudioBtn.classList.add('bg-green-500', 'text-white');
+                   
+                   if ('speechSynthesis' in window) {
+                       const utterance = new SpeechSynthesisUtterance(word);
+                       utterance.lang = 'en-GB'; 
+                       utterance.rate = 0.9; 
+                       utterance.onend = () => this.resetAudioBtn();
+                       utterance.onerror = () => this.resetAudioBtn();
+                       window.speechSynthesis.speak(utterance);
+                   } else {
+                       this.showAlert("Audio Error", "Sorry, your browser doesn't support text-to-speech audio.", "warning");
+                       setTimeout(() => this.resetAudioBtn(), 500);
+                   }
+                });
+            },
+
+            updateProgress() {
+                let answeredCount = 0;
+                for(let key in answers) {
+                    if(this.userAnswers[key] && this.userAnswers[key].trim() !== '') {
+                        answeredCount++;
+                    }
+                }
+                this.progressText.textContent = `${answeredCount} / ${this.totalQuestions} Answered`;
+            },
+
+            resetAudioBtn() {
+                this.playAudioBtn.classList.add('text-blue-600', 'bg-blue-50');
+                this.playAudioBtn.classList.remove('bg-green-500', 'text-white');
+            },
+            
+            changeFontSize(delta) {
+                this.currentFontSize += delta;
+                if (this.currentFontSize < 14) this.currentFontSize = 14;
+                if (this.currentFontSize > 26) this.currentFontSize = 26;
+                document.documentElement.style.setProperty('--app-font-size', `${this.currentFontSize}px`);
+            },
+
+            openVocabModal(wordKey) {
+                const data = vocabulary[wordKey];
+                if (data) {
+                    this.vocabWordEl.textContent = wordKey;
+                    this.vocabMeaningEl.textContent = data.meaning;
+                    this.vocabPronunciationText.textContent = data.phonetic || '';
+                    this.vocabModal.classList.remove('hidden');
+                    setTimeout(() => {
+                        this.vocabModalContent.classList.remove('scale-95', 'opacity-0');
+                        this.vocabModalContent.classList.add('scale-100', 'opacity-100');
+                    }, 10);
+                }
+            },
+
+            closeModal() {
+                if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+                this.vocabModalContent.classList.remove('scale-100', 'opacity-100');
+                this.vocabModalContent.classList.add('scale-95', 'opacity-0');
+                this.resetAudioBtn();
+                setTimeout(() => this.vocabModal.classList.add('hidden'), 200);
+            },
+
+            showAlert(title, message, type = 'error') {
+                this.alertTitleEl.textContent = title;
+                this.alertMessageEl.textContent = message;
+                
+                if (type === 'warning') {
+                    this.alertIconContainer.className = 'mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 mb-4';
+                    this.alertIconContainer.innerHTML = '<svg class="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>';
+                } else {
+                    this.alertIconContainer.className = 'mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4';
+                    this.alertIconContainer.innerHTML = '<svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>';
+                }
+                
+                this.alertModal.classList.remove('hidden');
+                setTimeout(() => {
+                    this.alertModalContent.classList.remove('scale-95', 'opacity-0');
+                    this.alertModalContent.classList.add('scale-100', 'opacity-100');
+                }, 10);
+            },
+
+            closeAlert() {
+                this.alertModalContent.classList.remove('scale-100', 'opacity-100');
+                this.alertModalContent.classList.add('scale-95', 'opacity-0');
+                setTimeout(() => {
+                    this.alertModal.classList.add('hidden');
+                }, 200);
+            },
+            
+            updateCheckButtonsState() {
+                document.querySelectorAll('.check-btn').forEach(btn => {
+                    const range = btn.dataset.range;
+                    if (this.answersChecked[range]) {
+                        btn.className = 'check-btn bg-gray-800 hover:bg-gray-900 text-white font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-pointer transform hover:-translate-y-0.5 hover:shadow-md active:scale-95';
+                        btn.textContent = 'Reset Answers';
+                        return;
+                    }
+
+                    const [start, end] = range.split('-').map(Number);
+                    let allAnswered = true;
+                    for (let i = start; i <= end; i++) {
+                        const qId = `q${i}`;
+                        const answer = (this.userAnswers[qId] || "").trim();
+                        if (!answer) {
+                            allAnswered = false;
+                            break;
+                        }
+                    }
+
+                    if (allAnswered) {
+                        btn.className = 'check-btn bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-pointer transform hover:-translate-y-0.5 hover:shadow-md active:scale-95';
+                    } else {
+                        btn.className = 'check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80';
+                    }
+                });
+            },
+
+            checkAnswers(range, btn) {
+                if (this.answersChecked[range]) {
+                    // Reset mode
+                    this.answersChecked[range] = false;
+                    
+                    const [start, end] = range.split('-').map(Number);
+                    for (let i = start; i <= end; i++) {
+                        const qId = `q${i}`;
+                        this.userAnswers[qId] = '';
+
+                        // Handle Radios
+                        const radios = document.querySelectorAll(`input[name="${qId}"][type="radio"]`);
+                        if (radios.length > 0) {
+                            radios.forEach(radio => {
+                                radio.checked = false;
+                                const label = radio.closest('label');
+                                if (label) label.classList.remove('correct-answer', 'incorrect-answer');
+                            });
+                        }
+
+                        // Handle Inputs
+                        const input = document.querySelector(`input[name="${qId}"][type="text"]`);
+                        if (input) {
+                            input.value = '';
+                            input.placeholder = '';
+                            input.classList.remove('correct-answer', 'incorrect-answer');
+                        }
+
+                        const expl = document.getElementById(`expl-${qId}`);
+                        if (expl) expl.remove();
+                    }
+                    this.updateCheckButtonsState();
+                    this.updateProgress();
+                    return;
+                }
+
+                const [start, end] = range.split('-').map(Number);
+
+                // --- Validation: Ensure all questions are answered ---
+                let allAnswered = true;
+                for (let i = start; i <= end; i++) {
+                    const qId = `q${i}`;
+                    const answer = (this.userAnswers[qId] || "").trim();
+                    if (!answer) {
+                        allAnswered = false;
+                        break;
+                    }
+                }
+
+                if (!allAnswered) {
+                    this.showAlert("Incomplete Answers", "Please fill in or select an answer for all questions in this section before checking.", "warning");
+                    return;
+                }
+                // -----------------------------------------------------
+
+                // Check mode
+                this.answersChecked[range] = true;
+                this.updateCheckButtonsState();
+
+                for (let i = start; i <= end; i++) {
+                    const qId = `q${i}`;
+                    let userAnswer = (this.userAnswers[qId] || "").toLowerCase().trim();
+                    
+                    let correctAnswersList = answers[qId].toLowerCase().split('|');
+                    let isCorrect = correctAnswersList.includes(userAnswer);
+
+                    let correctFeedbackHTML = '';
+
+                    // Check Radios
+                    const radios = document.querySelectorAll(`input[name="${qId}"][type="radio"]`);
+                    if (radios.length > 0) {
+                        radios.forEach(radio => {
+                            const label = radio.closest('label');
+                            if (label) label.classList.remove('correct-answer', 'incorrect-answer');
+                            
+                            if (correctAnswersList.includes(radio.value.toLowerCase())) {
+                                if (label) label.classList.add('correct-answer');
+                            } else if (radio.value.toLowerCase() === userAnswer) {
+                                if (label) label.classList.add('incorrect-answer');
+                            }
+                        });
+                        
+                        if (!isCorrect) {
+                            const correctAnsFormatted = correctAnswersList[0]
+                                .split(' ')
+                                .map(w => w.length === 1 ? w.toUpperCase() : w.charAt(0).toUpperCase() + w.slice(1))
+                                .join(' ');
+                            correctFeedbackHTML = `<span class="correct-badge">Correct Answer: ${correctAnsFormatted}</span><br>`;
+                        }
+                    }
+
+                    // Check Inputs
+                    const input = document.querySelector(`input[name="${qId}"][type="text"]`);
+                    if (input) {
+                        input.classList.remove('correct-answer', 'incorrect-answer');
+                        
+                        if (isCorrect) {
+                            input.classList.add('correct-answer');
+                        } else {
+                            input.classList.add('incorrect-answer');
+                            const correctAnsFormatted = correctAnswersList[0]
+                                .split(' ')
+                                .map(w => w.length === 1 ? w.toUpperCase() : w.charAt(0).toUpperCase() + w.slice(1)) 
+                                .join(' ');
+                                
+                            input.value = '';
+                            input.placeholder = correctAnsFormatted;
+                            
+                            correctFeedbackHTML = `<span class="correct-badge">Correct Answer: ${correctAnsFormatted}</span><br>`;
+                        }
+                    }
+
+                    // Add Explanation Box
+                    if (explanations[qId]) {
+                        const existingExpl = document.getElementById(`expl-${qId}`);
+                        if (!existingExpl) {
+                            const explDiv = document.createElement('div');
+                            explDiv.id = `expl-${qId}`;
+                            explDiv.className = 'explanation-box';
+                            explDiv.innerHTML = `${correctFeedbackHTML}<strong>Explanation:</strong> ${explanations[qId]}`;
+                            
+                            const container = document.getElementById(`container-${qId}`);
+                            if (container) {
+                                if(container.tagName === "SPAN" || container.tagName === "P" && container.style.display === "inline") {
+                                    const wrap = container.closest('li.leading-relaxed') || container.closest('div.leading-loose') || container.parentElement;
+                                    wrap.insertAdjacentElement('afterend', explDiv);
+                                } else {
+                                    container.insertAdjacentElement('afterend', explDiv);
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+
+            initSplitter() {
+                let isDragging = false;
+                const contentPanes = document.getElementById('content-panes');
+
+                this.splitter.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    isDragging = true;
+                    document.body.style.cursor = 'col-resize';
+                });
+
+                document.addEventListener('mousemove', (e) => {
+                    if (!isDragging) return;
+                    e.preventDefault();
+                    if (window.innerWidth <= 768) return; 
+                    
+                    const containerRect = contentPanes.getBoundingClientRect();
+                    const newLeftWidth = e.clientX - containerRect.left;
+                    if (newLeftWidth > 200 && newLeftWidth < containerRect.width - 200) {
+                        const newLeftPercent = (newLeftWidth / containerRect.width) * 100;
+                        contentPanes.style.gridTemplateColumns = `${newLeftPercent}% 5px 1fr`;
+                    }
+                });
+
+                document.addEventListener('mouseup', () => {
+                    if (isDragging) {
+                        isDragging = false;
+                        document.body.style.cursor = 'default';
+                    }
+                });
+            },
+
+            initHighlighter() {
+                document.body.addEventListener('mouseup', (e) => {
+                    const selection = window.getSelection();
+                    const selectedText = selection.toString().trim();
+
+                    if (selectedText.length > 0) {
+                        const range = selection.getRangeAt(0);
+                        if (!this.leftPane.contains(range.commonAncestorContainer) && !this.rightPane.contains(range.commonAncestorContainer)) {
+                           this.highlightTooltip.style.display = 'none';
+                           return;
+                        }
+
+                        this.highlightTooltip.style.left = `${e.pageX - 30}px`;
+                        this.highlightTooltip.style.top = `${e.pageY - 40}px`;
+                        this.highlightTooltip.style.display = 'block';
+
+                        this.highlightTooltip.onclick = () => {
+                            const container = range.commonAncestorContainer;
+                            if (container.nodeType === 3) { 
+                                if (range.startContainer.parentElement !== range.endContainer.parentElement) {
+                                    this.highlightTooltip.style.display = 'none';
+                                    this.showAlert("Highlight Error", "Please select text within a single paragraph to highlight.", "warning");
+                                    selection.removeAllRanges();
+                                    return;
+                                }
+                            }
+                            
+                            const mark = document.createElement('mark');
+                            try {
+                                range.surroundContents(mark);
+                            } catch (ex) {
+                                this.showAlert("Highlight Error", "Please select plain text to highlight. Highlighting across different formatting is restricted.", "warning");
+                            } 
+                            finally {
+                                selection.removeAllRanges();
+                                this.highlightTooltip.style.display = 'none';
+                            }
+                        };
+                    } else {
+                        this.highlightTooltip.style.display = 'none';
+                    }
+                });
+
+                document.body.addEventListener('mousedown', (e) => {
+                   if (e.target !== this.highlightTooltip && window.getSelection().toString().length === 0) {
+                        this.highlightTooltip.style.display = 'none';
+                   }
+                });
+            }
+        };
+
+        app.init();
+    });
+</script>
+
+</body>
+</html>

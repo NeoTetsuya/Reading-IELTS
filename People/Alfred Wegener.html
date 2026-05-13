@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IELTS Academic Simulator - Alfred Wegener</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --app-font-size: 17px;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            overscroll-behavior: none;
+            background-color: #f3f4f6;
+        }
+        .ielts-container {
+            display: grid;
+            grid-template-rows: auto 1fr;
+            height: 100vh;
+        }
+        .content-panes {
+            display: grid;
+            grid-template-columns: 1fr 5px 1fr;
+            overflow: hidden;
+        }
+        .pane {
+            overflow-y: auto;
+            padding: 2rem 3rem;
+            font-size: var(--app-font-size);
+            scroll-behavior: smooth;
+        }
+        #left-pane {
+            background-color: #fdfdfd;
+        }
+        #right-pane {
+            background-color: #f8fafc;
+        }
+        .splitter {
+            background-color: #cbd5e1;
+            cursor: col-resize;
+            z-index: 10;
+            transition: background-color 0.2s;
+        }
+        .splitter:hover, .splitter:active {
+            background-color: #94a3b8;
+        }
+        
+        /* Typography Improvements */
+        .reading-passage {
+            font-family: 'Merriweather', serif;
+            line-height: 1.9;
+            color: #334155;
+            text-align: justify;
+            margin-bottom: 2rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .reading-passage p {
+            margin-bottom: 1.5rem;
+            text-indent: 1.5rem; 
+        }
+        .reading-passage h3 {
+            font-family: 'Inter', sans-serif;
+            color: #0f172a;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+            font-size: 1.5em;
+            text-align: center;
+            text-indent: 0;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .reading-passage h4 {
+            font-family: 'Inter', sans-serif;
+            color: #475569;
+            margin-bottom: 2rem;
+            font-weight: 500;
+            font-size: 1.1em;
+            text-align: center;
+            text-indent: 0;
+        }
+        .paragraph-label {
+            float: left;
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+            font-size: 1.1em;
+            margin-right: 0.5rem;
+            color: #1e40af;
+            text-indent: 0;
+            background-color: #eff6ff;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            border: 1px solid #bfdbfe;
+            margin-top: 5px;
+        }
+
+        /* Question Styles */
+        .q-item {
+            padding: 1rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s;
+            background-color: white;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 0.75rem;
+        }
+        
+        .text-input {
+            border: 2px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 4px 8px;
+            font-weight: 600;
+            color: #1e293b;
+            transition: all 0.2s;
+            text-align: center;
+            background-color: #f8fafc;
+        }
+        .text-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            background-color: #ffffff;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+        .text-input-short {
+            width: 4rem;
+            text-transform: uppercase;
+        }
+
+        /* Custom Radio Button Styles */
+        .custom-radio-label {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            background-color: white;
+            flex: 1;
+            justify-content: center;
+            text-align: center;
+        }
+        .custom-radio-label.mcq-label {
+            justify-content: flex-start;
+            text-align: left;
+            flex: none;
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+        .custom-radio-label:hover {
+            background-color: #f8fafc;
+            border-color: #cbd5e1;
+        }
+        .custom-radio-label input:checked + span {
+            color: #1e40af;
+            font-weight: 700;
+        }
+
+        /* Custom Dropdown Styles */
+        select.text-input {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 0.25rem center;
+            background-size: 1em;
+            padding-right: 1.25rem;
+            padding-left: 0.5rem;
+            cursor: pointer;
+        }
+
+        /* Answer Feedback Animations & Styles */
+        .correct-answer {
+            border-color: #22c55e !important;
+            background-color: #f0fdf4 !important;
+            color: #166534 !important;
+        }
+        label.correct-answer {
+            box-shadow: 0 0 0 1px #22c55e;
+            color: #166534 !important;
+        }
+        label.correct-answer span { color: #166534 !important; }
+        
+        .incorrect-answer {
+            border-color: #ef4444 !important;
+            background-color: #fef2f2 !important;
+            color: #991b1b !important;
+        }
+        label.incorrect-answer {
+            box-shadow: 0 0 0 1px #ef4444;
+            color: #991b1b !important;
+        }
+        label.incorrect-answer span { color: #991b1b !important; }
+
+        .explanation-box {
+            animation: fadeIn 0.4s ease-out forwards;
+            margin-top: 0.75rem;
+            padding: 1rem;
+            background-color: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            border-radius: 0.5rem;
+            font-size: 0.95rem;
+            color: #1e3a8a;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            text-align: left;
+        }
+        .explanation-box .correct-badge {
+            display: inline-block;
+            background: #22c55e;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.85em;
+            margin-bottom: 0.5rem;
+            letter-spacing: 0.05em;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Vocabulary Styles */
+        .vocab-word {
+            color: #2563eb;
+            font-weight: 600;
+            cursor: pointer;
+            border-bottom: 2px dotted #93c5fd;
+            transition: all 0.2s ease-in-out;
+            padding: 0 2px;
+        }
+        .vocab-word:hover {
+            background-color: #dbeafe;
+            border-bottom-style: solid;
+            border-radius: 2px;
+        }
+
+        /* UI Elements */
+        .highlight-tooltip {
+            position: absolute;
+            background-color: #1e293b;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            z-index: 100;
+            cursor: pointer;
+            display: none;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        mark {
+            background-color: #fef08a;
+            border-radius: 3px;
+            padding: 2px 0;
+            cursor: pointer;
+            transition: background-color 0.2s, color 0.2s;
+            position: relative;
+        }
+        mark:hover {
+            background-color: #fca5a5;
+            color: #7f1d1d;
+        }
+        mark:hover::after {
+            content: ' ×';
+            font-weight: bold;
+            font-size: 0.8em;
+            opacity: 0.7;
+        }
+        
+        /* Responsive Design Overrides */
+        @media (max-width: 768px) {
+            .content-panes {
+                display: flex;
+                flex-direction: column;
+                overflow-y: auto;
+            }
+            .splitter {
+                display: none;
+            }
+            .pane {
+                padding: 1.25rem 1rem;
+                overflow-y: visible;
+                height: auto;
+            }
+            #left-pane {
+                border-bottom: 2px dashed #cbd5e1;
+                padding-bottom: 2rem;
+            }
+            .text-input {
+                max-width: 140px;
+                padding: 2px 6px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div id="test-container" class="ielts-container">
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 flex justify-between items-center z-20 shadow-sm flex-wrap gap-3">
+        <div class="flex items-center gap-2 sm:space-x-3">
+            <div class="bg-blue-600 text-white p-1.5 sm:p-2 rounded-lg shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+            </div>
+            <h1 class="text-xl font-bold text-gray-800 hidden sm:block">IELTS Simulator <span class="text-blue-600 font-medium">| Alfred Wegener</span></h1>
+            <h1 class="text-base font-bold text-gray-800 sm:hidden">IELTS <span class="text-blue-600">Alfred Wegener</span></h1>
+        </div>
+        
+        <!-- Timer & Progress -->
+        <div class="flex items-center space-x-4">
+            <div class="hidden sm:flex flex-col items-end">
+                <span class="text-xs text-gray-500 font-bold uppercase tracking-wide">Progress</span>
+                <span id="progress-text" class="text-sm font-semibold text-blue-600">0 / 14 Answered</span>
+            </div>
+            <div class="flex items-center bg-gray-100 rounded-lg px-3 py-1.5 border border-gray-200">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span id="timer" class="font-mono font-bold text-gray-700 text-lg">20:00</span>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2 sm:space-x-3">
+            <button id="clear-highlights-btn" class="hidden sm:flex items-center justify-center px-3 py-1.5 rounded bg-amber-50 hover:bg-amber-100 text-amber-700 transition-colors focus:outline-none border border-amber-200 text-sm font-medium" title="Clear Highlights">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                Clear
+            </button>
+            <div class="flex items-center space-x-1 sm:space-x-2 bg-gray-50 p-1 rounded-lg border border-gray-200">
+                <button id="decrease-font-btn" class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded bg-white shadow-sm hover:bg-gray-100 text-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-400 font-bold text-sm sm:text-base" title="Decrease Font Size">A-</button>
+                <button id="increase-font-btn" class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded bg-white shadow-sm hover:bg-gray-100 text-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-400 font-bold text-sm sm:text-base" title="Increase Font Size">A+</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main id="content-panes" class="content-panes">
+        <!-- Left Pane: Passages -->
+        <div id="left-pane" class="pane relative">
+            <div class="reading-passage">
+                <h3>Alfred Wegener: science, exploration and the theory of continental drift</h3>
+                <h4>by Mott T Greene</h4>
+                
+                <p>This is a book about the life and scientific work of Alfred Wegener, whose reputation today rests with his theory of continental displacements, better known as ‘continental drift’. Wegener proposed this theory in 1912 and developed it extensively for nearly 20 years. His book on the subject, <em>The Origin of Continents and Oceans</em>, went through four editions and was the focus of an international controversy in his lifetime and for some years after his death.</p>
+
+                <p>Wegener’s basic idea was that many mysteries about the Earth’s history could be solved if one supposed that the continents moved laterally, rather than supposing that they remained fixed in place. Wegener showed in great detail how such continental movements were <span class="vocab-word" data-word="plausible">plausible</span> and how they worked, using evidence from a large number of sciences including geology, geophysics, paleontology, and climatology. Wegener’s idea – that the continents move – is at the heart of the theory that guides Earth sciences today: namely plate tectonics. Plate tectonics is in many respects quite different from Wegener’s proposal, in the same way that modern evolutionary theory is very different from the ideas Charles Darwin proposed in the 1850s about biological evolution. Yet plate tectonics is a <span class="vocab-word" data-word="descendant">descendant</span> of Alfred Wegener’s theory of continental drift, in quite the same way that modern evolutionary theory is a descendant of Darwin’s theory of natural selection.</p>
+
+                <p>When I started writing about Wegener’s life and work, one of the most intriguing things about him for me was that, although he came up with a theory on continental drift, he was not a geologist. He trained as an astronomer and pursued a career in atmospheric physics. When he proposed the theory of continental displacements in 1912, he was a lecturer in physics and astronomy at the University of Marburg, in southern Germany. However, he was not an ‘unknown’. In 1906 he had set a world record (with his brother Kurt) for time aloft in a hot-air balloon: 52 hours. Between 1906 and 1908 he had taken part in a highly publicized and extremely dangerous expedition to the coast of northeast Greenland. He had also made a name for himself amongst a small circle of meteorologists and atmospheric physicists in Germany as the author of a textbook, <em>Thermodynamics of the Atmosphere</em> (1911), and of a number of interesting scientific papers.</p>
+
+                <p>As important as Wegener’s work on continental drift has turned out to be, it was largely a sideline to his interest in atmospheric physics, geophysics, and <span class="vocab-word" data-word="paleoclimatology">paleoclimatology</span>*, and thus I have been at great pains to put Wegener’s work on continental drift in the larger context of his other scientific work, and in the even larger context of atmospheric sciences in his lifetime. This is a ‘continental drift book’ only to the extent that Wegener was interested in that topic and later became famous for it. My treatment of his other scientific work is no less detailed, though I certainly have devoted more attention to the reception of his ideas on continental displacement, as they were much more controversial than his other work.</p>
+
+                <p>Readers interested in the specific detail of Wegener’s career will see that he often stopped pursuing a given line of investigation (sometimes for years on end), only to pick it up later. I have tried to provide <span class="vocab-word" data-word="guideposts">guideposts</span> to his rapidly shifting interests by characterizing different phases of his life as careers in different sciences, which is reflected in the titles of the chapters. Thus, the index should be a sufficient guide for those interested in a particular aspect of Wegener’s life but perhaps not all of it. My own feeling, however, is that the parts do not make as much sense on their own as do all of his activities taken together. In this respect I urge readers to try to experience Wegener’s life as he lived it, with all the interruptions, changes of mind, and renewed efforts this entailed.</p>
+
+                <p>Wegener left behind a few published works but, as was standard practice, these reported the results of his work – not the journey he took to reach that point. Only a few hundred of the many thousands of letters he wrote and received in his lifetime have survived and he didn’t keep notebooks or diaries that recorded his life and activities. He was not active (with a few exceptions) in scientific societies, and did not seek to find influence or advance his ideas through professional contacts and politics, spending most of his time at home in his study reading and writing, or in the field collecting observations.</p>
+
+                <p>Some famous scientists, such as Newton, Darwin, and Einstein, left mountains of written material behind, hundreds of notebooks and letters numbering in the tens of thousands. Others, like Michael Faraday, left extensive journals of their thoughts and speculations, parallel to their scientific notebooks. The more such material a scientist leaves behind, the better chance a biographer has of forming an accurate picture of how a scientist’s ideas took shape and evolved.</p>
+
+                <p>I am firmly of the opinion that most of us, Wegener included, are not in any real sense the authors of our own lives. We plan, think, and act, often with apparent freedom, but most of the time our lives ‘happen to us’, and we only <span class="vocab-word" data-word="retrospectively">retrospectively</span> turn this <span class="vocab-word" data-word="happenstance">happenstance</span> into a <span class="vocab-word" data-word="coherent">coherent</span> narrative of fulfilled intentions. This book, therefore, is a story both of the life and scientific work that Alfred Wegener planned and intended and of the life and scientific work that actually ‘happened to him’. These are, as I think you will soon see, not always the same thing.</p>
+                
+                <p class="text-sm text-gray-500 italic mt-6 border-t border-gray-200 pt-2">* Paleoclimatology – The study of past climates</p>
+            </div>
+        </div>
+
+        <!-- Splitter -->
+        <div id="splitter" class="splitter relative flex items-center justify-center group">
+            <div class="w-1 h-8 bg-gray-400 rounded-full opacity-50 group-hover:bg-gray-600 transition-colors"></div>
+        </div>
+
+        <!-- Right Pane: Questions -->
+        <div id="right-pane" class="pane">
+            <div id="questions-section" class="max-w-3xl mx-auto space-y-8 pb-10">
+                
+                <!-- YES / NO / NOT GIVEN -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-blue-100 text-blue-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 27-30</span>
+                        <h4 class="font-bold text-gray-800">YES / NO / NOT GIVEN</h4>
+                    </div>
+                    <p class="mb-5 text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100 text-sm">
+                        Do the following statements agree with the claims of the writer in Reading Passage 3?<br><br>
+                        Select the correct option below:<br>
+                        <strong class="text-blue-700">YES</strong> if the statement agrees with the claims of the writer<br>
+                        <strong class="text-blue-700">NO</strong> if the statement contradicts the claims of the writer<br>
+                        <strong class="text-blue-700">NOT GIVEN</strong> if it is impossible to say what the writer thinks about this
+                    </p>
+                    
+                    <div class="space-y-6">
+                        <div class="q-item border border-gray-100 p-4" id="container-q27">
+                            <p class="mb-3 text-gray-800 font-medium leading-snug"><span class="font-bold text-blue-600 mr-2">27</span> Wegener’s ideas about continental drift were widely disputed while he was alive.</p>
+                            <div class="flex flex-wrap gap-3">
+                                <label class="custom-radio-label"><input type="radio" name="q27" value="yes" class="mr-2 hidden"><span class="font-semibold text-gray-600">Yes</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q27" value="no" class="mr-2 hidden"><span class="font-semibold text-gray-600">No</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q27" value="not given" class="mr-2 hidden"><span class="font-semibold text-gray-600">Not Given</span></label>
+                            </div>
+                        </div>
+
+                        <div class="q-item border border-gray-100 p-4" id="container-q28">
+                            <p class="mb-3 text-gray-800 font-medium leading-snug"><span class="font-bold text-blue-600 mr-2">28</span> The idea that the continents remained fixed in place was defended in a number of respected scientific publications.</p>
+                            <div class="flex flex-wrap gap-3">
+                                <label class="custom-radio-label"><input type="radio" name="q28" value="yes" class="mr-2 hidden"><span class="font-semibold text-gray-600">Yes</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q28" value="no" class="mr-2 hidden"><span class="font-semibold text-gray-600">No</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q28" value="not given" class="mr-2 hidden"><span class="font-semibold text-gray-600">Not Given</span></label>
+                            </div>
+                        </div>
+
+                        <div class="q-item border border-gray-100 p-4" id="container-q29">
+                            <p class="mb-3 text-gray-800 font-medium leading-snug"><span class="font-bold text-blue-600 mr-2">29</span> Wegener relied on a limited range of scientific fields to support his theory of continental drift.</p>
+                            <div class="flex flex-wrap gap-3">
+                                <label class="custom-radio-label"><input type="radio" name="q29" value="yes" class="mr-2 hidden"><span class="font-semibold text-gray-600">Yes</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q29" value="no" class="mr-2 hidden"><span class="font-semibold text-gray-600">No</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q29" value="not given" class="mr-2 hidden"><span class="font-semibold text-gray-600">Not Given</span></label>
+                            </div>
+                        </div>
+
+                        <div class="q-item border border-gray-100 p-4" id="container-q30">
+                            <p class="mb-3 text-gray-800 font-medium leading-snug"><span class="font-bold text-blue-600 mr-2">30</span> The similarities between Wegener’s theory of continental drift and modern-day plate tectonics are enormous.</p>
+                            <div class="flex flex-wrap gap-3">
+                                <label class="custom-radio-label"><input type="radio" name="q30" value="yes" class="mr-2 hidden"><span class="font-semibold text-gray-600">Yes</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q30" value="no" class="mr-2 hidden"><span class="font-semibold text-gray-600">No</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q30" value="not given" class="mr-2 hidden"><span class="font-semibold text-gray-600">Not Given</span></label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="27-30">Check Answers</button>
+                    </div>
+                </div>
+
+                <!-- Summary Completion with List -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-blue-100 text-blue-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 31-36</span>
+                        <h4 class="font-bold text-gray-800">Summary Completion</h4>
+                    </div>
+                    <p class="mb-5 text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100 text-sm">
+                        Complete the summary using the list of phrases, <strong>A-J</strong>, below.<br>
+                        Choose the correct letter, <strong>A-J</strong>, for each answer.
+                    </p>
+
+                    <div class="mb-6 p-5 border border-blue-200 bg-blue-50/50 rounded-xl w-full mx-auto shadow-sm grid grid-cols-2 gap-y-3 gap-x-4">
+                        <div class="text-gray-800 text-sm"><strong class="text-blue-700 mr-2">A</strong> modest fame</div>
+                        <div class="text-gray-800 text-sm"><strong class="text-blue-700 mr-2">B</strong> vast range</div>
+                        <div class="text-gray-800 text-sm"><strong class="text-blue-700 mr-2">C</strong> record-breaking achievement</div>
+                        <div class="text-gray-800 text-sm"><strong class="text-blue-700 mr-2">D</strong> research methods</div>
+                        <div class="text-gray-800 text-sm"><strong class="text-blue-700 mr-2">E</strong> select group</div>
+                        <div class="text-gray-800 text-sm"><strong class="text-blue-700 mr-2">F</strong> professional interests</div>
+                        <div class="text-gray-800 text-sm"><strong class="text-blue-700 mr-2">G</strong> scientific debate</div>
+                        <div class="text-gray-800 text-sm"><strong class="text-blue-700 mr-2">H</strong> hazardous exploration</div>
+                        <div class="text-gray-800 text-sm"><strong class="text-blue-700 mr-2">I</strong> biographer’s perspective</div>
+                        <div class="text-gray-800 text-sm"><strong class="text-blue-700 mr-2">J</strong> narrow investigation</div>
+                    </div>
+                    
+                    <div class="leading-loose text-gray-800 text-[0.95em] bg-gray-50 p-6 rounded-lg border border-gray-100">
+                        <h5 class="font-bold text-lg text-center mb-4 text-gray-900 uppercase tracking-wide">Wegener’s life and work</h5>
+                        
+                        <p class="mb-4" id="container-q31" style="display:inline;">
+                            One of the remarkable things about Wegener from a 
+                            <span class="inline-block mx-1"><strong class="text-blue-600 mx-1">31</strong>
+                                <select name="q31" class="text-input text-input-short">
+                                    <option value=""></option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option><option value="E">E</option><option value="F">F</option><option value="G">G</option><option value="H">H</option><option value="I">I</option><option value="J">J</option>
+                                </select>
+                            </span> 
+                            is that although he proposed a theory of continental drift, he was not a geologist. 
+                        </p>
+                        <p class="mb-4" id="container-q32" style="display:inline;">
+                            His 
+                            <span class="inline-block mx-1"><strong class="text-blue-600 mx-1">32</strong>
+                                <select name="q32" class="text-input text-input-short">
+                                    <option value=""></option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option><option value="E">E</option><option value="F">F</option><option value="G">G</option><option value="H">H</option><option value="I">I</option><option value="J">J</option>
+                                </select>
+                            </span> 
+                            were limited to atmospheric physics. 
+                        </p>
+                        <p class="mb-4" id="container-q33" style="display:inline;">
+                            However, at the time he proposed his theory of continental drift in 1912, he was already a person of 
+                            <span class="inline-block mx-1"><strong class="text-blue-600 mx-1">33</strong>
+                                <select name="q33" class="text-input text-input-short">
+                                    <option value=""></option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option><option value="E">E</option><option value="F">F</option><option value="G">G</option><option value="H">H</option><option value="I">I</option><option value="J">J</option>
+                                </select>
+                            </span> .
+                        </p>
+                        <p class="mt-4 mb-4" id="container-q34" style="display:inline;">
+                            Six years previously, there had been his 
+                            <span class="inline-block mx-1"><strong class="text-blue-600 mx-1">34</strong>
+                                <select name="q34" class="text-input text-input-short">
+                                    <option value=""></option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option><option value="E">E</option><option value="F">F</option><option value="G">G</option><option value="H">H</option><option value="I">I</option><option value="J">J</option>
+                                </select>
+                            </span> 
+                            of 52 hours in a hot-air balloon, 
+                        </p>
+                        <p class="mb-4" id="container-q35" style="display:inline;">
+                            followed by his well-publicised but 
+                            <span class="inline-block mx-1"><strong class="text-blue-600 mx-1">35</strong>
+                                <select name="q35" class="text-input text-input-short">
+                                    <option value=""></option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option><option value="E">E</option><option value="F">F</option><option value="G">G</option><option value="H">H</option><option value="I">I</option><option value="J">J</option>
+                                </select>
+                            </span> 
+                            of Greenland’s coast. 
+                        </p>
+                        <p class="mb-4" id="container-q36" style="display:inline;">
+                            With the publication of his textbook on thermodynamics, he had also come to the attention of a 
+                            <span class="inline-block mx-1"><strong class="text-blue-600 mx-1">36</strong>
+                                <select name="q36" class="text-input text-input-short">
+                                    <option value=""></option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option><option value="E">E</option><option value="F">F</option><option value="G">G</option><option value="H">H</option><option value="I">I</option><option value="J">J</option>
+                                </select>
+                            </span> 
+                            of German scientists.
+                        </p>
+                    </div>
+                    <div class="mt-6 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="31-36">Check Answers</button>
+                    </div>
+                </div>
+
+                <!-- Multiple Choice -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-blue-100 text-blue-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 37-40</span>
+                        <h4 class="font-bold text-gray-800">Multiple Choice</h4>
+                    </div>
+                    <p class="mb-5 text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100 text-sm">
+                        Choose the correct letter, <strong>A, B, C,</strong> or <strong>D</strong>.
+                    </p>
+                    
+                    <div class="space-y-6">
+                        <div class="q-item border border-gray-100 p-4" id="container-q37">
+                            <p class="mb-3 text-gray-800 font-medium leading-snug"><span class="font-bold text-blue-600 mr-2">37</span> What is Mott T Greene doing in the fifth paragraph?</p>
+                            <div class="flex flex-col gap-2">
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q37" value="a" class="mr-3 hidden"><span class="text-gray-700"><strong class="mr-2">A</strong> describing what motivated him to write the book</span></label>
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q37" value="b" class="mr-3 hidden"><span class="text-gray-700"><strong class="mr-2">B</strong> explaining why it is desirable to read the whole book</span></label>
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q37" value="c" class="mr-3 hidden"><span class="text-gray-700"><strong class="mr-2">C</strong> suggesting why Wegener pursued so many different careers</span></label>
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q37" value="d" class="mr-3 hidden"><span class="text-gray-700"><strong class="mr-2">D</strong> indicating what aspects of Wegener’s life interested him most</span></label>
+                            </div>
+                        </div>
+
+                        <div class="q-item border border-gray-100 p-4" id="container-q38">
+                            <p class="mb-3 text-gray-800 font-medium leading-snug"><span class="font-bold text-blue-600 mr-2">38</span> What is said about Wegener in the sixth paragraph?</p>
+                            <div class="flex flex-col gap-2">
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q38" value="a" class="mr-3 hidden"><span class="text-gray-700"><strong class="mr-2">A</strong> He was not a particularly ambitious person.</span></label>
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q38" value="b" class="mr-3 hidden"><span class="text-gray-700"><strong class="mr-2">B</strong> He kept a record of all his scientific observations.</span></label>
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q38" value="c" class="mr-3 hidden"><span class="text-gray-700"><strong class="mr-2">C</strong> He did not adopt many of the scientific practices of the time.</span></label>
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q38" value="d" class="mr-3 hidden"><span class="text-gray-700"><strong class="mr-2">D</strong> He enjoyed discussing new discoveries with other scientists.</span></label>
+                            </div>
+                        </div>
+
+                        <div class="q-item border border-gray-100 p-4" id="container-q39">
+                            <p class="mb-3 text-gray-800 font-medium leading-snug"><span class="font-bold text-blue-600 mr-2">39</span> What does Greene say about some other famous scientists?</p>
+                            <div class="flex flex-col gap-2">
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q39" value="a" class="mr-3 hidden"><span class="text-gray-700"><strong class="mr-2">A</strong> Their published works had a greater impact than Wegener’s did.</span></label>
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q39" value="b" class="mr-3 hidden"><span class="text-gray-700"><strong class="mr-2">B</strong> They had fewer doubts about their scientific ideas than Wegener did.</span></label>
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q39" value="c" class="mr-3 hidden"><span class="text-gray-700"><strong class="mr-2">C</strong> Their scientific ideas were more controversial than Wegener’s.</span></label>
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q39" value="d" class="mr-3 hidden"><span class="text-gray-700"><strong class="mr-2">D</strong> They are easier subjects to write about than Wegener.</span></label>
+                            </div>
+                        </div>
+
+                        <div class="q-item border border-gray-100 p-4" id="container-q40">
+                            <p class="mb-3 text-gray-800 font-medium leading-snug"><span class="font-bold text-blue-600 mr-2">40</span> What is Greene’s main point in the final paragraph?</p>
+                            <div class="flex flex-col gap-2">
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q40" value="a" class="mr-3 hidden"><span class="text-gray-700"><strong class="mr-2">A</strong> It is not enough in life to have good intentions.</span></label>
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q40" value="b" class="mr-3 hidden"><span class="text-gray-700"><strong class="mr-2">B</strong> People need to plan carefully if they want to succeed.</span></label>
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q40" value="c" class="mr-3 hidden"><span class="text-gray-700"><strong class="mr-2">C</strong> People have little control over many aspects of their lives.</span></label>
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q40" value="d" class="mr-3 hidden"><span class="text-gray-700"><strong class="mr-2">D</strong> It is important that people ensure they have the freedom to act.</span></label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="37-40">Check Answers</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Highlight Tooltip -->
+<div id="highlight-tooltip" class="highlight-tooltip">Highlight Text</div>
+
+<!-- Vocabulary Modal -->
+<div id="vocab-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50 transition-opacity">
+    <div class="bg-white rounded-2xl shadow-2xl p-5 sm:p-8 w-full max-w-md relative transform transition-all scale-95 opacity-0" id="vocab-modal-content">
+        <button id="close-vocab-modal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-full w-8 h-8 flex items-center justify-center transition-colors">&times;</button>
+        <div class="flex items-center mb-6 border-b pb-4 mt-2">
+            <h3 id="vocab-word" class="text-2xl sm:text-3xl font-extrabold text-gray-900 capitalize tracking-tight"></h3>
+        </div>
+        <div class="flex items-center mb-5">
+            <button id="play-audio-btn" class="flex items-center justify-center h-10 w-10 sm:h-12 sm:w-12 shrink-0 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white mr-4 transition-all shadow-sm border border-blue-100" title="Listen to pronunciation">
+                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>
+            </button>
+            <p id="vocab-pronunciation-text" class="text-gray-500 font-mono text-base sm:text-lg bg-gray-50 px-3 py-1 rounded-md border border-gray-100"></p>
+        </div>
+        <p id="vocab-meaning" class="text-gray-700 text-base sm:text-lg leading-relaxed"></p>
+    </div>
+</div>
+
+<!-- Alert Modal -->
+<div id="alert-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-[80] transition-opacity">
+    <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm relative transform transition-all scale-95 opacity-0 text-center" id="alert-modal-content">
+        <div id="alert-icon-container" class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+            <svg id="alert-icon" class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+        </div>
+        <h3 id="alert-title" class="text-lg leading-6 font-medium text-gray-900 mb-2">Notice</h3>
+        <p id="alert-message" class="text-sm text-gray-500 mb-6">Message goes here.</p>
+        <button id="close-alert-btn" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm transition-colors">
+            Got it
+        </button>
+    </div>
+</div>
+
+<script>
+    // --- DATA ---
+    const vocabulary = {
+        'plausible': { meaning: 'Seeming reasonable or probable.', phonetic: '/ˈplɔː.zə.bəl/' },
+        'descendant': { meaning: 'Something that has developed from an earlier version of something.', phonetic: '/dɪˈsen.dənt/' },
+        'paleoclimatology': { meaning: 'The study of past climates.', phonetic: '/ˌpæliəʊˌklaɪməˈtɒlədʒi/' },
+        'guideposts': { meaning: 'A rule or principle that provides guidance to appropriate behavior.', phonetic: '/ˈɡaɪd.pəʊsts/' },
+        'retrospectively': { meaning: 'With consideration of past events or situations.', phonetic: '/ˌret.rəˈspek.tɪv.li/' },
+        'happenstance': { meaning: 'Coincidence.', phonetic: '/ˈhæp.ən.stɑːns/' },
+        'coherent': { meaning: 'Logical and consistent.', phonetic: '/kəʊˈhɪə.rənt/' }
+    };
+
+    const answers = {
+        q27: "yes", q28: "not given", q29: "no", q30: "no",
+        q31: "i", q32: "f", q33: "a", q34: "c", q35: "h", q36: "e",
+        q37: "b", q38: "a", q39: "d", q40: "c"
+    };
+
+    const explanations = {
+        q27: "<b>Giải thích:</b> Cuốn sách của Wegener là tâm điểm của tranh cãi quốc tế khi anh ấy còn sống (“was the focus of an international controversy in his lifetime”), khớp với ý nghĩa câu hỏi: Ý tưởng của Wegener gây ra nhiều tranh cãi khi anh còn sống (“were widely disputed”). Vì vậy, đáp án là YES.",
+        q28: "<b>Giải thích:</b> Bài đọc đề cập tới ý tưởng của Wegener là: rất nhiều bí ẩn về lịch sử Trái Đất có thể được giải đáp nếu như người ta cho rằng các lục địa di chuyển theo chiều ngang thay vì giả định rằng chúng đứng yên, nhưng không đề cập tới thông tin: thuyết lục địa đứng yên đã được bảo vệ bởi những ấn phẩm có uy tín. Vì vậy, đáp án là NOT GIVEN.",
+        q29: "<b>Giải thích:</b> Wegener đã sử dụng những dẫn chứng từ nhiều nguồn khoa học như địa chất, địa vật lý, cổ sinh vật học và khí hậu học. Trái ngược với ý nghĩa của câu hỏi là Wegener đã sử dụng ít dẫn chứng khoa học để hỗ trợ cho lý thuyết của anh ấy. Vì vậy, đáp án là NO.",
+        q30: "<b>Giải thích:</b> Kiến tạo mảng ở nhiều khía cạnh hoàn toàn khác với đề xuất của Wegener, trái ngược với ý nghĩa của câu hỏi: Sự giống nhau giữa chúng là rất nhiều. Vì vậy, đáp án là NO.",
+        q31: "<b>Giải thích:</b> Bài đọc thể hiện nội dung rằng một điều thú vị nhất về Wegener (“one of the most intriguing things about him” khớp với “one of the remarkable things about Wegener”) đối với tác giả là Wegener đã đưa ra một lý thuyết (“came up with a theory” khớp với “proposed a theory”) về sự trôi dạt lục địa (“continental drift”), mặc dù không phải là một nhà địa chất (“he was not a geologist”). Do đó người đưa ra quan điểm về Wegener ở đây là chính tác giả. Vì vậy, đáp án là I. biographer perspective (quan điểm của người viết).",
+        q32: "<b>Giải thích:</b> Bài đọc thể hiện nội dung rằng Wegener theo đuổi sự nghiệp trong lĩnh vực vật lý khí quyển (“atmospheric physics”). Do đó đối tượng thuộc về Wegener được nhắc đến là sự nghiệp (“career”). Vì vậy, đáp án là F. professional interests (Những hứng thú nghề nghiệp).",
+        q33: "<b>Giải thích:</b> Bài đọc thể hiện nội dung rằng khi Wegener đề xuất lý thuyết (“proposed the theory”) về sự dịch chuyển lục địa (“continental displacements” khớp với “continental drift”) vào năm 1912, Wegener khi đó đã không phải là một người vô danh “'unknown”. Vì vậy, đáp án là A. modest fame (ít nổi tiếng).",
+        q34: "<b>Giải thích:</b> Bài đọc thể hiện nội dung rằng vào năm 1906, Wegener đã thiết lập một kỉ lục (“set a world record”) về thời gian bay trên khinh khí cầu: 52 giờ (“time aloft in a hot-air balloon: 52 hours” khớp với “52 hours in a hot-air balloon”). Vì vậy, đáp án là C. record-breaking achievement (thành tích phá kỷ lục).",
+        q35: "<b>Giải thích:</b> Bài đọc thể hiện nội dung rằng trong khoảng thời gian từ 1906 đến 1908, Wegener đã tham gia vào một chuyến thám hiểm được công bố rộng rãi (“highly publicized” khớp với “well-publicised”) và cực kỳ nguy hiểm (“extremely dangerous expedition”) đến bờ biển phía đông bắc Greenland (“the coast of northeast Greenland” khớp với “Greenland's coast”). Do đó sự kiện diễn ra ở bờ biển Greenland chính là “extremely dangerous expedition”. Vì vậy, đáp án là H. hazardous exploration.",
+        q36: "<b>Giải thích:</b> Bài đọc thể hiện nội dung rằng vì Wegener là tác giả của cuốn sách Nhiệt động lực học của khí quyển (“as the author of a textbook, Thermodynamics of the Atmosphere” khớp với “With the publication of his textbook on thermodynamics”), Wegener cũng đã tạo được tên tuổi của mình (“made a name” khớp với “come to the attention”) trong một nhóm nhỏ (“a small circle”) các nhà khí tượng học và nhà vật lý khí quyển ở Đức (“meteorologists and atmospheric physicists in Germany” khớp với “German scientists”). Vì vậy, đáp án là E. select group.",
+        q37: "<b>Giải thích:</b> Đoạn văn đã cung cấp một số luận điểm cho rằng tại sao nên đọc cả cuốn sách như: cuốn sách mô tả các giai đoạn khác nhau trong cuộc đời anh ấy - sự nghiệp trong các ngành khoa học khác nhau (“careers in different sciences”); những gián đoạn, những thay đổi của tâm trí (“all the interruptions, changes of mind”). Vì thế, tác giả đã kêu gọi người đọc thử trải nghiệm cuộc sống của ông ấy (“I urge readers to try to experience Wegener's life”). Chọn đáp án B.",
+        q38: "<b>Giải thích:</b> Anh ấy không phải là một người tham vọng (“ambitious”), khớp với bài đọc “he was not active” (không tích cực), anh ấy chỉ dành thời gian ở nhà (spending most of his time at home) thay vì phát triển ý tưởng (advance his ideas), vì vậy ta có thể hiểu phần nào nhân vật này thiếu tham vọng. Chọn đáp án A.",
+        q39: "<b>Giải thích:</b> Những nhà khoa học như Newton, Darwin đều để lại một kho tàng tài liệu, điều đó giúp người viết tiểu sử càng có cơ hội hiểu về cách các ý tưởng của một nhà khoa học hình thành và phát triển. Tuy nhiên, Wegener thì ngược lại (“these are not always the same thing” - chưa chắc tài liệu về Wegener đã khớp với thực tại đời sống của Wegener). Chọn đáp án D.",
+        q40: "<b>Giải thích:</b> Tác giả cho rằng hầu hết chúng ta không thực sự là tác giả của cuộc đời (“real sense of authors”), mà những thứ xảy ra trong cuộc đời chúng ta đôi khi là ngẫu nhiên, và chúng ta hồi tưởng lại chúng theo một cách mạch lạc, khớp với ý nghĩa trong câu hỏi: Mọi người có ít quyền kiểm soát đối với nhiều khía cạnh trong cuộc sống của họ. Chọn đáp án C."
+    };
+
+    // --- APPLICATION LOGIC ---
+    document.addEventListener('DOMContentLoaded', () => {
+        const app = {
+            userAnswers: {},
+            answersChecked: {},
+            currentFontSize: 17,
+            totalQuestions: Object.keys(answers).length,
+            timeRemaining: 20 * 60, // 20 minutes
+
+            // Elements
+            leftPane: document.getElementById('left-pane'),
+            rightPane: document.getElementById('right-pane'),
+            splitter: document.getElementById('splitter'),
+            highlightTooltip: document.getElementById('highlight-tooltip'),
+            vocabModal: document.getElementById('vocab-modal'),
+            vocabModalContent: document.getElementById('vocab-modal-content'),
+            closeVocabModalBtn: document.getElementById('close-vocab-modal'),
+            vocabWordEl: document.getElementById('vocab-word'),
+            vocabMeaningEl: document.getElementById('vocab-meaning'),
+            vocabPronunciationText: document.getElementById('vocab-pronunciation-text'),
+            playAudioBtn: document.getElementById('play-audio-btn'),
+            clearHighlightsBtn: document.getElementById('clear-highlights-btn'),
+            progressText: document.getElementById('progress-text'),
+            timerEl: document.getElementById('timer'),
+
+            // Alert Elements
+            alertModal: document.getElementById('alert-modal'),
+            alertModalContent: document.getElementById('alert-modal-content'),
+            closeAlertBtn: document.getElementById('close-alert-btn'),
+            alertTitleEl: document.getElementById('alert-title'),
+            alertMessageEl: document.getElementById('alert-message'),
+            alertIconContainer: document.getElementById('alert-icon-container'),
+
+            init() {
+                this.setupEventListeners();
+                this.initSplitter();
+                this.initHighlighter();
+                this.updateCheckButtonsState();
+                this.startTimer();
+                this.updateProgress();
+            },
+
+            startTimer() {
+                const interval = setInterval(() => {
+                    if (this.timeRemaining <= 0) {
+                        clearInterval(interval);
+                        this.timerEl.textContent = "00:00";
+                        this.timerEl.classList.add('text-red-600');
+                        this.showAlert("Time's Up!", "Your 20 minutes for this reading passage have expired.", "warning");
+                        return;
+                    }
+                    this.timeRemaining--;
+                    const m = Math.floor(this.timeRemaining / 60).toString().padStart(2, '0');
+                    const s = (this.timeRemaining % 60).toString().padStart(2, '0');
+                    this.timerEl.textContent = `${m}:${s}`;
+                    
+                    if (this.timeRemaining <= 300) { // last 5 minutes
+                        this.timerEl.classList.add('text-red-500');
+                    }
+                }, 1000);
+            },
+
+            setupEventListeners() {
+                document.getElementById('increase-font-btn').addEventListener('click', () => this.changeFontSize(1));
+                document.getElementById('decrease-font-btn').addEventListener('click', () => this.changeFontSize(-1));
+
+                this.clearHighlightsBtn.addEventListener('click', () => {
+                    const marks = this.leftPane.querySelectorAll('mark');
+                    marks.forEach(mark => {
+                        const text = document.createTextNode(mark.textContent);
+                        mark.replaceWith(text);
+                    });
+                });
+
+                this.closeVocabModalBtn.addEventListener('click', () => this.closeModal());
+                this.vocabModal.addEventListener('click', (e) => {
+                   if (e.target === this.vocabModal) this.closeModal();
+                });
+
+                // Keyboard accessibility: Close modals with Escape key & Disable Ctrl+F
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') {
+                        if (!this.vocabModal.classList.contains('hidden')) this.closeModal();
+                        if (!this.alertModal.classList.contains('hidden')) this.closeAlert();
+                    }
+                    
+                    // Disable Ctrl+F / Cmd+F
+                    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
+                        e.preventDefault(); 
+                        this.showAlert("Action Disabled", "The 'Find' function is disabled to simulate real computer-delivered test conditions.", "warning");
+                    }
+
+                    // Disable F5 and Ctrl+R / Cmd+R
+                    if (e.key === 'F5' || ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'r')) {
+                        e.preventDefault();
+                        this.showAlert("Action Disabled", "Refreshing the page is disabled during the test to prevent losing your progress.", "warning");
+                    }
+                });
+
+                // Detect Tab Switching
+                document.addEventListener('visibilitychange', () => {
+                    if (document.hidden && this.timeRemaining > 0) {
+                        this.showAlert("Warning: Tab Switch Detected", "Please do not switch tabs or leave the test window during the exam. Continued tab switching may result in your test being invalidated.", "warning");
+                    }
+                });
+
+                // Warn user if they try to close or refresh the tab
+                window.addEventListener('beforeunload', (e) => {
+                    if (this.timeRemaining > 0 && this.timeRemaining < 20 * 60) {
+                        e.preventDefault();
+                        e.returnValue = ''; 
+                    }
+                });
+
+                // Alert Modal Events
+                this.closeAlertBtn.addEventListener('click', () => this.closeAlert());
+                this.alertModal.addEventListener('click', (e) => {
+                   if (e.target === this.alertModal) this.closeAlert();
+                });
+
+                // Track text inputs and dropdowns
+                document.body.addEventListener('input', (e) => {
+                    if ((e.target.tagName === 'INPUT' && e.target.type === 'text') || e.target.tagName === 'SELECT') {
+                        this.userAnswers[e.target.name] = e.target.value;
+                        e.target.classList.remove('correct-answer', 'incorrect-answer');
+                        if (e.target.tagName === 'INPUT') e.target.placeholder = '';
+                        const container = document.getElementById(`container-${e.target.name}`);
+                        if(container) container.classList.remove('bg-red-50', 'bg-green-50');
+                        
+                        this.updateCheckButtonsState();
+                        this.updateProgress();
+                    }
+                });
+                
+                document.body.addEventListener('change', (e) => {
+                    if (e.target.tagName === 'INPUT' && e.target.type === 'radio') {
+                        this.userAnswers[e.target.name] = e.target.value;
+                        
+                        const groupRadios = document.querySelectorAll(`input[name="${e.target.name}"]`);
+                        groupRadios.forEach(radio => {
+                            const label = radio.closest('label');
+                            if(label) label.classList.remove('correct-answer', 'incorrect-answer');
+                        });
+                        
+                        this.updateCheckButtonsState();
+                        this.updateProgress();
+                    }
+                });
+
+                // Vocab Words & Removable Highlights Event Delegation
+                this.leftPane.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('vocab-word')) {
+                        const wordKey = e.target.dataset.word;
+                        this.openVocabModal(wordKey);
+                    }
+                    
+                    // Allow clicking to remove highlight
+                    if (e.target.tagName === 'MARK') {
+                        const textNode = document.createTextNode(e.target.textContent);
+                        e.target.replaceWith(textNode);
+                    }
+                });
+
+                // Check Buttons Event Delegation
+                document.querySelectorAll('.check-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const range = e.target.dataset.range;
+                        this.checkAnswers(range, e.target);
+                    });
+                });
+                
+                // Real Audio Pronunciation Event
+                this.playAudioBtn.addEventListener('click', () => {
+                   const word = this.vocabWordEl.textContent;
+                   if (!word) return;
+                   if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+                   
+                   this.playAudioBtn.classList.remove('text-blue-600', 'bg-blue-50');
+                   this.playAudioBtn.classList.add('bg-green-500', 'text-white');
+                   
+                   if ('speechSynthesis' in window) {
+                       const utterance = new SpeechSynthesisUtterance(word);
+                       utterance.lang = 'en-GB'; 
+                       utterance.rate = 0.9; 
+                       utterance.onend = () => this.resetAudioBtn();
+                       utterance.onerror = () => this.resetAudioBtn();
+                       window.speechSynthesis.speak(utterance);
+                   } else {
+                       this.showAlert("Audio Error", "Sorry, your browser doesn't support text-to-speech audio.", "warning");
+                       setTimeout(() => this.resetAudioBtn(), 500);
+                   }
+                });
+            },
+
+            updateProgress() {
+                let answeredCount = 0;
+                for(let key in answers) {
+                    if(this.userAnswers[key] && this.userAnswers[key].trim() !== '') {
+                        answeredCount++;
+                    }
+                }
+                this.progressText.textContent = `${answeredCount} / ${this.totalQuestions} Answered`;
+            },
+
+            resetAudioBtn() {
+                this.playAudioBtn.classList.add('text-blue-600', 'bg-blue-50');
+                this.playAudioBtn.classList.remove('bg-green-500', 'text-white');
+            },
+            
+            changeFontSize(delta) {
+                this.currentFontSize += delta;
+                if (this.currentFontSize < 14) this.currentFontSize = 14;
+                if (this.currentFontSize > 26) this.currentFontSize = 26;
+                document.documentElement.style.setProperty('--app-font-size', `${this.currentFontSize}px`);
+            },
+
+            openVocabModal(wordKey) {
+                const data = vocabulary[wordKey];
+                if (data) {
+                    this.vocabWordEl.textContent = wordKey;
+                    this.vocabMeaningEl.textContent = data.meaning;
+                    this.vocabPronunciationText.textContent = data.phonetic || '';
+                    this.vocabModal.classList.remove('hidden');
+                    setTimeout(() => {
+                        this.vocabModalContent.classList.remove('scale-95', 'opacity-0');
+                        this.vocabModalContent.classList.add('scale-100', 'opacity-100');
+                    }, 10);
+                }
+            },
+
+            closeModal() {
+                if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+                this.vocabModalContent.classList.remove('scale-100', 'opacity-100');
+                this.vocabModalContent.classList.add('scale-95', 'opacity-0');
+                this.resetAudioBtn();
+                setTimeout(() => this.vocabModal.classList.add('hidden'), 200);
+            },
+
+            showAlert(title, message, type = 'error') {
+                this.alertTitleEl.textContent = title;
+                this.alertMessageEl.textContent = message;
+                
+                if (type === 'warning') {
+                    this.alertIconContainer.className = 'mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 mb-4';
+                    this.alertIconContainer.innerHTML = '<svg class="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>';
+                } else {
+                    this.alertIconContainer.className = 'mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4';
+                    this.alertIconContainer.innerHTML = '<svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>';
+                }
+                
+                this.alertModal.classList.remove('hidden');
+                setTimeout(() => {
+                    this.alertModalContent.classList.remove('scale-95', 'opacity-0');
+                    this.alertModalContent.classList.add('scale-100', 'opacity-100');
+                }, 10);
+            },
+
+            closeAlert() {
+                this.alertModalContent.classList.remove('scale-100', 'opacity-100');
+                this.alertModalContent.classList.add('scale-95', 'opacity-0');
+                setTimeout(() => {
+                    this.alertModal.classList.add('hidden');
+                }, 200);
+            },
+            
+            updateCheckButtonsState() {
+                document.querySelectorAll('.check-btn').forEach(btn => {
+                    const range = btn.dataset.range;
+                    if (this.answersChecked[range]) {
+                        btn.className = 'check-btn bg-gray-800 hover:bg-gray-900 text-white font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-pointer transform hover:-translate-y-0.5 hover:shadow-md active:scale-95';
+                        btn.textContent = 'Reset Answers';
+                        return;
+                    }
+
+                    const [start, end] = range.split('-').map(Number);
+                    let allAnswered = true;
+                    for (let i = start; i <= end; i++) {
+                        const qId = `q${i}`;
+                        const answer = (this.userAnswers[qId] || "").trim();
+                        if (!answer) {
+                            allAnswered = false;
+                            break;
+                        }
+                    }
+
+                    if (allAnswered) {
+                        btn.className = 'check-btn bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-pointer transform hover:-translate-y-0.5 hover:shadow-md active:scale-95';
+                    } else {
+                        btn.className = 'check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80';
+                    }
+                });
+            },
+
+            checkAnswers(range, btn) {
+                if (this.answersChecked[range]) {
+                    // Reset mode
+                    this.answersChecked[range] = false;
+                    
+                    const [start, end] = range.split('-').map(Number);
+                    for (let i = start; i <= end; i++) {
+                        const qId = `q${i}`;
+                        this.userAnswers[qId] = '';
+
+                        // Handle Radios
+                        const radios = document.querySelectorAll(`input[name="${qId}"][type="radio"]`);
+                        if (radios.length > 0) {
+                            radios.forEach(radio => {
+                                radio.checked = false;
+                                const label = radio.closest('label');
+                                if (label) label.classList.remove('correct-answer', 'incorrect-answer');
+                            });
+                        }
+
+                        // Handle Inputs and Selects
+                        const input = document.querySelector(`input[name="${qId}"][type="text"], select[name="${qId}"]`);
+                        if (input) {
+                            input.value = '';
+                            if (input.tagName === 'INPUT') input.placeholder = '';
+                            input.classList.remove('correct-answer', 'incorrect-answer');
+                        }
+
+                        const expl = document.getElementById(`expl-${qId}`);
+                        if (expl) expl.remove();
+                    }
+                    this.updateCheckButtonsState();
+                    this.updateProgress();
+                    return;
+                }
+
+                const [start, end] = range.split('-').map(Number);
+
+                // --- Validation: Ensure all questions are answered ---
+                let allAnswered = true;
+                for (let i = start; i <= end; i++) {
+                    const qId = `q${i}`;
+                    const answer = (this.userAnswers[qId] || "").trim();
+                    if (!answer) {
+                        allAnswered = false;
+                        break;
+                    }
+                }
+
+                if (!allAnswered) {
+                    this.showAlert("Incomplete Answers", "Please fill in an answer for all questions in this section before checking.", "warning");
+                    return;
+                }
+                // -----------------------------------------------------
+
+                // Check mode
+                this.answersChecked[range] = true;
+                this.updateCheckButtonsState();
+
+                for (let i = start; i <= end; i++) {
+                    const qId = `q${i}`;
+                    let userAnswer = (this.userAnswers[qId] || "").toLowerCase().trim();
+                    
+                    let correctAnswersList = answers[qId].toLowerCase().split('|');
+                    let isCorrect = correctAnswersList.includes(userAnswer);
+
+                    let correctFeedbackHTML = '';
+
+                    // Check Radios
+                    const radios = document.querySelectorAll(`input[name="${qId}"][type="radio"]`);
+                    if (radios.length > 0) {
+                        radios.forEach(radio => {
+                            const label = radio.closest('label');
+                            if (label) label.classList.remove('correct-answer', 'incorrect-answer');
+                            
+                            if (correctAnswersList.includes(radio.value.toLowerCase())) {
+                                if (label) label.classList.add('correct-answer');
+                            } else if (radio.value.toLowerCase() === userAnswer) {
+                                if (label) label.classList.add('incorrect-answer');
+                            }
+                        });
+                        
+                        if (!isCorrect) {
+                            const correctAnsFormatted = correctAnswersList[0]
+                                .split(' ')
+                                .map(w => w.length === 1 ? w.toUpperCase() : w.charAt(0).toUpperCase() + w.slice(1))
+                                .join(' ');
+                            correctFeedbackHTML = `<span class="correct-badge">Correct Answer: ${correctAnsFormatted}</span><br>`;
+                        }
+                    }
+
+                    // Check Inputs and Selects
+                    const input = document.querySelector(`input[name="${qId}"][type="text"], select[name="${qId}"]`);
+                    if (input) {
+                        input.classList.remove('correct-answer', 'incorrect-answer');
+                        
+                        if (isCorrect) {
+                            input.classList.add('correct-answer');
+                        } else {
+                            input.classList.add('incorrect-answer');
+                            const correctAnsFormatted = correctAnswersList[0]
+                                .split(' ')
+                                .map(w => w.length === 1 ? w.toUpperCase() : w.charAt(0).toUpperCase() + w.slice(1)) 
+                                .join(' ');
+                                
+                            if (input.tagName === 'INPUT') {
+                                input.value = '';
+                                input.placeholder = correctAnsFormatted;
+                            }
+                            
+                            correctFeedbackHTML = `<span class="correct-badge">Correct Answer: ${correctAnsFormatted}</span><br>`;
+                        }
+                    }
+
+                    // Add Explanation Box
+                    if (explanations[qId]) {
+                        const existingExpl = document.getElementById(`expl-${qId}`);
+                        if (!existingExpl) {
+                            const explDiv = document.createElement('div');
+                            explDiv.id = `expl-${qId}`;
+                            explDiv.className = 'explanation-box';
+                            explDiv.innerHTML = `${correctFeedbackHTML}${explanations[qId]}`;
+                            
+                            const container = document.getElementById(`container-${qId}`);
+                            if (container) {
+                                // For select elements in a text flow, append below the parent block
+                                if(container.tagName === "SPAN" || container.tagName === "P" && container.style.display === "inline") {
+                                    const wrap = container.closest('div.leading-loose') || container.closest('p.leading-relaxed') || container.parentElement;
+                                    wrap.insertAdjacentElement('afterend', explDiv);
+                                } else {
+                                    container.insertAdjacentElement('afterend', explDiv);
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+
+            initSplitter() {
+                let isDragging = false;
+                const contentPanes = document.getElementById('content-panes');
+
+                this.splitter.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    isDragging = true;
+                    document.body.style.cursor = 'col-resize';
+                });
+
+                document.addEventListener('mousemove', (e) => {
+                    if (!isDragging) return;
+                    e.preventDefault();
+                    if (window.innerWidth <= 768) return; 
+                    
+                    const containerRect = contentPanes.getBoundingClientRect();
+                    const newLeftWidth = e.clientX - containerRect.left;
+                    if (newLeftWidth > 200 && newLeftWidth < containerRect.width - 200) {
+                        const newLeftPercent = (newLeftWidth / containerRect.width) * 100;
+                        contentPanes.style.gridTemplateColumns = `${newLeftPercent}% 5px 1fr`;
+                    }
+                });
+
+                document.addEventListener('mouseup', () => {
+                    if (isDragging) {
+                        isDragging = false;
+                        document.body.style.cursor = 'default';
+                    }
+                });
+            },
+
+            initHighlighter() {
+                document.body.addEventListener('mouseup', (e) => {
+                    const selection = window.getSelection();
+                    const selectedText = selection.toString().trim();
+
+                    if (selectedText.length > 0) {
+                        const range = selection.getRangeAt(0);
+                        if (!this.leftPane.contains(range.commonAncestorContainer) && !this.rightPane.contains(range.commonAncestorContainer)) {
+                           this.highlightTooltip.style.display = 'none';
+                           return;
+                        }
+
+                        this.highlightTooltip.style.left = `${e.pageX - 30}px`;
+                        this.highlightTooltip.style.top = `${e.pageY - 40}px`;
+                        this.highlightTooltip.style.display = 'block';
+
+                        this.highlightTooltip.onclick = () => {
+                            const container = range.commonAncestorContainer;
+                            if (container.nodeType === 3) { 
+                                if (range.startContainer.parentElement !== range.endContainer.parentElement) {
+                                    this.highlightTooltip.style.display = 'none';
+                                    this.showAlert("Highlight Error", "Please select text within a single paragraph to highlight.", "warning");
+                                    selection.removeAllRanges();
+                                    return;
+                                }
+                            }
+                            
+                            const mark = document.createElement('mark');
+                            try {
+                                range.surroundContents(mark);
+                            } catch (ex) {
+                                this.showAlert("Highlight Error", "Please select plain text to highlight. Highlighting across different formatting is restricted.", "warning");
+                            } 
+                            finally {
+                                selection.removeAllRanges();
+                                this.highlightTooltip.style.display = 'none';
+                            }
+                        };
+                    } else {
+                        this.highlightTooltip.style.display = 'none';
+                    }
+                });
+
+                document.body.addEventListener('mousedown', (e) => {
+                   if (e.target !== this.highlightTooltip && window.getSelection().toString().length === 0) {
+                        this.highlightTooltip.style.display = 'none';
+                   }
+                });
+            }
+        };
+
+        app.init();
+    });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IELTS Simulator - Frozen Food</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --app-font-size: 17px; }
+        body { font-family: 'Inter', sans-serif; overscroll-behavior: none; background-color: #f0f9ff; }
+        .ielts-container { display: grid; grid-template-rows: auto 1fr; height: 100vh; }
+        .content-panes { display: grid; grid-template-columns: 1fr 5px 1fr; overflow: hidden; }
+        .pane { overflow-y: auto; padding: 2rem 3rem; font-size: var(--app-font-size); scroll-behavior: smooth; }
+        #left-pane { background-color: #fdfdfd; }
+        #right-pane { background-color: #f0f9ff; }
+        .splitter { background-color: #bae6fd; cursor: col-resize; z-index: 10; }
+        .splitter:hover { background-color: #7dd3fc; }
+        .reading-passage { font-family: 'Merriweather', serif; line-height: 1.9; color: #1e3a5f; text-align: justify; max-width: 800px; margin: 0 auto; }
+        .reading-passage p { margin-bottom: 1.5rem; text-indent: 1.5rem; }
+        .reading-passage h3 { font-family: 'Inter', sans-serif; color: #0c2340; margin-bottom: 0.25rem; font-weight: 700; font-size: 1.5em; text-align: center; text-indent: 0; text-transform: uppercase; letter-spacing: 0.05em; }
+        .reading-passage .subtitle { font-family: 'Inter', sans-serif; color: #3b82f6; font-size: 0.95em; text-align: center; text-indent: 0; margin-bottom: 1.5rem; font-style: italic; }
+        .q-item { padding: 1rem; border-radius: 0.5rem; background-color: white; border: 1px solid #bae6fd; margin-bottom: 0.75rem; }
+        .text-input { border: 2px solid #bae6fd; border-radius: 6px; padding: 4px 8px; font-weight: 600; color: #1e3a5f; transition: all 0.2s; text-align: center; background-color: #f0f9ff; }
+        .text-input:focus { outline: none; border-color: #0ea5e9; background-color: #fff; box-shadow: 0 0 0 3px rgba(14,165,233,0.15); }
+        .text-input-word { width: 9rem; text-transform: lowercase; }
+        .custom-radio-group { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem; }
+        .custom-radio-label { display: flex; align-items: center; justify-content: center; padding: 0.5rem 1rem; border: 1.5px solid #bae6fd; border-radius: 0.5rem; cursor: pointer; background-color: white; flex: 1; min-width: 90px; font-weight: 600; color: #1e3a5f; transition: all 0.2s; }
+        .custom-radio-label:hover { background-color: #e0f2fe; border-color: #7dd3fc; }
+        .custom-radio-label input { display: none; }
+        .correct-answer { border-color: #22c55e !important; background-color: #f0fdf4 !important; color: #166534 !important; }
+        .correct-answer span { color: #166534 !important; }
+        .incorrect-answer { border-color: #ef4444 !important; background-color: #fef2f2 !important; color: #991b1b !important; }
+        .incorrect-answer span { color: #991b1b !important; }
+        .explanation-box { animation: fadeIn 0.4s ease-out forwards; margin-top: 0.75rem; padding: 1rem; background-color: #e0f2fe; border-left: 4px solid #0ea5e9; border-radius: 0.5rem; font-size: 0.95rem; color: #0c4a6e; }
+        .explanation-box .correct-badge { display: inline-block; background: #22c55e; color: white; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85em; margin-bottom: 0.5rem; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+        .vocab-word { color: #0369a1; font-weight: 600; cursor: pointer; border-bottom: 2px dotted #7dd3fc; padding: 0 2px; }
+        .vocab-word:hover { background-color: #e0f2fe; border-bottom-style: solid; border-radius: 2px; }
+        .highlight-tooltip { position: absolute; background-color: #1e293b; color: white; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 500; z-index: 100; cursor: pointer; display: none; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        mark { background-color: #fef08a; border-radius: 3px; padding: 2px 0; cursor: pointer; }
+        mark:hover { background-color: #fca5a5; color: #7f1d1d; }
+        .notes-block { background: #e0f2fe; border: 1px solid #bae6fd; border-radius: 0.75rem; padding: 1.5rem; margin-bottom: 1rem; line-height: 2; color: #0c4a6e; }
+        .notes-block h5 { font-family: 'Inter', sans-serif; font-weight: 700; color: #0369a1; font-size: 1em; margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        .notes-block h6 { font-family: 'Inter', sans-serif; font-weight: 700; color: #075985; font-size: 0.92em; margin-top: 0.75rem; margin-bottom: 0.25rem; }
+        .notes-block ul { list-style: disc; padding-left: 1.5rem; }
+        .notes-block ul ul { list-style: circle; padding-left: 1.5rem; }
+        .notes-block li { margin-bottom: 0.25rem; }
+        @media (max-width: 768px) { .content-panes { display: flex; flex-direction: column; overflow-y: auto; } .splitter { display: none; } .pane { padding: 1.25rem 1rem; overflow-y: visible; height: auto; } #left-pane { border-bottom: 2px dashed #bae6fd; } .custom-radio-label { min-width: 70px; padding: 0.4rem 0.5rem; font-size: 0.9em; } }
+    </style>
+</head>
+<body>
+<div class="ielts-container">
+<header class="bg-white border-b border-sky-100 px-4 sm:px-6 py-3 flex justify-between items-center z-20 shadow-sm flex-wrap gap-3">
+    <div class="flex items-center gap-2">
+        <div class="bg-sky-600 text-white p-2 rounded-lg"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"/></svg></div>
+        <h1 class="text-xl font-bold text-gray-800">IELTS Simulator <span class="text-sky-600 font-medium">| Frozen Food</span></h1>
+    </div>
+    <div class="flex items-center space-x-4">
+        <div class="hidden sm:flex flex-col items-end"><span class="text-xs text-gray-500 font-bold uppercase">Progress</span><span id="progress-text" class="text-sm font-semibold text-sky-600">0 / 13 Answered</span></div>
+        <div class="flex items-center bg-gray-100 rounded-lg px-3 py-1.5 border border-gray-200"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span id="timer" class="font-mono font-bold text-gray-700 text-lg">20:00</span></div>
+    </div>
+    <div class="flex items-center gap-2">
+        <button id="clear-highlights-btn" class="hidden sm:flex items-center px-3 py-1.5 rounded bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 text-sm font-medium"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>Clear</button>
+        <div class="flex items-center space-x-1 bg-gray-50 p-1 rounded-lg border border-gray-200">
+            <button id="decrease-font-btn" class="w-8 h-8 flex items-center justify-center rounded bg-white shadow-sm hover:bg-gray-100 text-gray-700 font-bold">A-</button>
+            <button id="increase-font-btn" class="w-8 h-8 flex items-center justify-center rounded bg-white shadow-sm hover:bg-gray-100 text-gray-700 font-bold">A+</button>
+        </div>
+    </div>
+</header>
+<main id="content-panes" class="content-panes">
+<div id="left-pane" class="pane">
+<div class="reading-passage">
+<h3>Frozen Food</h3>
+<p class="subtitle">A US perspective on the development of the frozen food industry</p>
+<p>At some point in history, humans discovered that ice <span class="vocab-word" data-word="preserved">preserved</span> food. There is evidence that winter ice was stored to preserve food in the summer as far back as 10,000 years ago. Two thousand years ago, the inhabitants of South America's Andean mountains had a unique means of conserving <span class="vocab-word" data-word="potatoes">potatoes</span> for later consumption. They froze them overnight, then trampled them to squeeze out the moisture, then dried them in the sun. This preserved their <span class="vocab-word" data-word="nutritional value">nutritional value</span> — if not their aesthetic appeal.</p>
+<p>Natural ice remained the main form of <span class="vocab-word" data-word="refrigeration">refrigeration</span> until late in the 19th century. In the early 1800s, ship owners from Boston, USA, had enormous blocks of Arctic ice towed all over the Atlantic for the purpose of food preservation. In 1851, railroads first began putting blocks of ice in insulated rail cars to send <span class="vocab-word" data-word="butter">butter</span> from Ogdensburg, New York, to Boston.</p>
+<p>Finally, in 1870, Australian inventors found a way to make 'mechanical ice'. They used a <span class="vocab-word" data-word="compressor">compressor</span> to force a gas — ammonia at first and later Freon — through a condenser. The compressed gas gave up some of its heat as it moved through the condenser. Then the gas was released quickly into a low-pressure <span class="vocab-word" data-word="evaporator">evaporator</span> coil where it became liquid and cold. Air was blown over the evaporator coil and then this cooled air passed into an insulated compartment, lowering its temperature to freezing point.</p>
+<p>Initially, this process was invented to keep Australian beer cool even in hot weather. But Australian <span class="vocab-word" data-word="cattlemen">cattlemen</span> were quick to realize that, if they could put this new invention on a ship, they could export meat across the oceans. In 1880, a shipment of Australian beef and mutton was sent, frozen, to England. While the food frozen this way was still <span class="vocab-word" data-word="palatable">palatable</span>, there was some <span class="vocab-word" data-word="deterioration">deterioration</span>. During the freezing process, crystals formed within the cells of the food, and when the ice expanded and the cells burst, this spoilt the flavor and texture of the food.</p>
+<p>The modern frozen food industry began with the indigenous Inuit people of Canada. In 1912, a biology student in Massachusetts, USA, named Clarence Birdseye, ran out of money and went to Labrador in Canada to trap and trade furs. While he was there, he became fascinated with how the Inuit would quickly freeze fish in the Arctic air. The fish looked and tasted fresh even months later.</p>
+<p>Birdseye returned to the USA in 1917 and began developing mechanical freezers capable of quick-freezing food. Birdseye methodically kept inventing better freezers and gradually built a business selling frozen fish from Gloucester, Massachusetts. In 1929, his business was sold and became General Foods, but he stayed with the company as director of research, and his division continued to <span class="vocab-word" data-word="innovate">innovate</span>.</p>
+<p>Birdseye was responsible for several key innovations that made the frozen food industry possible. He developed quick-freezing techniques that reduced the damage that <span class="vocab-word" data-word="crystals">crystals</span> caused, as well as the technique of freezing the product in the package it was to be sold in. He also introduced the use of <span class="vocab-word" data-word="cellophane">cellophane</span>, the first transparent material for food packaging, which allowed consumers to see the quality of the product. Birdseye products also came in convenient size packages that could be prepared with a minimum of effort.</p>
+<p>But there were still <span class="vocab-word" data-word="obstacles">obstacles</span>. In the 1930s, few grocery stores could afford to buy freezers for a market that wasn't established yet. So, Birdseye leased inexpensive freezer cases to them. He also leased insulated railroad cars so that he could ship his products nationwide. However, few consumers had freezers large enough or efficient enough to take advantage of the products.</p>
+<p>Sales increased in the early 1940s, when World War II gave a boost to the frozen food industry because <span class="vocab-word" data-word="tin">tin</span> was being used for <span class="vocab-word" data-word="munitions">munitions</span>. Canned foods were rationed to save tin for the war effort, while frozen foods were abundant and cheap. Finally, by the 1950s, refrigerator technology had developed far enough to make these appliances affordable for the average family. By 1953, 33 million US families owned a <span class="vocab-word" data-word="refrigerator">refrigerator</span>, and manufacturers were gradually increasing the size of the freezer compartments in them.</p>
+<p>1950s families were also looking for convenience at mealtimes, so the moment was right for the arrival of the 'TV Dinner'. Swanson Foods was a large, nationally recognized producer of canned and frozen poultry. In 1954, the company adapted some of Birdseye's freezing techniques, and with the help of a clever name and a huge <span class="vocab-word" data-word="advertising budget">advertising budget</span>, it launched the first 'TV Dinner'. This consisted of frozen turkey, potatoes and vegetables served in the same segmented aluminium tray that was used by airlines. The product was an instant success. Within a year, Swanson had sold 13 million TV dinners. American consumers couldn't resist the combination of a trusted brand name, a single-serving package and the convenience of a meal that could be ready after only 25 minutes in a hot oven. By 1959, Americans were spending $2.7 billion annually on frozen foods, and half a billion of that was spent on ready-prepared meals such as the TV Dinner.</p>
+<p>Today, the US frozen food industry has a <span class="vocab-word" data-word="turnover">turnover</span> of over $67 billion annually, with $26.6 billion of that sold to consumers for home consumption. The remaining $40 billion in frozen food sales come through restaurants, cafeterias, hospitals and schools, and that represents a third of the total food service sales.</p>
+</div>
+</div>
+<div id="splitter" class="splitter flex items-center justify-center"><div class="w-1 h-8 bg-sky-300 rounded-full opacity-50"></div></div>
+<div id="right-pane" class="pane">
+<div class="max-w-3xl mx-auto space-y-8 pb-10">
+
+<!-- Q1-7 Notes -->
+<div class="p-6 bg-white rounded-2xl shadow-sm border border-sky-100">
+<div class="flex items-center mb-4"><span class="bg-sky-100 text-sky-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 1–7</span><h4 class="font-bold text-gray-800">Notes Completion</h4></div>
+<p class="mb-5 text-gray-700 bg-sky-50 p-4 rounded-lg border border-sky-100 text-sm">Complete the notes below. Choose <strong class="text-sky-700">ONE WORD ONLY</strong> from the passage for each answer.</p>
+<div class="notes-block">
+<h5>The History of Frozen Food</h5>
+<h6>2,000 years ago, South America</h6>
+<ul><li>People conserved the nutritional value of <span id="container-q1" class="inline-block mx-1"><strong class="text-sky-700 text-sm mr-1">1</strong><input type="text" name="q1" class="text-input text-input-word" placeholder="________" autocomplete="off" spellcheck="false"></span>, using a method of freezing then drying.</li></ul>
+<h6>1851, USA</h6>
+<ul><li><span id="container-q2" class="inline-block mx-1"><strong class="text-sky-700 text-sm mr-1">2</strong><input type="text" name="q2" class="text-input text-input-word" placeholder="________" autocomplete="off" spellcheck="false"></span> was kept cool by ice during transportation in specially adapted trains.</li></ul>
+<h6>1880, Australia</h6>
+<ul><li>Two kinds of <span id="container-q3" class="inline-block mx-1"><strong class="text-sky-700 text-sm mr-1">3</strong><input type="text" name="q3" class="text-input text-input-word" placeholder="________" autocomplete="off" spellcheck="false"></span> were the first frozen food shipped to England.</li></ul>
+<h6>1917 onwards, USA</h6>
+<ul><li>Clarence Birdseye introduced innovations including:<ul>
+<li>quick-freezing methods, so that <span id="container-q4" class="inline-block mx-1"><strong class="text-sky-700 text-sm mr-1">4</strong><input type="text" name="q4" class="text-input text-input-word" placeholder="________" autocomplete="off" spellcheck="false"></span> did not spoil the food.</li>
+<li>packaging products with <span id="container-q5" class="inline-block mx-1"><strong class="text-sky-700 text-sm mr-1">5</strong><input type="text" name="q5" class="text-input text-input-word" placeholder="________" autocomplete="off" spellcheck="false"></span> so the product was visible.</li>
+</ul></li></ul>
+<h6>Early 1940s, USA</h6>
+<ul><li>Frozen food became popular because of a shortage of <span id="container-q6" class="inline-block mx-1"><strong class="text-sky-700 text-sm mr-1">6</strong><input type="text" name="q6" class="text-input text-input-word" placeholder="________" autocomplete="off" spellcheck="false"></span>.</li></ul>
+<h6>1950s, USA</h6>
+<ul><li>A large number of homes now had a <span id="container-q7" class="inline-block mx-1"><strong class="text-sky-700 text-sm mr-1">7</strong><input type="text" name="q7" class="text-input text-input-word" placeholder="________" autocomplete="off" spellcheck="false"></span>.</li></ul>
+</div>
+<div class="mt-4 flex justify-end"><button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm cursor-not-allowed opacity-80" data-range="1-7">Check Answers</button></div>
+</div>
+
+<!-- Q8-13 TFNG -->
+<div class="p-6 bg-white rounded-2xl shadow-sm border border-sky-100">
+<div class="flex items-center mb-4"><span class="bg-sky-100 text-sky-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 8–13</span><h4 class="font-bold text-gray-800">TRUE / FALSE / NOT GIVEN</h4></div>
+<p class="mb-5 text-gray-700 bg-sky-50 p-4 rounded-lg border border-sky-100 text-sm">Do the following statements agree with the information given in the passage?<br><strong class="text-sky-700">TRUE</strong> — agrees &nbsp;|&nbsp; <strong class="text-sky-700">FALSE</strong> — contradicts &nbsp;|&nbsp; <strong class="text-sky-700">NOT GIVEN</strong> — no information</p>
+<div class="space-y-5">
+
+<div class="q-item" id="container-q8"><p class="mb-3 text-gray-800 font-medium"><span class="font-bold text-sky-700 mr-2">8</span> The ice transportation business made some Boston ship owners very wealthy in the early 1800s.</p>
+<div class="custom-radio-group"><label class="custom-radio-label"><input type="radio" name="q8" value="true"><span>TRUE</span></label><label class="custom-radio-label"><input type="radio" name="q8" value="false"><span>FALSE</span></label><label class="custom-radio-label"><input type="radio" name="q8" value="not given"><span>NOT GIVEN</span></label></div></div>
+
+<div class="q-item" id="container-q9"><p class="mb-3 text-gray-800 font-medium"><span class="font-bold text-sky-700 mr-2">9</span> A disadvantage of the freezing process invented in Australia was that it affected the taste of food.</p>
+<div class="custom-radio-group"><label class="custom-radio-label"><input type="radio" name="q9" value="true"><span>TRUE</span></label><label class="custom-radio-label"><input type="radio" name="q9" value="false"><span>FALSE</span></label><label class="custom-radio-label"><input type="radio" name="q9" value="not given"><span>NOT GIVEN</span></label></div></div>
+
+<div class="q-item" id="container-q10"><p class="mb-3 text-gray-800 font-medium"><span class="font-bold text-sky-700 mr-2">10</span> Clarence Birdseye travelled to Labrador in order to learn how the Inuit people froze fish.</p>
+<div class="custom-radio-group"><label class="custom-radio-label"><input type="radio" name="q10" value="true"><span>TRUE</span></label><label class="custom-radio-label"><input type="radio" name="q10" value="false"><span>FALSE</span></label><label class="custom-radio-label"><input type="radio" name="q10" value="not given"><span>NOT GIVEN</span></label></div></div>
+
+<div class="q-item" id="container-q11"><p class="mb-3 text-gray-800 font-medium"><span class="font-bold text-sky-700 mr-2">11</span> Swanson Foods invested a great deal of money in the promotion of the TV Dinner.</p>
+<div class="custom-radio-group"><label class="custom-radio-label"><input type="radio" name="q11" value="true"><span>TRUE</span></label><label class="custom-radio-label"><input type="radio" name="q11" value="false"><span>FALSE</span></label><label class="custom-radio-label"><input type="radio" name="q11" value="not given"><span>NOT GIVEN</span></label></div></div>
+
+<div class="q-item" id="container-q12"><p class="mb-3 text-gray-800 font-medium"><span class="font-bold text-sky-700 mr-2">12</span> Swanson Foods developed a new style of container for the launch of the TV Dinner.</p>
+<div class="custom-radio-group"><label class="custom-radio-label"><input type="radio" name="q12" value="true"><span>TRUE</span></label><label class="custom-radio-label"><input type="radio" name="q12" value="false"><span>FALSE</span></label><label class="custom-radio-label"><input type="radio" name="q12" value="not given"><span>NOT GIVEN</span></label></div></div>
+
+<div class="q-item" id="container-q13"><p class="mb-3 text-gray-800 font-medium"><span class="font-bold text-sky-700 mr-2">13</span> The US frozen food industry is currently the largest in the world.</p>
+<div class="custom-radio-group"><label class="custom-radio-label"><input type="radio" name="q13" value="true"><span>TRUE</span></label><label class="custom-radio-label"><input type="radio" name="q13" value="false"><span>FALSE</span></label><label class="custom-radio-label"><input type="radio" name="q13" value="not given"><span>NOT GIVEN</span></label></div></div>
+
+</div>
+<div class="mt-6 flex justify-end"><button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm cursor-not-allowed opacity-80" data-range="8-13">Check Answers</button></div>
+</div>
+
+</div></div></main></div>
+
+<!-- Vocab Modal -->
+<div id="vocab-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
+<div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md relative transform transition-all scale-95 opacity-0" id="vocab-modal-content">
+<button id="close-vocab-modal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-full w-8 h-8 flex items-center justify-center">&times;</button>
+<div class="flex items-center mb-6 border-b pb-4 mt-2"><h3 id="vocab-word" class="text-3xl font-extrabold text-gray-900 capitalize tracking-tight"></h3></div>
+<div class="flex items-center mb-5">
+<button id="play-audio-btn" class="flex items-center justify-center h-12 w-12 shrink-0 rounded-full bg-sky-50 text-sky-700 hover:bg-sky-600 hover:text-white mr-4 transition-all shadow-sm border border-sky-200"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg></button>
+<p id="vocab-pronunciation-text" class="text-gray-500 font-mono text-lg bg-gray-50 px-3 py-1 rounded-md border border-gray-100"></p>
+</div>
+<p id="vocab-meaning" class="text-gray-700 text-lg leading-relaxed"></p>
+</div></div>
+
+<!-- Alert Modal -->
+<div id="alert-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-[80]">
+<div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm relative transform transition-all scale-95 opacity-0 text-center" id="alert-modal-content">
+<div id="alert-icon-container" class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 mb-4"><svg class="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg></div>
+<h3 id="alert-title" class="text-lg font-medium text-gray-900 mb-2">Notice</h3>
+<p id="alert-message" class="text-sm text-gray-500 mb-6"></p>
+<button id="close-alert-btn" class="w-full inline-flex justify-center rounded-md px-4 py-2 bg-sky-600 text-white font-medium hover:bg-sky-700 text-sm">Got it</button>
+</div></div>
+<div id="highlight-tooltip" class="highlight-tooltip">Highlight Text</div>

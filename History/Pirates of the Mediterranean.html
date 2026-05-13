@@ -1,0 +1,1071 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IELTS Academic Simulator - Pirates of the Mediterranean</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --app-font-size: 17px;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            overscroll-behavior: none;
+            background-color: #f3f4f6;
+        }
+        .ielts-container {
+            display: grid;
+            grid-template-rows: auto 1fr;
+            height: 100vh;
+        }
+        .content-panes {
+            display: grid;
+            grid-template-columns: 1fr 5px 1fr;
+            overflow: hidden;
+        }
+        .pane {
+            overflow-y: auto;
+            padding: 2rem 3rem;
+            font-size: var(--app-font-size);
+            scroll-behavior: smooth;
+        }
+        #left-pane {
+            background-color: #fdfdfd;
+        }
+        #right-pane {
+            background-color: #f8fafc;
+        }
+        .splitter {
+            background-color: #cbd5e1;
+            cursor: col-resize;
+            z-index: 10;
+            transition: background-color 0.2s;
+        }
+        .splitter:hover, .splitter:active {
+            background-color: #94a3b8;
+        }
+        
+        /* Typography Improvements */
+        .reading-passage {
+            font-family: 'Merriweather', serif;
+            line-height: 1.9;
+            color: #334155;
+            text-align: justify;
+            margin-bottom: 2rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .reading-passage p {
+            margin-bottom: 1.5rem;
+            text-indent: 1.5rem; 
+        }
+        .reading-passage h3 {
+            font-family: 'Inter', sans-serif;
+            color: #0f172a;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+            font-size: 1.5em;
+            text-align: center;
+            text-indent: 0;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .reading-passage h4 {
+            font-family: 'Inter', sans-serif;
+            color: #475569;
+            margin-bottom: 2rem;
+            font-weight: 500;
+            font-size: 1.1em;
+            text-align: center;
+            text-indent: 0;
+        }
+        .paragraph-label {
+            float: left;
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+            font-size: 1.1em;
+            margin-right: 0.5rem;
+            color: #1e40af;
+            text-indent: 0;
+            background-color: #eff6ff;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            border: 1px solid #bfdbfe;
+            margin-top: 5px;
+        }
+
+        /* Question Styles */
+        .q-item {
+            padding: 1rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s;
+            background-color: white;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 0.75rem;
+        }
+        
+        .text-input {
+            border: 2px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 4px 8px;
+            font-weight: 600;
+            color: #1e293b;
+            transition: all 0.2s;
+            text-align: center;
+            background-color: #f8fafc;
+        }
+        select.text-input {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-position: right 0.25rem center;
+            background-repeat: no-repeat;
+            background-size: 1em;
+            padding-right: 1.25rem;
+            padding-left: 0.5rem;
+            cursor: pointer;
+        }
+        .text-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            background-color: #ffffff;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+
+        /* Answer Feedback Animations & Styles */
+        .correct-answer {
+            border-color: #22c55e !important;
+            background-color: #f0fdf4 !important;
+            color: #166534 !important;
+        }
+        
+        .incorrect-answer {
+            border-color: #ef4444 !important;
+            background-color: #fef2f2 !important;
+            color: #991b1b !important;
+        }
+
+        .explanation-box {
+            animation: fadeIn 0.4s ease-out forwards;
+            margin-top: 0.75rem;
+            padding: 1rem;
+            background-color: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            border-radius: 0.5rem;
+            font-size: 0.95rem;
+            color: #1e3a8a;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            text-align: left;
+        }
+        .explanation-box .correct-badge {
+            display: inline-block;
+            background: #22c55e;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.85em;
+            margin-bottom: 0.5rem;
+            letter-spacing: 0.05em;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Vocabulary Styles */
+        .vocab-word {
+            color: #2563eb;
+            font-weight: 600;
+            cursor: pointer;
+            border-bottom: 2px dotted #93c5fd;
+            transition: all 0.2s ease-in-out;
+            padding: 0 2px;
+        }
+        .vocab-word:hover {
+            background-color: #dbeafe;
+            border-bottom-style: solid;
+            border-radius: 2px;
+        }
+
+        /* UI Elements */
+        .highlight-tooltip {
+            position: absolute;
+            background-color: #1e293b;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            z-index: 100;
+            cursor: pointer;
+            display: none;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        mark {
+            background-color: #fef08a;
+            border-radius: 3px;
+            padding: 2px 0;
+            cursor: pointer;
+            transition: background-color 0.2s, color 0.2s;
+            position: relative;
+        }
+        mark:hover {
+            background-color: #fca5a5;
+            color: #7f1d1d;
+        }
+        mark:hover::after {
+            content: ' ×';
+            font-weight: bold;
+            font-size: 0.8em;
+            opacity: 0.7;
+        }
+        
+        /* Responsive Design Overrides */
+        @media (max-width: 768px) {
+            .content-panes {
+                display: flex;
+                flex-direction: column;
+                overflow-y: auto;
+            }
+            .splitter {
+                display: none;
+            }
+            .pane {
+                padding: 1.25rem 1rem;
+                overflow-y: visible;
+                height: auto;
+            }
+            #left-pane {
+                border-bottom: 2px dashed #cbd5e1;
+                padding-bottom: 2rem;
+            }
+            .text-input {
+                max-width: 140px;
+                padding: 2px 6px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div id="test-container" class="ielts-container">
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 flex justify-between items-center z-20 shadow-sm flex-wrap gap-3">
+        <div class="flex items-center gap-2 sm:space-x-3">
+            <div class="bg-blue-600 text-white p-1.5 sm:p-2 rounded-lg shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+            </div>
+            <h1 class="text-xl font-bold text-gray-800 hidden sm:block">IELTS Simulator <span class="text-blue-600 font-medium">| Pirates of the Mediterranean</span></h1>
+            <h1 class="text-base font-bold text-gray-800 sm:hidden">IELTS <span class="text-blue-600">Pirates</span></h1>
+        </div>
+        
+        <!-- Timer & Progress -->
+        <div class="flex items-center space-x-4">
+            <div class="hidden sm:flex flex-col items-end">
+                <span class="text-xs text-gray-500 font-bold uppercase tracking-wide">Progress</span>
+                <span id="progress-text" class="text-sm font-semibold text-blue-600">0 / 13 Answered</span>
+            </div>
+            <div class="flex items-center bg-gray-100 rounded-lg px-3 py-1.5 border border-gray-200">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span id="timer" class="font-mono font-bold text-gray-700 text-lg">20:00</span>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2 sm:space-x-3">
+            <button id="clear-highlights-btn" class="hidden sm:flex items-center justify-center px-3 py-1.5 rounded bg-amber-50 hover:bg-amber-100 text-amber-700 transition-colors focus:outline-none border border-amber-200 text-sm font-medium" title="Clear Highlights">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                Clear
+            </button>
+            <div class="flex items-center space-x-1 sm:space-x-2 bg-gray-50 p-1 rounded-lg border border-gray-200">
+                <button id="decrease-font-btn" class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded bg-white shadow-sm hover:bg-gray-100 text-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-400 font-bold text-sm sm:text-base" title="Decrease Font Size">A-</button>
+                <button id="increase-font-btn" class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded bg-white shadow-sm hover:bg-gray-100 text-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-400 font-bold text-sm sm:text-base" title="Increase Font Size">A+</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main id="content-panes" class="content-panes">
+        <!-- Left Pane: Passages -->
+        <div id="left-pane" class="pane relative">
+            <div class="reading-passage">
+                <h3>The pirates of the ancient Mediterranean</h3>
+                <h4>In the first and second millennia BCE, pirates sailed around the Mediterranean, attacking ships and avoiding pursuers</h4>
+                
+                <p><span class="paragraph-label">A</span> When one mentions pirates, an image springs to most people’s minds of a crew of misfits, daredevils and adventurers in command of a tall sailing ship in the Caribbean Sea. Yet from the first to the third millennium BCE, thousands of years before these <span class="vocab-word" data-word="swashbucklers">swashbucklers</span> began spreading fear across the Caribbean, pirates prowled the Mediterranean, raiding merchant ships and threatening vital trade routes. However, despite all efforts and the might of various ancient states, piracy could not be stopped. The situation remained unchanged for thousands of years. Only when the pirates directly threatened the interests of ancient Rome did the Roman Republic organise a massive fleet to eliminate piracy. Under the command of the Roman general Pompey, Rome eradicated piracy, transforming the Mediterranean into ‘<em>Mare Nostrum</em>’ (Our Sea).</p>
+
+                <p><span class="paragraph-label">B</span> Although piracy in the Mediterranean is first recorded in ancient Egypt during the reign of Pharaoh Amenhotep III (c 1390–1353 BCE), it is reasonable to assume it predated this powerful civilisation. This is partly due to the great importance the Mediterranean held at this time, and partly due to its geography. While the Mediterranean region is <span class="vocab-word" data-word="predominantly">predominantly</span> fertile, some parts are rugged and hilly, even mountainous. In the ancient times, the inhabitants of these areas relied heavily on marine resources, including fish and salt. Most had their own boats, possessed good seafaring skills, and unsurpassed knowledge of the local coastline and sailing routes. Thus, it is not surprising that during hardships, these men turned to piracy. Geography itself further benefited the pirates, with the numerous coves along the coast providing places for them to hide their boats and strike undetected. Before the invention of ocean-going <span class="vocab-word" data-word="caravels">caravels</span>* in the 15th century, ships could not easily cross long distances over open water. Thus, in the ancient world most were restricted to a few well-known navigable routes that followed the coastline. Caught in a trap, a slow merchant ship laden with goods had no other option but to surrender. In addition, knowledge of the local area helped the pirates to avoid retaliation once a state fleet arrived.</p>
+                <p class="text-sm text-gray-500 italic mt-[-1rem] border-t border-gray-200 pt-2 mb-6">* caravel: a small, highly manoeuvrable sailing ship developed by the Portuguese</p>
+
+                <p><span class="paragraph-label">C</span> One should also add that it was not unknown in the first and second millennia BCE for governments to resort to pirates’ services, especially during wartime, employing their skills and numbers against their opponents. A pirate fleet would serve in the first wave of attack, preparing the way for the navy. Some of the regions were known for providing safe harbours to pirates, who, in return, boosted the local economy.</p>
+
+                <p><span class="paragraph-label">D</span> The first known record of a named group of Mediterranean pirates, made during the rule of ancient Egyptian Pharaoh Akhenaten (c 1353–1336 BCE), was in the Amarna Letters. These were extracts of diplomatic correspondence between the pharaoh and his allies, and covered many pressing issues, including piracy. It seems the pharaoh was troubled by two distinct pirate groups, the Lukka and the Sherden. Despite the Egyptian fleet’s best efforts, the pirates continued to cause substantial disruption to regional commerce. In the letters, the king of Alashiya (modern Cyprus) rejected Akhenaten’s claims of a connection with the Lukka (based in modern-day Turkey). The king assured Akhenaten he was prepared to punish any of his subjects involved in piracy.</p>
+
+                <p><span class="paragraph-label">E</span> The ancient Greek world’s experience of piracy was different from that of Egyptian rulers. While Egypt’s power was land-based, the ancient Greeks relied on the Mediterranean in almost all aspects of life, from trade to warfare. Interestingly, in his works the <em>Iliad</em> and the <em>Odyssey</em>, the ancient Greek writer Homer not only <span class="vocab-word" data-word="condones">condones</span>, but praises the lifestyle and actions of pirates. The opinion remained unchanged in the following centuries. The ancient Greek historian Thucydides, for instance, glorified pirates’ daring attacks on ships or even cities. For Greeks, piracy was a part of everyday life. Even high-ranking members of the state were not beyond engaging in such activities. According to the Greek orator Demosthenes, in 355 BCE, Athenian ambassadors made a detour from their official travel to capture a ship sailing from Egypt, taking the wealth found onboard for themselves! The Greeks’ liberal approach towards piracy does not mean they always tolerated it, but attempts to <span class="vocab-word" data-word="curtail">curtail</span> piracy were hampered by the large number of pirates operating in the Mediterranean.</p>
+
+                <p><span class="paragraph-label">F</span> The rising power of ancient Rome required the Roman Republic to deal with piracy in the Mediterranean. While piracy was a serious issue for the Republic, Rome profited greatly from its existence. Pirate raids provided a steady source of slaves, essential for Rome’s agriculture and mining industries. But this arrangement could work only while the pirates left Roman interests alone. Pirate attacks on grain ships, which were essential to Roman citizens, led to angry voices in the Senate, demanding punishment of the culprits. Rome, however, did nothing, further encouraging piracy. By the 1st century BCE, <span class="vocab-word" data-word="emboldened">emboldened</span> pirates kidnapped prominent Roman dignitaries, asking for a large ransom to be paid. Their most famous hostage was none other than Julius Caesar, captured in 75 BCE.</p>
+
+                <p><span class="paragraph-label">G</span> By now, Rome was well aware that pirates had outlived their usefulness. The time had come for <span class="vocab-word" data-word="concerted">concerted</span> action. In 67 BCE, a new law granted Pompey vast funds to combat the Mediterranean menace. Taking personal command, Pompey divided the entire Mediterranean into 13 districts, assigning a fleet and commander to each. After cleansing one district of pirates, the fleet would join another in the next district. The process continued until the entire Mediterranean was free of pirates. Although thousands of pirates died at the hands of Pompey’s troops, as a long-term solution to the problem, many more were offered land in fertile areas located far from the sea. Instead of a maritime menace, Rome got productive farmers that further boosted its economy.</p>
+            </div>
+        </div>
+
+        <!-- Splitter -->
+        <div id="splitter" class="splitter relative flex items-center justify-center group">
+            <div class="w-1 h-8 bg-gray-400 rounded-full opacity-50 group-hover:bg-gray-600 transition-colors"></div>
+        </div>
+
+        <!-- Right Pane: Questions -->
+        <div id="right-pane" class="pane">
+            <div id="questions-section" class="max-w-3xl mx-auto space-y-8 pb-10">
+                
+                <!-- Matching Information -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-blue-100 text-blue-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 14-19</span>
+                        <h4 class="font-bold text-gray-800">Matching Information</h4>
+                    </div>
+                    <p class="mb-5 text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100 text-sm">
+                        Reading Passage 2 has seven paragraphs, <strong>A-G</strong>.<br>
+                        Which paragraph contains the following information?<br><br>
+                        Select the correct letter, <strong>A-G</strong>, from the dropdowns below.<br>
+                        <em>NB You may use any letter more than once.</em>
+                    </p>
+                    
+                    <div class="space-y-3">
+                        <div class="q-item flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-0" id="container-q14">
+                            <span class="text-gray-800 pr-0 sm:pr-4 mt-1"><strong class="text-blue-600 mr-2">14</strong> a reference to a denial of involvement in piracy</span>
+                            <select name="q14" class="text-input w-full sm:w-20 text-center uppercase font-bold cursor-pointer bg-white shrink-0 self-start sm:self-auto">
+                                <option value="" disabled selected>-</option>
+                                <option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option><option value="e">E</option><option value="f">F</option><option value="g">G</option>
+                            </select>
+                        </div>
+                        <div class="q-item flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-0" id="container-q15">
+                            <span class="text-gray-800 pr-0 sm:pr-4 mt-1"><strong class="text-blue-600 mr-2">15</strong> details of how a campaign to eradicate piracy was carried out</span>
+                            <select name="q15" class="text-input w-full sm:w-20 text-center uppercase font-bold cursor-pointer bg-white shrink-0 self-start sm:self-auto">
+                                <option value="" disabled selected>-</option>
+                                <option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option><option value="e">E</option><option value="f">F</option><option value="g">G</option>
+                            </select>
+                        </div>
+                        <div class="q-item flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-0" id="container-q16">
+                            <span class="text-gray-800 pr-0 sm:pr-4 mt-1"><strong class="text-blue-600 mr-2">16</strong> a mention of the circumstances in which states in the ancient world would make use of pirates</span>
+                            <select name="q16" class="text-input w-full sm:w-20 text-center uppercase font-bold cursor-pointer bg-white shrink-0 self-start sm:self-auto">
+                                <option value="" disabled selected>-</option>
+                                <option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option><option value="e">E</option><option value="f">F</option><option value="g">G</option>
+                            </select>
+                        </div>
+                        <div class="q-item flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-0" id="container-q17">
+                            <span class="text-gray-800 pr-0 sm:pr-4 mt-1"><strong class="text-blue-600 mr-2">17</strong> a reference to how people today commonly view pirates</span>
+                            <select name="q17" class="text-input w-full sm:w-20 text-center uppercase font-bold cursor-pointer bg-white shrink-0 self-start sm:self-auto">
+                                <option value="" disabled selected>-</option>
+                                <option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option><option value="e">E</option><option value="f">F</option><option value="g">G</option>
+                            </select>
+                        </div>
+                        <div class="q-item flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-0" id="container-q18">
+                            <span class="text-gray-800 pr-0 sm:pr-4 mt-1"><strong class="text-blue-600 mr-2">18</strong> an explanation of how some people were encouraged not to return to piracy</span>
+                            <select name="q18" class="text-input w-full sm:w-20 text-center uppercase font-bold cursor-pointer bg-white shrink-0 self-start sm:self-auto">
+                                <option value="" disabled selected>-</option>
+                                <option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option><option value="e">E</option><option value="f">F</option><option value="g">G</option>
+                            </select>
+                        </div>
+                        <div class="q-item flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-0" id="container-q19">
+                            <span class="text-gray-800 pr-0 sm:pr-4 mt-1"><strong class="text-blue-600 mr-2">19</strong> a mention of the need for many sailing vessels to stay relatively close to land</span>
+                            <select name="q19" class="text-input w-full sm:w-20 text-center uppercase font-bold cursor-pointer bg-white shrink-0 self-start sm:self-auto">
+                                <option value="" disabled selected>-</option>
+                                <option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option><option value="e">E</option><option value="f">F</option><option value="g">G</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="14-19">Check Answers</button>
+                    </div>
+                </div>
+
+                <!-- Multiple Choice (Pick 2) -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-blue-100 text-blue-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 20 and 21</span>
+                        <h4 class="font-bold text-gray-800">Multiple Choice</h4>
+                    </div>
+                    <p class="mb-5 text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100 text-sm">
+                        Choose <strong>TWO</strong> letters, <strong>A-E</strong>.<br><br>
+                        Which <strong>TWO</strong> of the following statements does the writer make about inhabitants of the Mediterranean region in the ancient world?
+                    </p>
+
+                    <div class="mb-6 p-5 border border-blue-200 bg-blue-50/50 rounded-xl text-gray-800 text-[0.95em]">
+                        <ul class="flex flex-col gap-3">
+                            <li class="flex items-start"><strong class="text-blue-700 bg-blue-100 w-6 h-6 flex items-center justify-center rounded shrink-0 mr-3">A</strong> <span>They often used stolen vessels to carry out pirate attacks.</span></li>
+                            <li class="flex items-start"><strong class="text-blue-700 bg-blue-100 w-6 h-6 flex items-center justify-center rounded shrink-0 mr-3">B</strong> <span>They managed to escape capture by the authorities because they knew the area so well.</span></li>
+                            <li class="flex items-start"><strong class="text-blue-700 bg-blue-100 w-6 h-6 flex items-center justify-center rounded shrink-0 mr-3">C</strong> <span>They paid for information about the routes merchant ships would take.</span></li>
+                            <li class="flex items-start"><strong class="text-blue-700 bg-blue-100 w-6 h-6 flex items-center justify-center rounded shrink-0 mr-3">D</strong> <span>They depended more on the sea for their livelihood than on farming.</span></li>
+                            <li class="flex items-start"><strong class="text-blue-700 bg-blue-100 w-6 h-6 flex items-center justify-center rounded shrink-0 mr-3">E</strong> <span>They stored many of the goods taken in pirate attacks in coves along the coastline.</span></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <div class="q-item flex items-center justify-between gap-3" id="container-q20">
+                            <span class="text-gray-800 font-bold"><strong class="text-blue-600 mr-2">20</strong> Option 1:</span>
+                            <select name="q20" class="text-input w-24 text-center uppercase font-bold cursor-pointer bg-white">
+                                <option value="" disabled selected>-</option>
+                                <option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option><option value="e">E</option>
+                            </select>
+                        </div>
+                        <div class="q-item flex items-center justify-between gap-3" id="container-q21">
+                            <span class="text-gray-800 font-bold"><strong class="text-blue-600 mr-2">21</strong> Option 2:</span>
+                            <select name="q21" class="text-input w-24 text-center uppercase font-bold cursor-pointer bg-white">
+                                <option value="" disabled selected>-</option>
+                                <option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option><option value="e">E</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="20-21">Check Answers</button>
+                    </div>
+                </div>
+
+                <!-- Multiple Choice (Pick 2) -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-blue-100 text-blue-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 22 and 23</span>
+                        <h4 class="font-bold text-gray-800">Multiple Choice</h4>
+                    </div>
+                    <p class="mb-5 text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100 text-sm">
+                        Choose <strong>TWO</strong> letters, <strong>A-E</strong>.<br><br>
+                        Which <strong>TWO</strong> of the following statements does the writer make about piracy and ancient Greece?
+                    </p>
+
+                    <div class="mb-6 p-5 border border-blue-200 bg-blue-50/50 rounded-xl text-gray-800 text-[0.95em]">
+                        <ul class="flex flex-col gap-3">
+                            <li class="flex items-start"><strong class="text-blue-700 bg-blue-100 w-6 h-6 flex items-center justify-center rounded shrink-0 mr-3">A</strong> <span>The state estimated that very few people were involved in piracy.</span></li>
+                            <li class="flex items-start"><strong class="text-blue-700 bg-blue-100 w-6 h-6 flex items-center justify-center rounded shrink-0 mr-3">B</strong> <span>Attitudes towards piracy changed shortly after the <em>Iliad</em> and the <em>Odyssey</em> were written.</span></li>
+                            <li class="flex items-start"><strong class="text-blue-700 bg-blue-100 w-6 h-6 flex items-center justify-center rounded shrink-0 mr-3">C</strong> <span>Important officials were known to occasionally take part in piracy.</span></li>
+                            <li class="flex items-start"><strong class="text-blue-700 bg-blue-100 w-6 h-6 flex items-center justify-center rounded shrink-0 mr-3">D</strong> <span>Every citizen regarded pirate attacks on cities as unacceptable.</span></li>
+                            <li class="flex items-start"><strong class="text-blue-700 bg-blue-100 w-6 h-6 flex items-center justify-center rounded shrink-0 mr-3">E</strong> <span>A favourable view of piracy is evident in certain ancient Greek texts.</span></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <div class="q-item flex items-center justify-between gap-3" id="container-q22">
+                            <span class="text-gray-800 font-bold"><strong class="text-blue-600 mr-2">22</strong> Option 1:</span>
+                            <select name="q22" class="text-input w-24 text-center uppercase font-bold cursor-pointer bg-white">
+                                <option value="" disabled selected>-</option>
+                                <option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option><option value="e">E</option>
+                            </select>
+                        </div>
+                        <div class="q-item flex items-center justify-between gap-3" id="container-q23">
+                            <span class="text-gray-800 font-bold"><strong class="text-blue-600 mr-2">23</strong> Option 2:</span>
+                            <select name="q23" class="text-input w-24 text-center uppercase font-bold cursor-pointer bg-white">
+                                <option value="" disabled selected>-</option>
+                                <option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option><option value="e">E</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="22-23">Check Answers</button>
+                    </div>
+                </div>
+
+                <!-- Summary Completion -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-blue-100 text-blue-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 24-26</span>
+                        <h4 class="font-bold text-gray-800">Summary Completion</h4>
+                    </div>
+                    <p class="mb-5 text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100 text-sm">
+                        Complete the summary below.<br>
+                        Choose <strong>ONE WORD ONLY</strong> from the passage for each answer.
+                    </p>
+                    
+                    <div class="bg-yellow-50/40 p-5 sm:p-8 border border-yellow-100 rounded-xl">
+                        <h5 class="font-bold text-lg text-center mb-6 text-gray-900 uppercase tracking-wide">Ancient Rome and piracy</h5>
+                        
+                        <div class="space-y-4 text-gray-800 text-[0.95em]">
+                            <p class="leading-relaxed">
+                                Piracy was an issue ancient Rome had to deal with, but it also brought some benefits for Rome. For example, pirates supplied slaves that were important for Rome’s industries. However, attacks on vessels transporting
+                                <span id="container-q24" class="inline-block mx-1 my-1"><strong class="text-blue-600 mr-1 text-sm">24</strong><input type="text" name="q24" class="text-input w-32"></span> 
+                                to Rome resulted in calls for
+                                <span id="container-q25" class="inline-block mx-1 my-1"><strong class="text-blue-600 mr-1 text-sm">25</strong><input type="text" name="q25" class="text-input w-36"></span> 
+                                for the pirates responsible. Nevertheless, piracy continued, with some pirates demanding a
+                                <span id="container-q26" class="inline-block mx-1 my-1"><strong class="text-blue-600 mr-1 text-sm">26</strong><input type="text" name="q26" class="text-input w-32"></span> 
+                                for the return of the Roman officials they captured.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="24-26">Check Answers</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Highlight Tooltip -->
+<div id="highlight-tooltip" class="highlight-tooltip">Highlight Text</div>
+
+<!-- Vocabulary Modal -->
+<div id="vocab-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50 transition-opacity">
+    <div class="bg-white rounded-2xl shadow-2xl p-5 sm:p-8 w-full max-w-md relative transform transition-all scale-95 opacity-0" id="vocab-modal-content">
+        <button id="close-vocab-modal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-full w-8 h-8 flex items-center justify-center transition-colors">&times;</button>
+        <div class="flex items-center mb-6 border-b pb-4 mt-2">
+            <h3 id="vocab-word" class="text-2xl sm:text-3xl font-extrabold text-gray-900 capitalize tracking-tight"></h3>
+        </div>
+        <div class="flex items-center mb-5">
+            <button id="play-audio-btn" class="flex items-center justify-center h-10 w-10 sm:h-12 sm:w-12 shrink-0 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white mr-4 transition-all shadow-sm border border-blue-100" title="Listen to pronunciation">
+                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>
+            </button>
+            <p id="vocab-pronunciation-text" class="text-gray-500 font-mono text-base sm:text-lg bg-gray-50 px-3 py-1 rounded-md border border-gray-100"></p>
+        </div>
+        <p id="vocab-meaning" class="text-gray-700 text-base sm:text-lg leading-relaxed"></p>
+    </div>
+</div>
+
+<!-- Alert Modal -->
+<div id="alert-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-[80] transition-opacity">
+    <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm relative transform transition-all scale-95 opacity-0 text-center" id="alert-modal-content">
+        <div id="alert-icon-container" class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+            <svg id="alert-icon" class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+        </div>
+        <h3 id="alert-title" class="text-lg leading-6 font-medium text-gray-900 mb-2">Notice</h3>
+        <p id="alert-message" class="text-sm text-gray-500 mb-6">Message goes here.</p>
+        <button id="close-alert-btn" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm transition-colors">
+            Got it
+        </button>
+    </div>
+</div>
+
+<script>
+    // --- DATA ---
+    const vocabulary = {
+        'swashbucklers': { meaning: 'Heroic, swaggering swordsmen or adventurers.', phonetic: '/ˈswɒʃˌbʌk.ləz/' },
+        'predominantly': { meaning: 'Mainly; for the most part.', phonetic: '/prɪˈdɒm.ɪ.nənt.li/' },
+        'caravels': { meaning: 'Small, highly maneuverable sailing ships developed in the 15th century by the Portuguese.', phonetic: '/ˈkær.ə.velz/' },
+        'condones': { meaning: 'Accepts or allows (behavior that is considered morally wrong or offensive) to continue.', phonetic: '/kənˈdəʊnz/' },
+        'curtail': { meaning: 'Reduce in extent or quantity; impose a restriction on.', phonetic: '/kɜːˈteɪl/' },
+        'emboldened': { meaning: 'Given the courage or confidence to do something.', phonetic: '/ɪmˈbəʊl.dənd/' },
+        'concerted': { meaning: 'Jointly arranged or carried out; coordinated.', phonetic: '/kənˈsɜː.tɪd/' }
+    };
+
+    const answers = {
+        q14: "d", q15: "g", q16: "c", q17: "a", q18: "g", q19: "b",
+        q20: "b|d", q21: "b|d",
+        q22: "c|e", q23: "c|e",
+        q24: "grain", q25: "punishment", q26: "ransom"
+    };
+
+    const explanations = {
+        q14: "<b>Giải thích:</b> Đoạn văn D có đề cập thông tin về một lời từ chối tham gia cướp biển là vua Alashiya (the king of Alashiya) đã từ chối (“rejected” khớp với “denial”) lời khẳng định liên kết (“claims of connection” khớp với “involment”) với cướp biển (“the Lukka” chỉ “pirate groups” khớp với “piracy”). Vì vậy, đáp án là D.",
+        q15: "<b>Giải thích:</b> Đoạn văn G có đề cập thông tin chi tiết về một chiến dịch xoá bỏ cướp biển. Đó là một cuộc chiến đấu với cướp biển tại vùng Địa Trung Hải (“combat the Mediterranean menace” khớp với “a campaign to eradicate piracy”) bằng cách chia vùng Địa Trung Hải thành 13 quận (“divided the entire Mediterranean into 13 districts”), mỗi quận được giao cho một đội quân và người chỉ huy (“assigning a fleet and commander to each”), các đội quân đuổi cướp biển lần lượt tại từng quận đến khi cả vùng Địa Trung Hải không còn cướp biển nào (“until the entire Mediterranean was free of pirates”). Vì vậy, đáp án là G.",
+        q16: "<b>Giải thích:</b> Đoạn văn C có đề cập thông tin về trường hợp nhà nước cổ đại tận dụng cướp biển. Cụ thể, vào thiên niên kỷ thứ nhất và thứ hai trước công nguyên (“in the first and second millenia BCE” khớp với “in the ancient world”), chính phủ (“governments” khớp với “states”) đã nhờ đến cướp biển (“pirates’ services” khớp với “pirates”), đặc biệt là trong thời kỳ chiến tranh (“wartime” khớp với “the circumstances”) bằng cách tận dụng (“employing” khớp với “make use of”) kỹ năng và quân số của họ nhằm chống lại kẻ thù. Vì vậy, đáp án là C.",
+        q17: "<b>Giải thích:</b> Đoạn văn A có đề cập thông tin về cách nhìn nhận của nhiều người hiện nay về cướp biển. Cụ thể, khi nhắc đến cướp biển (“pirates”), hình ảnh hiện lên trong đầu nhiều người (“an image springs to most people’s mind” khớp với “how people today commonly view”) là một nhóm người kỳ quặc (“a crew of misfits”), những kẻ liều lĩnh (“daredevils”) và phiêu lưu (“adventurers”). Vì vậy, đáp án là A.",
+        q18: "<b>Giải thích:</b> Đoạn văn G có đề cập thông tin về lý do một số người được khuyến khích không quay lại làm cướp biển. Vì những cướp biển còn sống sót được cung cấp đất đai màu mỡ ở xa vùng biển (“many more were offered land in fertile areas far from the sea”) nên họ không còn làm cướp biển (“instead of maritime menace”) mà đã trở thành những người nông dân làm việc năng suất (“productive farmers”). Vì vậy, đáp án là G.",
+        q19: "<b>Giải thích:</b> Đoạn văn B có đề cập đến thông tin nhiều thuyền phải ở gần đất liền là vì các vịnh nhỏ dọc theo bờ biển (“numerous coves along the coast”) giúp những người cướp biển che giấu thuyền (“hide their boats”) và tấn công mà không bị phát hiện (“strike undetected”). Vì vậy, đáp án là B.",
+        q20: "<b>Giải thích:</b> Tác giả đề cập đến việc kiến thức về địa phương (“knowledge of the local area” khớp với “they knew the area so well”) giúp cướp biển tránh (“avoid” khớp với “escape”) bị đánh trả (“retaliation” khớp với “capture”) khi đội quân nhà nước đến (“a state fleet” khớp với “the authorities”). (Đáp án B).<br>Tác giả cũng đề cập đến việc vùng Địa Trung Hải có nhiều đất đai màu mỡ nhưng cũng có vùng khô cằn. Các cư dân chủ yếu phụ thuộc vào (“relied heavily on” khớp với “depended more on”) tài nguyên biển (“marine resources” khớp với “the sea”). (Đáp án D).",
+        q21: "<b>Giải thích:</b> Tác giả đề cập đến việc kiến thức về địa phương (“knowledge of the local area” khớp với “they knew the area so well”) giúp cướp biển tránh (“avoid” khớp với “escape”) bị đánh trả (“retaliation” khớp với “capture”) khi đội quân nhà nước đến (“a state fleet” khớp với “the authorities”). (Đáp án B).<br>Tác giả cũng đề cập đến việc vùng Địa Trung Hải có nhiều đất đai màu mỡ nhưng cũng có vùng khô cằn. Các cư dân chủ yếu phụ thuộc vào (“relied heavily on” khớp với “depended more on”) tài nguyên biển (“marine resources” khớp với “the sea”). (Đáp án D).",
+        q22: "<b>Giải thích:</b> Tác giả đề cập đến việc những thành viên cấp cao trong nhà nước (“high-ranking members of the state” khớp với “important officials”) không đứng ngoài (“were not beyond engaging” khớp với “occasionally take part in”) những vụ cướp biển (“such activities” chỉ “piracy”). (Đáp án C).<br>Tác giả có đề cập đến tác phẩm thể hiện sự ủng hộ cướp biển. Đó là tác phẩm Iliad và Odyssey (“the Iliad and the Odyssey” khớp với “ancient Greek texts”) ca ngợi (“praises” khớp với “a favourable view”) lối sống và hành động của cướp biển. (Đáp án E).",
+        q23: "<b>Giải thích:</b> Tác giả đề cập đến việc những thành viên cấp cao trong nhà nước (“high-ranking members of the state” khớp với “important officials”) không đứng ngoài (“were not beyond engaging” khớp với “occasionally take part in”) những vụ cướp biển (“such activities” chỉ “piracy”). (Đáp án C).<br>Tác giả có đề cập đến tác phẩm thể hiện sự ủng hộ cướp biển. Đó là tác phẩm Iliad và Odyssey (“the Iliad and the Odyssey” khớp với “ancient Greek texts”) ca ngợi (“praises” khớp với “a favourable view”) lối sống và hành động của cướp biển. (Đáp án E).",
+        q24: "<b>Giải thích:</b> Bài đọc đề cập đến những cuộc tấn công của cướp biển (“pirate attacks” khớp với “attacks”) nhắm vào các con tàu (“ships” khớp với “vessels”) chở ngũ cốc (“grains”), một loại hàng hoá quan trọng đối với người dân tại La Mã (“Roman citizens” khớp với “Rome”). Vì vậy, đáp án là “grain”.",
+        q25: "<b>Giải thích:</b> Bài đọc đề cập rằng những cuộc tấn công cướp biển đó đã gây ra phẫn nộ (“led to angry voices”) và dẫn đến yêu cầu (“demanding” khớp với “calls for”) xử phạt (“punishment”) những tội đồ này (“culprits” chỉ “pirates”). Vì vậy, đáp án là “punishment”.",
+        q26: "<b>Giải thích:</b> Bài đọc cho biết một số cướp biển gan dạ (“emboldened pirates” khớp với “some pirates”) đã bắt cóc (“kidnapped” khớp với “captured”) một số quan chức La Mã (“Roman dignitaries” khớp với “Roman officials”) và yêu cầu (“asking for” khớp với “demanding”) tiền chuộc (“ransom”). Vì vậy, đáp án là “ransom”."
+    };
+
+    // --- APPLICATION LOGIC ---
+    document.addEventListener('DOMContentLoaded', () => {
+        const app = {
+            userAnswers: {},
+            answersChecked: {},
+            currentFontSize: 17,
+            totalQuestions: Object.keys(answers).length,
+            timeRemaining: 20 * 60, // 20 minutes
+
+            // Elements
+            leftPane: document.getElementById('left-pane'),
+            rightPane: document.getElementById('right-pane'),
+            splitter: document.getElementById('splitter'),
+            highlightTooltip: document.getElementById('highlight-tooltip'),
+            vocabModal: document.getElementById('vocab-modal'),
+            vocabModalContent: document.getElementById('vocab-modal-content'),
+            closeVocabModalBtn: document.getElementById('close-vocab-modal'),
+            vocabWordEl: document.getElementById('vocab-word'),
+            vocabMeaningEl: document.getElementById('vocab-meaning'),
+            vocabPronunciationText: document.getElementById('vocab-pronunciation-text'),
+            playAudioBtn: document.getElementById('play-audio-btn'),
+            clearHighlightsBtn: document.getElementById('clear-highlights-btn'),
+            progressText: document.getElementById('progress-text'),
+            timerEl: document.getElementById('timer'),
+
+            // Alert Elements
+            alertModal: document.getElementById('alert-modal'),
+            alertModalContent: document.getElementById('alert-modal-content'),
+            closeAlertBtn: document.getElementById('close-alert-btn'),
+            alertTitleEl: document.getElementById('alert-title'),
+            alertMessageEl: document.getElementById('alert-message'),
+            alertIconContainer: document.getElementById('alert-icon-container'),
+
+            init() {
+                this.setupEventListeners();
+                this.initSplitter();
+                this.initHighlighter();
+                this.updateCheckButtonsState();
+                this.startTimer();
+                this.updateProgress();
+            },
+
+            startTimer() {
+                const interval = setInterval(() => {
+                    if (this.timeRemaining <= 0) {
+                        clearInterval(interval);
+                        this.timerEl.textContent = "00:00";
+                        this.timerEl.classList.add('text-red-600');
+                        this.showAlert("Time's Up!", "Your 20 minutes for this reading passage have expired.", "warning");
+                        return;
+                    }
+                    this.timeRemaining--;
+                    const m = Math.floor(this.timeRemaining / 60).toString().padStart(2, '0');
+                    const s = (this.timeRemaining % 60).toString().padStart(2, '0');
+                    this.timerEl.textContent = `${m}:${s}`;
+                    
+                    if (this.timeRemaining <= 300) { // last 5 minutes
+                        this.timerEl.classList.add('text-red-500');
+                    }
+                }, 1000);
+            },
+
+            setupEventListeners() {
+                document.getElementById('increase-font-btn').addEventListener('click', () => this.changeFontSize(1));
+                document.getElementById('decrease-font-btn').addEventListener('click', () => this.changeFontSize(-1));
+
+                this.clearHighlightsBtn.addEventListener('click', () => {
+                    const marks = this.leftPane.querySelectorAll('mark');
+                    marks.forEach(mark => {
+                        const text = document.createTextNode(mark.textContent);
+                        mark.replaceWith(text);
+                    });
+                });
+
+                this.closeVocabModalBtn.addEventListener('click', () => this.closeModal());
+                this.vocabModal.addEventListener('click', (e) => {
+                   if (e.target === this.vocabModal) this.closeModal();
+                });
+
+                // Keyboard accessibility: Close modals with Escape key & Disable Ctrl+F
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') {
+                        if (!this.vocabModal.classList.contains('hidden')) this.closeModal();
+                        if (!this.alertModal.classList.contains('hidden')) this.closeAlert();
+                    }
+                    
+                    // Disable Ctrl+F / Cmd+F
+                    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
+                        e.preventDefault(); 
+                        this.showAlert("Action Disabled", "The 'Find' function is disabled to simulate real computer-delivered test conditions.", "warning");
+                    }
+
+                    // Disable F5 and Ctrl+R / Cmd+R
+                    if (e.key === 'F5' || ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'r')) {
+                        e.preventDefault();
+                        this.showAlert("Action Disabled", "Refreshing the page is disabled during the test to prevent losing your progress.", "warning");
+                    }
+                });
+
+                // Detect Tab Switching
+                document.addEventListener('visibilitychange', () => {
+                    if (document.hidden && this.timeRemaining > 0) {
+                        this.showAlert("Warning: Tab Switch Detected", "Please do not switch tabs or leave the test window during the exam. Continued tab switching may result in your test being invalidated.", "warning");
+                    }
+                });
+
+                // Warn user if they try to close or refresh the tab
+                window.addEventListener('beforeunload', (e) => {
+                    if (this.timeRemaining > 0 && this.timeRemaining < 20 * 60) {
+                        e.preventDefault();
+                        e.returnValue = ''; 
+                    }
+                });
+
+                // Alert Modal Events
+                this.closeAlertBtn.addEventListener('click', () => this.closeAlert());
+                this.alertModal.addEventListener('click', (e) => {
+                   if (e.target === this.alertModal) this.closeAlert();
+                });
+
+                // Track text inputs and dropdowns
+                document.body.addEventListener('input', (e) => {
+                    if ((e.target.tagName === 'INPUT' && e.target.type === 'text') || e.target.tagName === 'SELECT') {
+                        this.userAnswers[e.target.name] = e.target.value;
+                        e.target.classList.remove('correct-answer', 'incorrect-answer');
+                        if (e.target.tagName === 'INPUT') e.target.placeholder = '';
+                        const container = document.getElementById(`container-${e.target.name}`);
+                        if(container) container.classList.remove('bg-red-50', 'bg-green-50');
+                        
+                        this.updateCheckButtonsState();
+                        this.updateProgress();
+                    }
+                });
+
+                // Vocab Words & Removable Highlights Event Delegation
+                this.leftPane.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('vocab-word')) {
+                        const wordKey = e.target.dataset.word;
+                        this.openVocabModal(wordKey);
+                    }
+                    
+                    // Allow clicking to remove highlight
+                    if (e.target.tagName === 'MARK') {
+                        const textNode = document.createTextNode(e.target.textContent);
+                        e.target.replaceWith(textNode);
+                    }
+                });
+
+                // Check Buttons Event Delegation
+                document.querySelectorAll('.check-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const range = e.target.dataset.range;
+                        this.checkAnswers(range, e.target);
+                    });
+                });
+                
+                // Real Audio Pronunciation Event
+                this.playAudioBtn.addEventListener('click', () => {
+                   const word = this.vocabWordEl.textContent;
+                   if (!word) return;
+                   if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+                   
+                   this.playAudioBtn.classList.remove('text-blue-600', 'bg-blue-50');
+                   this.playAudioBtn.classList.add('bg-green-500', 'text-white');
+                   
+                   if ('speechSynthesis' in window) {
+                       const utterance = new SpeechSynthesisUtterance(word);
+                       utterance.lang = 'en-GB'; 
+                       utterance.rate = 0.9; 
+                       utterance.onend = () => this.resetAudioBtn();
+                       utterance.onerror = () => this.resetAudioBtn();
+                       window.speechSynthesis.speak(utterance);
+                   } else {
+                       this.showAlert("Audio Error", "Sorry, your browser doesn't support text-to-speech audio.", "warning");
+                       setTimeout(() => this.resetAudioBtn(), 500);
+                   }
+                });
+            },
+
+            updateProgress() {
+                let answeredCount = 0;
+                for(let key in answers) {
+                    if(this.userAnswers[key] && this.userAnswers[key].trim() !== '') {
+                        answeredCount++;
+                    }
+                }
+                this.progressText.textContent = `${answeredCount} / ${this.totalQuestions} Answered`;
+            },
+
+            resetAudioBtn() {
+                this.playAudioBtn.classList.add('text-blue-600', 'bg-blue-50');
+                this.playAudioBtn.classList.remove('bg-green-500', 'text-white');
+            },
+            
+            changeFontSize(delta) {
+                this.currentFontSize += delta;
+                if (this.currentFontSize < 14) this.currentFontSize = 14;
+                if (this.currentFontSize > 26) this.currentFontSize = 26;
+                document.documentElement.style.setProperty('--app-font-size', `${this.currentFontSize}px`);
+            },
+
+            openVocabModal(wordKey) {
+                const data = vocabulary[wordKey];
+                if (data) {
+                    this.vocabWordEl.textContent = wordKey;
+                    this.vocabMeaningEl.textContent = data.meaning;
+                    this.vocabPronunciationText.textContent = data.phonetic || '';
+                    this.vocabModal.classList.remove('hidden');
+                    setTimeout(() => {
+                        this.vocabModalContent.classList.remove('scale-95', 'opacity-0');
+                        this.vocabModalContent.classList.add('scale-100', 'opacity-100');
+                    }, 10);
+                }
+            },
+
+            closeModal() {
+                if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+                this.vocabModalContent.classList.remove('scale-100', 'opacity-100');
+                this.vocabModalContent.classList.add('scale-95', 'opacity-0');
+                this.resetAudioBtn();
+                setTimeout(() => this.vocabModal.classList.add('hidden'), 200);
+            },
+
+            showAlert(title, message, type = 'error') {
+                this.alertTitleEl.textContent = title;
+                this.alertMessageEl.textContent = message;
+                
+                if (type === 'warning') {
+                    this.alertIconContainer.className = 'mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 mb-4';
+                    this.alertIconContainer.innerHTML = '<svg class="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>';
+                } else {
+                    this.alertIconContainer.className = 'mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4';
+                    this.alertIconContainer.innerHTML = '<svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>';
+                }
+                
+                this.alertModal.classList.remove('hidden');
+                setTimeout(() => {
+                    this.alertModalContent.classList.remove('scale-95', 'opacity-0');
+                    this.alertModalContent.classList.add('scale-100', 'opacity-100');
+                }, 10);
+            },
+
+            closeAlert() {
+                this.alertModalContent.classList.remove('scale-100', 'opacity-100');
+                this.alertModalContent.classList.add('scale-95', 'opacity-0');
+                setTimeout(() => {
+                    this.alertModal.classList.add('hidden');
+                }, 200);
+            },
+            
+            updateCheckButtonsState() {
+                document.querySelectorAll('.check-btn').forEach(btn => {
+                    const range = btn.dataset.range;
+                    if (this.answersChecked[range]) {
+                        btn.className = 'check-btn bg-gray-800 hover:bg-gray-900 text-white font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-pointer transform hover:-translate-y-0.5 hover:shadow-md active:scale-95';
+                        btn.textContent = 'Reset Answers';
+                        return;
+                    }
+
+                    let allAnswered = true;
+                    if (range === '20-21' || range === '22-23') {
+                        const parts = range.split('-');
+                        for (let i of parts) {
+                            const answer = (this.userAnswers[`q${i}`] || "").trim();
+                            if (!answer) allAnswered = false;
+                        }
+                    } else {
+                        const [start, end] = range.split('-').map(Number);
+                        for (let i = start; i <= end; i++) {
+                            const qId = `q${i}`;
+                            const answer = (this.userAnswers[qId] || "").trim();
+                            if (!answer) {
+                                allAnswered = false;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (allAnswered) {
+                        btn.className = 'check-btn bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-pointer transform hover:-translate-y-0.5 hover:shadow-md active:scale-95';
+                    } else {
+                        btn.className = 'check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80';
+                    }
+                });
+            },
+
+            checkAnswers(range, btn) {
+                if (this.answersChecked[range]) {
+                    // Reset mode
+                    this.answersChecked[range] = false;
+                    
+                    let ids = [];
+                    if (range.includes('-')) {
+                        const [start, end] = range.split('-').map(Number);
+                        for (let i = start; i <= end; i++) ids.push(`q${i}`);
+                    }
+                    
+                    for (let qId of ids) {
+                        this.userAnswers[qId] = '';
+                        const input = document.querySelector(`input[name="${qId}"][type="text"], select[name="${qId}"]`);
+                        if (input) {
+                            input.value = '';
+                            if (input.tagName === 'INPUT') input.placeholder = '';
+                            input.classList.remove('correct-answer', 'incorrect-answer');
+                        }
+                        const expl = document.getElementById(`expl-${qId}`);
+                        if (expl) expl.remove();
+                    }
+                    this.updateCheckButtonsState();
+                    this.updateProgress();
+                    return;
+                }
+
+                let ids = [];
+                if (range.includes('-')) {
+                    const [start, end] = range.split('-').map(Number);
+                    for (let i = start; i <= end; i++) ids.push(`q${i}`);
+                }
+
+                // --- Validation: Ensure all questions are answered ---
+                let allAnswered = true;
+                for (let qId of ids) {
+                    const answer = (this.userAnswers[qId] || "").trim();
+                    if (!answer) {
+                        allAnswered = false;
+                        break;
+                    }
+                }
+
+                if (!allAnswered) {
+                    this.showAlert("Incomplete Answers", "Please fill in an answer for all questions in this section before checking.", "warning");
+                    return;
+                }
+                // -----------------------------------------------------
+
+                // Check mode
+                this.answersChecked[range] = true;
+                this.updateCheckButtonsState();
+
+                for (let qId of ids) {
+                    let userAnswer = (this.userAnswers[qId] || "").toLowerCase().trim();
+                    let correctAnswersList = answers[qId].toLowerCase().split('|');
+                    let isCorrect = correctAnswersList.includes(userAnswer);
+
+                    // Prevent duplicate answers counting twice for 'pick 2' questions
+                    if (qId === 'q20' && userAnswer === this.userAnswers['q21']) isCorrect = false;
+                    if (qId === 'q21' && userAnswer === this.userAnswers['q20']) isCorrect = false;
+                    if (qId === 'q22' && userAnswer === this.userAnswers['q23']) isCorrect = false;
+                    if (qId === 'q23' && userAnswer === this.userAnswers['q22']) isCorrect = false;
+
+                    let correctFeedbackHTML = '';
+
+                    const input = document.querySelector(`input[name="${qId}"][type="text"], select[name="${qId}"]`);
+                    if (input) {
+                        input.classList.remove('correct-answer', 'incorrect-answer');
+                        
+                        if (isCorrect) {
+                            input.classList.add('correct-answer');
+                        } else {
+                            input.classList.add('incorrect-answer');
+                            const correctAnsFormatted = correctAnswersList[0]
+                                .split(' ')
+                                .map(w => w.length === 1 ? w.toUpperCase() : w.charAt(0).toUpperCase() + w.slice(1)) 
+                                .join(' ');
+                                
+                            if (input.tagName === 'INPUT') {
+                                input.value = '';
+                                input.placeholder = correctAnsFormatted;
+                            }
+                            
+                            correctFeedbackHTML = `<span class="correct-badge">Correct Answer: ${correctAnsFormatted}</span><br>`;
+                        }
+                    }
+
+                    // Add Explanation Box
+                    if (explanations[qId]) {
+                        const existingExpl = document.getElementById(`expl-${qId}`);
+                        if (!existingExpl) {
+                            const explDiv = document.createElement('div');
+                            explDiv.id = `expl-${qId}`;
+                            explDiv.className = 'explanation-box';
+                            explDiv.innerHTML = `${correctFeedbackHTML}${explanations[qId]}`;
+                            
+                            const container = document.getElementById(`container-${qId}`);
+                            if (container) {
+                                if(container.tagName === "SPAN" || container.tagName === "P" && container.style.display === "inline") {
+                                    const wrap = container.closest('div.leading-loose') || container.closest('p.leading-relaxed') || container.parentElement;
+                                    wrap.insertAdjacentElement('afterend', explDiv);
+                                } else {
+                                    container.insertAdjacentElement('afterend', explDiv);
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+
+            initSplitter() {
+                let isDragging = false;
+                const contentPanes = document.getElementById('content-panes');
+
+                this.splitter.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    isDragging = true;
+                    document.body.style.cursor = 'col-resize';
+                });
+
+                document.addEventListener('mousemove', (e) => {
+                    if (!isDragging) return;
+                    e.preventDefault();
+                    if (window.innerWidth <= 768) return; 
+                    
+                    const containerRect = contentPanes.getBoundingClientRect();
+                    const newLeftWidth = e.clientX - containerRect.left;
+                    if (newLeftWidth > 200 && newLeftWidth < containerRect.width - 200) {
+                        const newLeftPercent = (newLeftWidth / containerRect.width) * 100;
+                        contentPanes.style.gridTemplateColumns = `${newLeftPercent}% 5px 1fr`;
+                    }
+                });
+
+                document.addEventListener('mouseup', () => {
+                    if (isDragging) {
+                        isDragging = false;
+                        document.body.style.cursor = 'default';
+                    }
+                });
+            },
+
+            initHighlighter() {
+                document.body.addEventListener('mouseup', (e) => {
+                    const selection = window.getSelection();
+                    const selectedText = selection.toString().trim();
+
+                    if (selectedText.length > 0) {
+                        const range = selection.getRangeAt(0);
+                        if (!this.leftPane.contains(range.commonAncestorContainer) && !this.rightPane.contains(range.commonAncestorContainer)) {
+                           this.highlightTooltip.style.display = 'none';
+                           return;
+                        }
+
+                        this.highlightTooltip.style.left = `${e.pageX - 30}px`;
+                        this.highlightTooltip.style.top = `${e.pageY - 40}px`;
+                        this.highlightTooltip.style.display = 'block';
+
+                        this.highlightTooltip.onclick = () => {
+                            const container = range.commonAncestorContainer;
+                            if (container.nodeType === 3) { 
+                                if (range.startContainer.parentElement !== range.endContainer.parentElement) {
+                                    this.highlightTooltip.style.display = 'none';
+                                    this.showAlert("Highlight Error", "Please select text within a single paragraph to highlight.", "warning");
+                                    selection.removeAllRanges();
+                                    return;
+                                }
+                            }
+                            
+                            const mark = document.createElement('mark');
+                            try {
+                                range.surroundContents(mark);
+                            } catch (ex) {
+                                this.showAlert("Highlight Error", "Please select plain text to highlight. Highlighting across different formatting is restricted.", "warning");
+                            } 
+                            finally {
+                                selection.removeAllRanges();
+                                this.highlightTooltip.style.display = 'none';
+                            }
+                        };
+                    } else {
+                        this.highlightTooltip.style.display = 'none';
+                    }
+                });
+
+                document.body.addEventListener('mousedown', (e) => {
+                   if (e.target !== this.highlightTooltip && window.getSelection().toString().length === 0) {
+                        this.highlightTooltip.style.display = 'none';
+                   }
+                });
+            }
+        };
+
+        app.init();
+    });
+</script>
+
+</body>
+</html>

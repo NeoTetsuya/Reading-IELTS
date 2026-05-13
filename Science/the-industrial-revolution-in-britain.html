@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IELTS Academic Simulator - The Industrial Revolution in Britain</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --app-font-size: 17px; }
+        body { font-family: 'Inter', sans-serif; overscroll-behavior: none; background-color: #f3f4f6; }
+        .ielts-container { display: grid; grid-template-rows: auto 1fr; height: 100vh; }
+        .content-panes { display: grid; grid-template-columns: 1fr 5px 1fr; overflow: hidden; }
+        .pane { overflow-y: auto; padding: 2rem 3rem; font-size: var(--app-font-size); scroll-behavior: smooth; }
+        #left-pane { background-color: #fdfdfd; }
+        #right-pane { background-color: #f8fafc; }
+        .splitter { background-color: #cbd5e1; cursor: col-resize; z-index: 10; transition: background-color 0.2s; }
+        .splitter:hover, .splitter:active { background-color: #94a3b8; }
+        .reading-passage { font-family: 'Merriweather', serif; line-height: 1.9; color: #334155; text-align: justify; max-width: 800px; margin: 0 auto; }
+        .reading-passage p { margin-bottom: 1.5rem; text-indent: 1.5rem; }
+        .reading-passage h3 { font-family: 'Inter', sans-serif; color: #0f172a; margin-bottom: 0.5rem; font-weight: 700; font-size: 1.5em; text-align: center; text-indent: 0; text-transform: uppercase; letter-spacing: 0.05em; }
+        .reading-passage .footnote { font-family: 'Inter', sans-serif; font-size: 0.85em; color: #64748b; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #e2e8f0; text-indent: 0; font-style: italic; }
+        .q-item { padding: 1rem; border-radius: 0.5rem; transition: all 0.2s; background-color: white; border: 1px solid #e2e8f0; margin-bottom: 0.75rem; }
+        .text-input { border: 2px solid #cbd5e1; border-radius: 6px; padding: 4px 8px; font-weight: 600; color: #1e293b; transition: all 0.2s; text-align: center; background-color: #f8fafc; }
+        .text-input:focus { outline: none; border-color: #b45309; background-color: #ffffff; box-shadow: 0 0 0 3px rgba(180,83,9,0.12); }
+        .text-input-word { width: 9rem; text-transform: lowercase; }
+        .custom-radio-label { display: flex; align-items: center; padding: 0.75rem 1rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s ease-in-out; background-color: white; flex: 1; justify-content: center; text-align: center; }
+        .custom-radio-label:hover { background-color: #f8fafc; border-color: #cbd5e1; }
+        .custom-radio-label input:checked + span { color: #92400e; font-weight: 700; }
+        .correct-answer { border-color: #22c55e !important; background-color: #f0fdf4 !important; color: #166534 !important; }
+        label.correct-answer { box-shadow: 0 0 0 1px #22c55e; color: #166534 !important; }
+        label.correct-answer span { color: #166534 !important; }
+        .incorrect-answer { border-color: #ef4444 !important; background-color: #fef2f2 !important; color: #991b1b !important; }
+        label.incorrect-answer { box-shadow: 0 0 0 1px #ef4444; color: #991b1b !important; }
+        label.incorrect-answer span { color: #991b1b !important; }
+        .explanation-box { animation: fadeIn 0.4s ease-out forwards; margin-top: 0.75rem; padding: 1rem; background-color: #fffbeb; border-left: 4px solid #d97706; border-radius: 0.5rem; font-size: 0.95rem; color: #78350f; box-shadow: 0 2px 4px rgba(0,0,0,0.05); text-align: left; }
+        .explanation-box .correct-badge { display: inline-block; background: #22c55e; color: white; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85em; margin-bottom: 0.5rem; letter-spacing: 0.05em; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+        .vocab-word { color: #b45309; font-weight: 600; cursor: pointer; border-bottom: 2px dotted #fcd34d; transition: all 0.2s ease-in-out; padding: 0 2px; }
+        .vocab-word:hover { background-color: #fef3c7; border-bottom-style: solid; border-radius: 2px; }
+        .highlight-tooltip { position: absolute; background-color: #1e293b; color: white; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 500; z-index: 100; cursor: pointer; display: none; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        mark { background-color: #fef08a; border-radius: 3px; padding: 2px 0; cursor: pointer; transition: background-color 0.2s, color 0.2s; }
+        mark:hover { background-color: #fca5a5; color: #7f1d1d; }
+        mark:hover::after { content: ' ×'; font-weight: bold; font-size: 0.8em; opacity: 0.7; }
+        .notes-block { background: #fffbeb; border: 1px solid #fde68a; border-radius: 0.75rem; padding: 1.5rem; margin-bottom: 1rem; }
+        .notes-block h5 { font-family: 'Inter', sans-serif; font-weight: 700; color: #92400e; font-size: 1em; margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        .notes-block ul { list-style: none; padding-left: 0; }
+        .notes-block ul li { position: relative; padding-left: 1.5rem; margin-bottom: 0.6rem; color: #44403c; }
+        .notes-block ul li::before { content: "●"; position: absolute; left: 0; color: #d97706; font-size: 0.7em; top: 0.35em; }
+        .ielts-table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
+        .ielts-table th, .ielts-table td { border: 1px solid #cbd5e1; padding: 0.85rem 1rem; vertical-align: top; }
+        .ielts-table th { background-color: #f8fafc; font-weight: 700; color: #1e293b; text-align: left; }
+        @media (max-width: 768px) {
+            .content-panes { display: flex; flex-direction: column; overflow-y: auto; }
+            .splitter { display: none; }
+            .pane { padding: 1.25rem 1rem; overflow-y: visible; height: auto; }
+            #left-pane { border-bottom: 2px dashed #cbd5e1; padding-bottom: 2rem; }
+            .text-input { max-width: 130px; padding: 2px 6px; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="test-container" class="ielts-container">
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 flex justify-between items-center z-20 shadow-sm flex-wrap gap-3">
+        <div class="flex items-center gap-2 sm:space-x-3">
+            <div class="bg-amber-700 text-white p-1.5 sm:p-2 rounded-lg shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                </svg>
+            </div>
+            <h1 class="text-xl font-bold text-gray-800 hidden sm:block">IELTS Simulator <span class="text-amber-700 font-medium">| The Industrial Revolution in Britain</span></h1>
+            <h1 class="text-base font-bold text-gray-800 sm:hidden">IELTS <span class="text-amber-700">Industrial Revolution</span></h1>
+        </div>
+
+        <div class="flex items-center space-x-4">
+            <div class="hidden sm:flex flex-col items-end">
+                <span class="text-xs text-gray-500 font-bold uppercase tracking-wide">Progress</span>
+                <span id="progress-text" class="text-sm font-semibold text-amber-700">0 / 13 Answered</span>
+            </div>
+            <div class="flex items-center bg-gray-100 rounded-lg px-3 py-1.5 border border-gray-200">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span id="timer" class="font-mono font-bold text-gray-700 text-lg">20:00</span>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2 sm:space-x-3">
+            <button id="clear-highlights-btn" class="hidden sm:flex items-center justify-center px-3 py-1.5 rounded bg-amber-50 hover:bg-amber-100 text-amber-700 transition-colors focus:outline-none border border-amber-200 text-sm font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                Clear
+            </button>
+            <div class="flex items-center space-x-1 sm:space-x-2 bg-gray-50 p-1 rounded-lg border border-gray-200">
+                <button id="decrease-font-btn" class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded bg-white shadow-sm hover:bg-gray-100 text-gray-700 transition-colors focus:outline-none font-bold text-sm sm:text-base">A-</button>
+                <button id="increase-font-btn" class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded bg-white shadow-sm hover:bg-gray-100 text-gray-700 transition-colors focus:outline-none font-bold text-sm sm:text-base">A+</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main id="content-panes" class="content-panes">
+        <!-- Left Pane: Passage -->
+        <div id="left-pane" class="pane relative">
+            <div class="reading-passage">
+                <h3>The Industrial Revolution in Britain</h3>
+
+                <p>The Industrial Revolution began in Britain in the mid-1700s and by the 1830s and 1840s had spread to many other parts of the world, including the United States. In Britain, it was a period when a largely rural, <span class="vocab-word" data-word="agrarian">agrarian</span> society was transformed into an industrialised, urban one. Goods that had once been crafted by hand started to be produced in mass quantities by machines in factories, thanks to the invention of steam power and the introduction of new machines and manufacturing techniques in textiles, iron-making and other industries.</p>
+
+                <p>The foundations of the Industrial Revolution date back to the early 1700s, when the English inventor Thomas Newcomen designed the first modern steam engine. Called the 'atmospheric steam engine', Newcomen's invention was originally used to power machines that pumped water out of mines. In the 1760s, the Scottish engineer James Watt started to adapt one of Newcomen's models, and succeeded in making it far more efficient. Watt later worked with the English manufacturer Matthew Boulton to invent a new steam engine driven by both the forward and backward strokes of the <span class="vocab-word" data-word="piston">piston</span>, while the gear mechanism it was connected to produced <span class="vocab-word" data-word="rotary">rotary</span> motion. It was a key innovation that would allow steam power to spread across British industries.</p>
+
+                <p>The demand for coal, which was a relatively cheap energy source, grew rapidly during the Industrial Revolution, as it was needed to run not only the factories used to produce manufactured goods, but also steam-powered transportation. In the early 1800s, the English engineer Richard Trevithick built a steam-powered <span class="vocab-word" data-word="locomotive">locomotive</span>, and by 1830 goods and passengers were being transported between the industrial centres of Manchester and Liverpool. In addition, steam-powered boats and ships were widely used to carry goods along Britain's canals as well as across the Atlantic.</p>
+
+                <p>Britain had produced textiles like wool, linen and cotton for hundreds of years, but prior to the Industrial Revolution, the British textile business was a true 'cottage industry', with the work performed in small workshops or even homes by individual <span class="vocab-word" data-word="spinners">spinners</span>, weavers and dyers. Starting in the mid-1700s, innovations like the spinning jenny and the power loom made weaving cloth and spinning yarn and thread much easier. With these machines, relatively little <span class="vocab-word" data-word="labour">labour</span> was required to produce cloth, and the new, mechanised textile factories that opened around the country were quickly able to meet customer demand for cloth both at home and abroad.</p>
+
+                <p>The British iron industry also underwent major change as it adopted new innovations. Chief among the new techniques was the <span class="vocab-word" data-word="smelting">smelting</span> of iron ore with coke (a material made by heating coal) instead of the traditional charcoal. This method was cheaper and produced metals that were of a higher quality, enabling Britain's iron and steel production to expand in response to demand created by the Napoleonic Wars (1803–15) and the expansion of the railways from the 1830s.</p>
+
+                <p>The latter part of the Industrial Revolution also saw key advances in communication methods, as people increasingly saw the need to communicate efficiently over long distances. In 1837, British inventors William Cooke and Charles Wheatstone <span class="vocab-word" data-word="patented">patented</span> the first commercial telegraphy system. In the 1830s and 1840s, Samuel Morse and other inventors worked on their own versions in the United States. Cooke and Wheatstone's system was soon used for railway signalling in the UK. As the speed of the new locomotives increased, it was essential to have a fast and effective means of avoiding collisions.</p>
+
+                <p>The impact of the Industrial Revolution on people's lives was immense. Although many people in Britain had begun moving to the cities from rural areas before the Industrial Revolution, this accelerated dramatically with <span class="vocab-word" data-word="industrialisation">industrialisation</span>, as the rise of large factories turned smaller towns into major cities in just a few decades. This rapid <span class="vocab-word" data-word="urbanisation">urbanisation</span> brought significant challenges, as overcrowded cities suffered from pollution and inadequate <span class="vocab-word" data-word="sanitation">sanitation</span>.</p>
+
+                <p>Although industrialisation increased the country's economic output overall and improved the standard of living for the middle and upper classes, many poor people continued to struggle. Factory workers had to work long hours in dangerous conditions for extremely low wages. These conditions along with the rapid pace of change fuelled opposition to industrialisation. A group of British workers who became known as 'Luddites' were British weavers and textile workers who objected to the increased use of mechanised looms and knitting frames. Many had spent years learning their craft, and they feared that unskilled machine operators were robbing them of their <span class="vocab-word" data-word="livelihood">livelihood</span>. A few desperate weavers began breaking into factories and smashing textile machines. They called themselves Luddites after Ned Ludd, a young apprentice who was rumoured to have wrecked a textile machine in 1779.</p>
+
+                <p>The first major instances of machine breaking took place in 1811 in the city of Nottingham, and the practice soon spread across the country. Machine-breaking Luddites attacked and burned factories, and in some cases they even exchanged gunfire with company guards and soldiers. The workers wanted employers to stop installing new machinery, but the British government responded to the <span class="vocab-word" data-word="uprisings">uprisings</span> by making machine-breaking punishable by death. The unrest finally reached its peak in April 1812, when a few Luddites were shot during an attack on a mill near Huddersfield. In the days that followed, other Luddites were arrested, and dozens were hanged or transported to Australia. By 1813, the Luddite resistance had all but vanished.</p>
+
+                <p class="footnote">* <strong>agrarian</strong>: relating to the land, especially the use of land for farming</p>
+            </div>
+        </div>
+
+        <!-- Splitter -->
+        <div id="splitter" class="splitter relative flex items-center justify-center group">
+            <div class="w-1 h-8 bg-gray-400 rounded-full opacity-50 group-hover:bg-gray-600 transition-colors"></div>
+        </div>
+
+        <!-- Right Pane: Questions -->
+        <div id="right-pane" class="pane">
+            <div id="questions-section" class="max-w-3xl mx-auto space-y-8 pb-10">
+
+                <!-- Questions 1-7: Notes Completion -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-amber-100 text-amber-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 1–7</span>
+                        <h4 class="font-bold text-gray-800">Notes Completion</h4>
+                    </div>
+                    <p class="mb-5 text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100 text-sm">
+                        Complete the notes below.<br>
+                        Choose <strong class="text-amber-700">ONE WORD ONLY</strong> from the passage for each answer.<br>
+                        Write your answers in the boxes below.
+                    </p>
+
+                    <!-- Notes Block -->
+                    <div class="notes-block">
+                        <h5>Britain's Industrial Revolution</h5>
+
+                        <!-- Steam power -->
+                        <div class="mb-4">
+                            <p class="font-bold text-amber-800 text-sm uppercase tracking-wide mb-2">Steam power</p>
+                            <ul>
+                                <li>Newcomen's steam engine was used in mines to remove water.</li>
+                                <li>In Watt and Boulton's steam engine, the movement of the
+                                    <span id="container-q1" class="inline-block mx-1">
+                                        <strong class="text-amber-700 text-sm mr-1">1</strong>
+                                        <input type="text" name="q1" class="text-input text-input-word" placeholder="________" autocomplete="off" spellcheck="false">
+                                    </span>
+                                    was linked to a gear system.
+                                </li>
+                                <li>A greater supply of
+                                    <span id="container-q2" class="inline-block mx-1">
+                                        <strong class="text-amber-700 text-sm mr-1">2</strong>
+                                        <input type="text" name="q2" class="text-input text-input-word" placeholder="________" autocomplete="off" spellcheck="false">
+                                    </span>
+                                    was required to power steam engines.
+                                </li>
+                            </ul>
+                        </div>
+
+                        <!-- Textile -->
+                        <div class="mb-4">
+                            <p class="font-bold text-amber-800 text-sm uppercase tracking-wide mb-2">Textile industry</p>
+                            <ul>
+                                <li>Before the Industrial Revolution, spinners and weavers worked at home and in
+                                    <span id="container-q3" class="inline-block mx-1">
+                                        <strong class="text-amber-700 text-sm mr-1">3</strong>
+                                        <input type="text" name="q3" class="text-input text-input-word" placeholder="________" autocomplete="off" spellcheck="false">
+                                    </span>.
+                                </li>
+                                <li>Not as much
+                                    <span id="container-q4" class="inline-block mx-1">
+                                        <strong class="text-amber-700 text-sm mr-1">4</strong>
+                                        <input type="text" name="q4" class="text-input text-input-word" placeholder="________" autocomplete="off" spellcheck="false">
+                                    </span>
+                                    was needed to produce cloth once the spinning jenny and power loom were invented.
+                                </li>
+                            </ul>
+                        </div>
+
+                        <!-- Iron -->
+                        <div class="mb-4">
+                            <p class="font-bold text-amber-800 text-sm uppercase tracking-wide mb-2">Iron industry</p>
+                            <ul>
+                                <li>Smelting of iron ore with coke resulted in material that was better
+                                    <span id="container-q5" class="inline-block mx-1">
+                                        <strong class="text-amber-700 text-sm mr-1">5</strong>
+                                        <input type="text" name="q5" class="text-input text-input-word" placeholder="________" autocomplete="off" spellcheck="false">
+                                    </span>.
+                                </li>
+                                <li>Demand for iron increased with the growth of the
+                                    <span id="container-q6" class="inline-block mx-1">
+                                        <strong class="text-amber-700 text-sm mr-1">6</strong>
+                                        <input type="text" name="q6" class="text-input text-input-word" placeholder="________" autocomplete="off" spellcheck="false">
+                                    </span>.
+                                </li>
+                            </ul>
+                        </div>
+
+                        <!-- Communications -->
+                        <div class="mb-4">
+                            <p class="font-bold text-amber-800 text-sm uppercase tracking-wide mb-2">Communications</p>
+                            <ul>
+                                <li>Cooke and Wheatstone patented the first telegraphy system.</li>
+                                <li>The telegraphy system was used to prevent locomotives colliding.</li>
+                            </ul>
+                        </div>
+
+                        <!-- Urbanisation -->
+                        <div>
+                            <p class="font-bold text-amber-800 text-sm uppercase tracking-wide mb-2">Urbanisation</p>
+                            <ul>
+                                <li>Small towns turned into cities very quickly.</li>
+                                <li>The new cities were dirty, crowded and lacked sufficient
+                                    <span id="container-q7" class="inline-block mx-1">
+                                        <strong class="text-amber-700 text-sm mr-1">7</strong>
+                                        <input type="text" name="q7" class="text-input text-input-word" placeholder="________" autocomplete="off" spellcheck="false">
+                                    </span>.
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="1-7">Check Answers</button>
+                    </div>
+                </div>
+
+                <!-- Questions 8-13: TRUE / FALSE / NOT GIVEN -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-amber-100 text-amber-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 8–13</span>
+                        <h4 class="font-bold text-gray-800">TRUE / FALSE / NOT GIVEN</h4>
+                    </div>
+                    <p class="mb-5 text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100 text-sm">
+                        Do the following statements agree with the information given in the passage?<br><br>
+                        <strong class="text-amber-700">TRUE</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if the statement agrees with the information<br>
+                        <strong class="text-amber-700">FALSE</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if the statement contradicts the information<br>
+                        <strong class="text-amber-700">NOT GIVEN</strong> &nbsp; if there is no information on this
+                    </p>
+
+                    <div class="space-y-5">
+                        <div class="q-item border border-gray-100 p-4" id="container-q8">
+                            <p class="mb-3 text-gray-800 font-medium leading-snug"><span class="font-bold text-amber-700 mr-2">8</span> Britain's canal network grew rapidly so that more goods could be transported around the country.</p>
+                            <div class="flex flex-wrap gap-3">
+                                <label class="custom-radio-label"><input type="radio" name="q8" value="true" class="hidden"><span class="font-semibold text-gray-600">True</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q8" value="false" class="hidden"><span class="font-semibold text-gray-600">False</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q8" value="not given" class="hidden"><span class="font-semibold text-gray-600">Not Given</span></label>
+                            </div>
+                        </div>
+
+                        <div class="q-item border border-gray-100 p-4" id="container-q9">
+                            <p class="mb-3 text-gray-800 font-medium leading-snug"><span class="font-bold text-amber-700 mr-2">9</span> Costs in the iron industry rose when the technique of smelting iron ore with coke was introduced.</p>
+                            <div class="flex flex-wrap gap-3">
+                                <label class="custom-radio-label"><input type="radio" name="q9" value="true" class="hidden"><span class="font-semibold text-gray-600">True</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q9" value="false" class="hidden"><span class="font-semibold text-gray-600">False</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q9" value="not given" class="hidden"><span class="font-semibold text-gray-600">Not Given</span></label>
+                            </div>
+                        </div>
+
+                        <div class="q-item border border-gray-100 p-4" id="container-q10">
+                            <p class="mb-3 text-gray-800 font-medium leading-snug"><span class="font-bold text-amber-700 mr-2">10</span> Samuel Morse's communication system was more reliable than that developed by William Cooke and Charles Wheatstone.</p>
+                            <div class="flex flex-wrap gap-3">
+                                <label class="custom-radio-label"><input type="radio" name="q10" value="true" class="hidden"><span class="font-semibold text-gray-600">True</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q10" value="false" class="hidden"><span class="font-semibold text-gray-600">False</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q10" value="not given" class="hidden"><span class="font-semibold text-gray-600">Not Given</span></label>
+                            </div>
+                        </div>
+
+                        <div class="q-item border border-gray-100 p-4" id="container-q11">
+                            <p class="mb-3 text-gray-800 font-medium leading-snug"><span class="font-bold text-amber-700 mr-2">11</span> The economic benefits of industrialisation were limited to certain sectors of society.</p>
+                            <div class="flex flex-wrap gap-3">
+                                <label class="custom-radio-label"><input type="radio" name="q11" value="true" class="hidden"><span class="font-semibold text-gray-600">True</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q11" value="false" class="hidden"><span class="font-semibold text-gray-600">False</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q11" value="not given" class="hidden"><span class="font-semibold text-gray-600">Not Given</span></label>
+                            </div>
+                        </div>
+
+                        <div class="q-item border border-gray-100 p-4" id="container-q12">
+                            <p class="mb-3 text-gray-800 font-medium leading-snug"><span class="font-bold text-amber-700 mr-2">12</span> Some skilled weavers believed that the introduction of the new textile machines would lead to job losses.</p>
+                            <div class="flex flex-wrap gap-3">
+                                <label class="custom-radio-label"><input type="radio" name="q12" value="true" class="hidden"><span class="font-semibold text-gray-600">True</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q12" value="false" class="hidden"><span class="font-semibold text-gray-600">False</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q12" value="not given" class="hidden"><span class="font-semibold text-gray-600">Not Given</span></label>
+                            </div>
+                        </div>
+
+                        <div class="q-item border border-gray-100 p-4" id="container-q13">
+                            <p class="mb-3 text-gray-800 font-medium leading-snug"><span class="font-bold text-amber-700 mr-2">13</span> There was some sympathy among local people for the Luddites who were arrested near Huddersfield.</p>
+                            <div class="flex flex-wrap gap-3">
+                                <label class="custom-radio-label"><input type="radio" name="q13" value="true" class="hidden"><span class="font-semibold text-gray-600">True</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q13" value="false" class="hidden"><span class="font-semibold text-gray-600">False</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q13" value="not given" class="hidden"><span class="font-semibold text-gray-600">Not Given</span></label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="8-13">Check Answers</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Highlight Tooltip -->
+<div id="highlight-tooltip" class="highlight-tooltip">Highlight Text</div>
+
+<!-- Vocabulary Modal -->
+<div id="vocab-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50 transition-opacity">
+    <div class="bg-white rounded-2xl shadow-2xl p-5 sm:p-8 w-full max-w-md relative transform transition-all scale-95 opacity-0" id="vocab-modal-content">
+        <button id="close-vocab-modal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-full w-8 h-8 flex items-center justify-center transition-colors">&times;</button>
+        <div class="flex items-center mb-6 border-b pb-4 mt-2">
+            <h3 id="vocab-word" class="text-2xl sm:text-3xl font-extrabold text-gray-900 capitalize tracking-tight"></h3>
+        </div>
+        <div class="flex items-center mb-5">
+            <button id="play-audio-btn" class="flex items-center justify-center h-10 w-10 sm:h-12 sm:w-12 shrink-0 rounded-full bg-amber-50 text-amber-700 hover:bg-amber-600 hover:text-white mr-4 transition-all shadow-sm border border-amber-200" title="Listen to pronunciation">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>
+            </button>
+            <p id="vocab-pronunciation-text" class="text-gray-500 font-mono text-base sm:text-lg bg-gray-50 px-3 py-1 rounded-md border border-gray-100"></p>
+        </div>
+        <p id="vocab-meaning" class="text-gray-700 text-base sm:text-lg leading-relaxed"></p>
+    </div>
+</div>
+
+<!-- Alert Modal -->
+<div id="alert-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-[80] transition-opacity">
+    <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm relative transform transition-all scale-95 opacity-0 text-center" id="alert-modal-content">
+        <div id="alert-icon-container" class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 mb-4">
+            <svg class="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+        </div>
+        <h3 id="alert-title" class="text-lg leading-6 font-medium text-gray-900 mb-2">Notice</h3>
+        <p id="alert-message" class="text-sm text-gray-500 mb-6">Message goes here.</p>
+        <button id="close-alert-btn" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-amber-700 text-base font-medium text-white hover:bg-amber-800 focus:outline-none sm:text-sm transition-colors">Got it</button>
+    </div>
+</div>
+
+<script>
+    const vocabulary = {
+        'agrarian': { meaning: 'Relating to cultivated land or the people who work on it; connected to farming and rural life.', phonetic: '/əˈɡreə.ri.ən/' },
+        'piston': { meaning: 'A sliding cylindrical component in an engine that moves back and forth inside a cylinder to convert pressure into motion.', phonetic: '/ˈpɪs.tən/' },
+        'rotary': { meaning: 'Acting by rotation; moving in a circle around a central point.', phonetic: '/ˈrəʊ.tər.i/' },
+        'locomotive': { meaning: 'A powered railway vehicle used for pulling trains.', phonetic: '/ˌləʊ.kəˈməʊ.tɪv/' },
+        'spinners': { meaning: 'People who spin fibres (such as cotton or wool) into thread or yarn.', phonetic: '/ˈspɪn.əz/' },
+        'labour': { meaning: 'Work, especially physical work; the workforce engaged in production.', phonetic: '/ˈleɪ.bər/' },
+        'smelting': { meaning: 'The process of extracting metal from its ore by melting it at high temperatures.', phonetic: '/ˈsmelt.ɪŋ/' },
+        'patented': { meaning: 'Obtained an official licence giving the inventor sole rights to make, use, or sell an invention for a set period.', phonetic: '/ˈpeɪ.tən.tɪd/' },
+        'industrialisation': { meaning: 'The development of industries in a country or region on a wide scale; the transition from a rural agrarian economy to one based on manufacturing.', phonetic: '/ɪnˌdʌs.tri.ə.laɪˈzeɪ.ʃən/' },
+        'urbanisation': { meaning: 'The process by which towns and cities are formed and grow as more people begin living and working in central areas.', phonetic: '/ˌɜː.bə.naɪˈzeɪ.ʃən/' },
+        'sanitation': { meaning: 'Conditions relating to public health, especially the provision of clean drinking water and the disposal of sewage.', phonetic: '/ˌsæn.ɪˈteɪ.ʃən/' },
+        'livelihood': { meaning: 'A means of securing the necessities of life; one\'s way of earning a living.', phonetic: '/ˈlaɪv.li.hʊd/' },
+        'uprisings': { meaning: 'Acts of resistance or rebellion against authority; revolts.', phonetic: '/ˈʌp.raɪ.zɪŋz/' }
+    };
+
+    const answers = {
+        q1: "piston",
+        q2: "coal",
+        q3: "workshops",
+        q4: "labour|labor",
+        q5: "quality",
+        q6: "railways|railway",
+        q7: "sanitation",
+        q8: "not given",
+        q9: "false",
+        q10: "not given",
+        q11: "true",
+        q12: "true",
+        q13: "not given"
+    };
+
+    const explanations = {
+        q1: "Paragraph 2: 'Watt later worked with … Matthew Boulton to invent a new steam engine driven by both the forward and backward strokes of the piston, while the gear mechanism it was connected to produced rotary motion.' The piston's movement was linked to the gear system. Answer: piston.",
+        q2: "Paragraph 3: 'The demand for coal … grew rapidly during the Industrial Revolution, as it was needed to run … steam-powered transportation.' A greater supply of coal was required. Answer: coal.",
+        q3: "Paragraph 4: 'prior to the Industrial Revolution, the British textile business … work performed in small workshops or even homes by individual spinners, weavers and dyers.' Workers operated in workshops (and homes). Answer: workshops.",
+        q4: "Paragraph 4: 'With these machines, relatively little labour was required to produce cloth.' Not as much labour was needed once the machines were invented. Answer: labour / labor.",
+        q5: "Paragraph 5: 'This method was cheaper and produced metals that were of a higher quality.' Smelting with coke resulted in material that was better quality. Answer: quality.",
+        q6: "Paragraph 5: 'Britain's iron and steel production [expanded] … [due to] the expansion of the railways from the 1830s.' The railways' growth drove demand for iron. Answer: railways / railway.",
+        q7: "Paragraph 7: 'overcrowded cities suffered from pollution and inadequate sanitation.' The new cities lacked sufficient sanitation. Answer: sanitation.",
+        q8: "Paragraph 3 mentions steam-powered boats carrying goods 'along Britain's canals', but does not say Britain's canal network grew rapidly. There is no information given. Answer: NOT GIVEN.",
+        q9: "Paragraph 5 clearly states: 'This method was cheaper' — meaning costs did NOT rise. This directly contradicts the statement. Answer: FALSE.",
+        q10: "Paragraph 6 mentions both the Cooke–Wheatstone system and Samuel Morse's system, but makes no comparison of reliability between them. Answer: NOT GIVEN.",
+        q11: "Paragraph 8: 'industrialisation increased … the standard of living for the middle and upper classes' but 'many poor people continued to struggle.' The benefits were limited to certain sectors (middle and upper classes). Answer: TRUE.",
+        q12: "Paragraph 8: 'they feared that unskilled machine operators were robbing them of their livelihood.' Skilled weavers believed the machines would cost them their jobs. Answer: TRUE.",
+        q13: "Paragraph 9 states that Luddites were arrested and hanged or transported, but there is no mention of local sympathy toward them. Answer: NOT GIVEN."
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const app = {
+            userAnswers: {},
+            answersChecked: {},
+            currentFontSize: 17,
+            totalQuestions: Object.keys(answers).length,
+            timeRemaining: 20 * 60,
+
+            leftPane: document.getElementById('left-pane'),
+            rightPane: document.getElementById('right-pane'),
+            splitter: document.getElementById('splitter'),
+            highlightTooltip: document.getElementById('highlight-tooltip'),
+            vocabModal: document.getElementById('vocab-modal'),
+            vocabModalContent: document.getElementById('vocab-modal-content'),
+            closeVocabModalBtn: document.getElementById('close-vocab-modal'),
+            vocabWordEl: document.getElementById('vocab-word'),
+            vocabMeaningEl: document.getElementById('vocab-meaning'),
+            vocabPronunciationText: document.getElementById('vocab-pronunciation-text'),
+            playAudioBtn: document.getElementById('play-audio-btn'),
+            clearHighlightsBtn: document.getElementById('clear-highlights-btn'),
+            progressText: document.getElementById('progress-text'),
+            timerEl: document.getElementById('timer'),
+            alertModal: document.getElementById('alert-modal'),
+            alertModalContent: document.getElementById('alert-modal-content'),
+            closeAlertBtn: document.getElementById('close-alert-btn'),
+            alertTitleEl: document.getElementById('alert-title'),
+            alertMessageEl: document.getElementById('alert-message'),
+            alertIconContainer: document.getElementById('alert-icon-container'),
+
+            init() {
+                this.setupEventListeners();
+                this.initSplitter();
+                this.initHighlighter();
+                this.updateCheckButtonsState();
+                this.startTimer();
+            },
+
+            startTimer() {
+                const interval = setInterval(() => {
+                    if (this.timeRemaining <= 0) {
+                        clearInterval(interval);
+                        this.timerEl.textContent = "00:00";
+                        this.timerEl.classList.add('text-red-600');
+                        this.showAlert("Time's Up!", "Your 20 minutes for this reading passage have expired.", "warning");
+                        return;
+                    }
+                    this.timeRemaining--;
+                    const m = Math.floor(this.timeRemaining / 60).toString().padStart(2, '0');
+                    const s = (this.timeRemaining % 60).toString().padStart(2, '0');
+                    this.timerEl.textContent = `${m}:${s}`;
+                    if (this.timeRemaining <= 300) this.timerEl.classList.add('text-red-500');
+                }, 1000);
+            },
+
+            setupEventListeners() {
+                document.getElementById('increase-font-btn').addEventListener('click', () => this.changeFontSize(1));
+                document.getElementById('decrease-font-btn').addEventListener('click', () => this.changeFontSize(-1));
+                this.clearHighlightsBtn.addEventListener('click', () => {
+                    this.leftPane.querySelectorAll('mark').forEach(m => m.replaceWith(document.createTextNode(m.textContent)));
+                });
+                this.closeVocabModalBtn.addEventListener('click', () => this.closeModal());
+                this.vocabModal.addEventListener('click', (e) => { if (e.target === this.vocabModal) this.closeModal(); });
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') {
+                        if (!this.vocabModal.classList.contains('hidden')) this.closeModal();
+                        if (!this.alertModal.classList.contains('hidden')) this.closeAlert();
+                    }
+                    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
+                        e.preventDefault();
+                        this.showAlert("Action Disabled", "The 'Find' function is disabled to simulate real test conditions.", "warning");
+                    }
+                });
+                document.addEventListener('visibilitychange', () => {
+                    if (document.hidden && this.timeRemaining > 0)
+                        this.showAlert("Warning: Tab Switch Detected", "Please do not switch tabs during the exam.", "warning");
+                });
+                window.addEventListener('beforeunload', (e) => {
+                    if (this.timeRemaining > 0 && this.timeRemaining < 20 * 60) { e.preventDefault(); e.returnValue = ''; }
+                });
+                this.closeAlertBtn.addEventListener('click', () => this.closeAlert());
+                this.alertModal.addEventListener('click', (e) => { if (e.target === this.alertModal) this.closeAlert(); });
+
+                document.body.addEventListener('input', (e) => {
+                    if (e.target.tagName === 'INPUT' && e.target.type === 'text') {
+                        this.userAnswers[e.target.name] = e.target.value.trim().toLowerCase();
+                        e.target.classList.remove('correct-answer', 'incorrect-answer');
+                        this.updateCheckButtonsState();
+                        this.updateProgress();
+                    }
+                });
+                document.body.addEventListener('change', (e) => {
+                    if (e.target.type === 'radio') {
+                        this.userAnswers[e.target.name] = e.target.value;
+                        document.querySelectorAll(`input[name="${e.target.name}"]`).forEach(r => r.closest('label').classList.remove('correct-answer', 'incorrect-answer'));
+                        this.updateCheckButtonsState();
+                        this.updateProgress();
+                    }
+                });
+                this.leftPane.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('vocab-word')) this.openVocabModal(e.target.dataset.word);
+                    if (e.target.tagName === 'MARK') e.target.replaceWith(document.createTextNode(e.target.textContent));
+                });
+                document.querySelectorAll('.check-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => this.checkAnswers(e.target.dataset.range, e.target));
+                });
+                this.playAudioBtn.addEventListener('click', () => {
+                    const word = this.vocabWordEl.textContent;
+                    if (!word) return;
+                    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+                    this.playAudioBtn.classList.remove('text-amber-700', 'bg-amber-50');
+                    this.playAudioBtn.classList.add('bg-green-500', 'text-white');
+                    if ('speechSynthesis' in window) {
+                        const u = new SpeechSynthesisUtterance(word);
+                        u.lang = 'en-GB'; u.rate = 0.9;
+                        u.onend = () => this.resetAudioBtn();
+                        u.onerror = () => this.resetAudioBtn();
+                        window.speechSynthesis.speak(u);
+                    } else { setTimeout(() => this.resetAudioBtn(), 500); }
+                });
+            },
+
+            updateProgress() {
+                let count = 0;
+                for (let key in answers) { if ((this.userAnswers[key] || "").trim()) count++; }
+                this.progressText.textContent = `${count} / ${this.totalQuestions} Answered`;
+            },
+
+            resetAudioBtn() {
+                this.playAudioBtn.classList.add('text-amber-700', 'bg-amber-50');
+                this.playAudioBtn.classList.remove('bg-green-500', 'text-white');
+            },
+
+            changeFontSize(delta) {
+                this.currentFontSize = Math.max(14, Math.min(26, this.currentFontSize + delta));
+                document.documentElement.style.setProperty('--app-font-size', `${this.currentFontSize}px`);
+            },
+
+            openVocabModal(wordKey) {
+                const data = vocabulary[wordKey];
+                if (data) {
+                    this.vocabWordEl.textContent = wordKey;
+                    this.vocabMeaningEl.textContent = data.meaning;
+                    this.vocabPronunciationText.textContent = data.phonetic || '';
+                    this.vocabModal.classList.remove('hidden');
+                    setTimeout(() => { this.vocabModalContent.classList.remove('scale-95', 'opacity-0'); this.vocabModalContent.classList.add('scale-100', 'opacity-100'); }, 10);
+                }
+            },
+
+            closeModal() {
+                if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+                this.vocabModalContent.classList.remove('scale-100', 'opacity-100');
+                this.vocabModalContent.classList.add('scale-95', 'opacity-0');
+                this.resetAudioBtn();
+                setTimeout(() => this.vocabModal.classList.add('hidden'), 200);
+            },
+
+            showAlert(title, message, type = 'error') {
+                this.alertTitleEl.textContent = title;
+                this.alertMessageEl.textContent = message;
+                const c = type === 'warning' ? 'yellow' : 'red';
+                this.alertIconContainer.className = `mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-${c}-100 mb-4`;
+                this.alertIconContainer.innerHTML = `<svg class="h-6 w-6 text-${c}-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>`;
+                this.alertModal.classList.remove('hidden');
+                setTimeout(() => { this.alertModalContent.classList.remove('scale-95', 'opacity-0'); this.alertModalContent.classList.add('scale-100', 'opacity-100'); }, 10);
+            },
+
+            closeAlert() {
+                this.alertModalContent.classList.remove('scale-100', 'opacity-100');
+                this.alertModalContent.classList.add('scale-95', 'opacity-0');
+                setTimeout(() => this.alertModal.classList.add('hidden'), 200);
+            },
+
+            updateCheckButtonsState() {
+                document.querySelectorAll('.check-btn').forEach(btn => {
+                    const range = btn.dataset.range;
+                    if (this.answersChecked[range]) {
+                        btn.className = 'check-btn bg-gray-800 hover:bg-gray-900 text-white font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-pointer transform hover:-translate-y-0.5 active:scale-95';
+                        btn.textContent = 'Reset Answers';
+                        return;
+                    }
+                    const [start, end] = range.split('-').map(Number);
+                    let allAnswered = true;
+                    for (let i = start; i <= end; i++) {
+                        if (!(this.userAnswers[`q${i}`] || "").trim()) { allAnswered = false; break; }
+                    }
+                    btn.className = allAnswered
+                        ? 'check-btn bg-amber-700 hover:bg-amber-800 text-white font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-pointer transform hover:-translate-y-0.5 active:scale-95'
+                        : 'check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80';
+                    btn.textContent = 'Check Answers';
+                });
+            },
+
+            checkAnswers(range, btn) {
+                if (this.answersChecked[range]) {
+                    this.answersChecked[range] = false;
+                    const [start, end] = range.split('-').map(Number);
+                    for (let i = start; i <= end; i++) {
+                        const qId = `q${i}`;
+                        this.userAnswers[qId] = '';
+                        document.querySelectorAll(`input[name="${qId}"][type="radio"]`).forEach(r => { r.checked = false; r.closest('label')?.classList.remove('correct-answer', 'incorrect-answer'); });
+                        const inp = document.querySelector(`input[name="${qId}"][type="text"]`);
+                        if (inp) { inp.value = ''; inp.placeholder = '________'; inp.classList.remove('correct-answer', 'incorrect-answer'); }
+                        document.getElementById(`expl-${qId}`)?.remove();
+                    }
+                    this.updateCheckButtonsState();
+                    this.updateProgress();
+                    return;
+                }
+
+                const [start, end] = range.split('-').map(Number);
+                let allAnswered = true;
+                for (let i = start; i <= end; i++) {
+                    if (!(this.userAnswers[`q${i}`] || "").trim()) { allAnswered = false; break; }
+                }
+                if (!allAnswered) { this.showAlert("Incomplete Answers", "Please answer all questions in this section before checking.", "warning"); return; }
+
+                this.answersChecked[range] = true;
+                this.updateCheckButtonsState();
+
+                for (let i = start; i <= end; i++) {
+                    const qId = `q${i}`;
+                    let userAnswer = (this.userAnswers[qId] || "").toLowerCase().trim();
+                    let correctList = answers[qId].toLowerCase().split('|');
+                    let isCorrect = correctList.includes(userAnswer);
+                    let correctFeedbackHTML = '';
+
+                    const radios = document.querySelectorAll(`input[name="${qId}"][type="radio"]`);
+                    if (radios.length > 0) {
+                        radios.forEach(r => {
+                            const lbl = r.closest('label');
+                            lbl?.classList.remove('correct-answer', 'incorrect-answer');
+                            if (correctList.includes(r.value.toLowerCase())) lbl?.classList.add('correct-answer');
+                            else if (r.value.toLowerCase() === userAnswer) lbl?.classList.add('incorrect-answer');
+                        });
+                        if (!isCorrect) {
+                            const fmt = correctList[0].charAt(0).toUpperCase() + correctList[0].slice(1);
+                            correctFeedbackHTML = `<span class="correct-badge">Correct Answer: ${fmt}</span><br>`;
+                        }
+                    }
+
+                    const inp = document.querySelector(`input[name="${qId}"][type="text"]`);
+                    if (inp) {
+                        inp.classList.remove('correct-answer', 'incorrect-answer');
+                        if (isCorrect) { inp.classList.add('correct-answer'); }
+                        else {
+                            inp.classList.add('incorrect-answer');
+                            inp.value = '';
+                            inp.placeholder = correctList[0];
+                            correctFeedbackHTML = `<span class="correct-badge">Correct Answer: ${correctList[0]}</span><br>`;
+                        }
+                    }
+
+                    if (explanations[qId] && !document.getElementById(`expl-${qId}`)) {
+                        const div = document.createElement('div');
+                        div.id = `expl-${qId}`;
+                        div.className = 'explanation-box';
+                        div.innerHTML = `${correctFeedbackHTML}<strong>Explanation:</strong> ${explanations[qId]}`;
+                        const container = document.getElementById(`container-${qId}`);
+                        if (container) {
+                            const wrap = container.closest('.q-item') || container.closest('li') || container;
+                            (wrap.closest('.q-item') || wrap).insertAdjacentElement('afterend', div);
+                        }
+                    }
+                }
+            },
+
+            initSplitter() {
+                let isDragging = false;
+                const panes = document.getElementById('content-panes');
+                this.splitter.addEventListener('mousedown', (e) => { e.preventDefault(); isDragging = true; document.body.style.cursor = 'col-resize'; });
+                document.addEventListener('mousemove', (e) => {
+                    if (!isDragging || window.innerWidth <= 768) return;
+                    const rect = panes.getBoundingClientRect();
+                    const newLeft = e.clientX - rect.left;
+                    if (newLeft > 200 && newLeft < rect.width - 200)
+                        panes.style.gridTemplateColumns = `${(newLeft / rect.width) * 100}% 5px 1fr`;
+                });
+                document.addEventListener('mouseup', () => { if (isDragging) { isDragging = false; document.body.style.cursor = 'default'; } });
+            },
+
+            initHighlighter() {
+                document.body.addEventListener('mouseup', (e) => {
+                    const sel = window.getSelection();
+                    const text = sel.toString().trim();
+                    if (text.length > 0) {
+                        const range = sel.getRangeAt(0);
+                        if (!this.leftPane.contains(range.commonAncestorContainer) && !this.rightPane.contains(range.commonAncestorContainer)) { this.highlightTooltip.style.display = 'none'; return; }
+                        this.highlightTooltip.style.left = `${e.pageX - 30}px`;
+                        this.highlightTooltip.style.top = `${e.pageY - 40}px`;
+                        this.highlightTooltip.style.display = 'block';
+                        this.highlightTooltip.onclick = () => {
+                            const mark = document.createElement('mark');
+                            try { range.surroundContents(mark); }
+                            catch(ex) { this.showAlert("Highlight Error", "Please select plain text within a single element.", "warning"); }
+                            finally { sel.removeAllRanges(); this.highlightTooltip.style.display = 'none'; }
+                        };
+                    } else { this.highlightTooltip.style.display = 'none'; }
+                });
+                document.body.addEventListener('mousedown', () => {
+                    if (window.getSelection().toString().length === 0) this.highlightTooltip.style.display = 'none';
+                });
+            }
+        };
+        app.init();
+    });
+</script>
+</body>
+</html>
