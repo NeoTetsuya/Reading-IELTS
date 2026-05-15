@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IELTS Simulator - Silbo Gomero</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --app-font-size: 17px; }
+        body { font-family: 'Inter', sans-serif; overscroll-behavior: none; background-color: #f3f4f6; }
+        .ielts-container { display: grid; grid-template-rows: auto 1fr; height: 100vh; }
+        .content-panes { display: grid; grid-template-columns: 1fr 5px 1fr; overflow: hidden; }
+        .pane { overflow-y: auto; padding: 2rem 3rem; font-size: var(--app-font-size); scroll-behavior: smooth; }
+        #left-pane { background-color: #fdfdfd; }
+        #right-pane { background-color: #f8fafc; }
+        .splitter { background-color: #cbd5e1; cursor: col-resize; z-index: 10; transition: background-color 0.2s; }
+        .splitter:hover, .splitter:active { background-color: #94a3b8; }
+        .reading-passage { font-family: 'Merriweather', serif; line-height: 1.9; color: #334155; text-align: justify; max-width: 800px; margin: 0 auto; }
+        .reading-passage p { margin-bottom: 1.5rem; text-indent: 1.5rem; }
+        .reading-passage h3 { font-family: 'Inter', sans-serif; color: #0f172a; margin-bottom: 0.25rem; font-weight: 700; font-size: 1.45em; text-align: center; text-indent: 0; text-transform: uppercase; letter-spacing: 0.04em; }
+        .reading-passage .subtitle { font-family: 'Inter', sans-serif; color: #64748b; font-size: 0.95em; text-align: center; text-indent: 0; margin-bottom: 1.5rem; font-style: italic; }
+        .q-item { padding: 1rem; border-radius: 0.5rem; transition: all 0.2s; background-color: white; border: 1px solid #e2e8f0; margin-bottom: 0.75rem; }
+        .text-input { border: 2px solid #cbd5e1; border-radius: 6px; padding: 4px 8px; font-weight: 600; color: #1e293b; transition: all 0.2s; text-align: center; background-color: #f8fafc; }
+        .text-input:focus { outline: none; border-color: #0369a1; background-color: #fff; box-shadow: 0 0 0 3px rgba(3,105,161,0.12); }
+        .text-input-word { width: 9rem; }
+        .correct-answer { border-color: #22c55e !important; background-color: #f0fdf4 !important; color: #166534 !important; }
+        .incorrect-answer { border-color: #ef4444 !important; background-color: #fef2f2 !important; color: #991b1b !important; }
+        .explanation-box { animation: fadeIn 0.4s ease-out forwards; margin-top: 0.75rem; padding: 1rem; background-color: #eff6ff; border-left: 4px solid #0369a1; border-radius: 0.5rem; font-size: 0.95rem; color: #1e3a5f; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .explanation-box .correct-badge { display: inline-block; background: #22c55e; color: white; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85em; margin-bottom: 0.5rem; }
+        .explanation-box .ng-badge { display: inline-block; background: #f59e0b; color: white; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85em; margin-bottom: 0.5rem; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+        .vocab-word { color: #0369a1; font-weight: 600; cursor: pointer; border-bottom: 2px dotted #7dd3fc; transition: all 0.2s ease-in-out; padding: 0 2px; }
+        .vocab-word:hover { background-color: #e0f2fe; border-bottom-style: solid; border-radius: 2px; }
+        .highlight-tooltip { position: absolute; background-color: #1e293b; color: white; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 500; z-index: 100; cursor: pointer; display: none; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        mark { background-color: #fef08a; border-radius: 3px; padding: 2px 0; cursor: pointer; }
+        mark:hover { background-color: #fca5a5; color: #7f1d1d; }
+        mark:hover::after { content: ' x'; font-weight: bold; font-size: 0.8em; opacity: 0.7; }
+        .tfng-label { display: flex; align-items: center; padding: 0.6rem 1rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s; background-color: white; margin-bottom: 0.4rem; gap: 0.75rem; }
+        .tfng-label:hover { background: #eff6ff; border-color: #7dd3fc; }
+        .tfng-label input { width: 1.1em; height: 1.1em; accent-color: #0369a1; flex-shrink: 0; }
+        label.correct-answer { border-color: #22c55e !important; background-color: #f0fdf4 !important; }
+        label.incorrect-answer { border-color: #ef4444 !important; background-color: #fef2f2 !important; }
+        label.ng-answer { border-color: #f59e0b !important; background-color: #fffbeb !important; }
+        .notes-block { background: #eff6ff; border: 1px solid #7dd3fc; border-radius: 0.75rem; padding: 1.5rem; margin-bottom: 1rem; }
+        .notes-block h5 { font-family: 'Inter', sans-serif; font-weight: 700; color: #0369a1; font-size: 1em; margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        .notes-block h6 { font-family: 'Inter', sans-serif; font-weight: 700; color: #0369a1; font-size: 0.9em; margin: 1rem 0 0.5rem 0; text-decoration: underline; }
+        .notes-block ul { list-style: disc; padding-left: 1.5rem; }
+        .notes-block ul li { margin-bottom: 0.6rem; line-height: 1.8; }
+        @media (max-width: 768px) {
+            .content-panes { display: flex; flex-direction: column; overflow-y: auto; }
+            .splitter { display: none; }
+            .pane { padding: 1.25rem 1rem; overflow-y: visible; height: auto; }
+            #left-pane { border-bottom: 2px dashed #cbd5e1; padding-bottom: 2rem; }
+        }
+    </style>
+</head>
+<body>
+<div id="test-container" class="ielts-container">
+    <header class="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 flex justify-between items-center z-20 shadow-sm flex-wrap gap-3">
+        <div class="flex items-center gap-2 sm:space-x-3">
+            <div class="bg-sky-700 text-white p-1.5 sm:p-2 rounded-lg shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M12 18.5l-3-3H5a2 2 0 01-2-2v-3a2 2 0 012-2h4l3-3v13zM19.07 4.93a10 10 0 010 14.14"/>
+                </svg>
+            </div>
+            <h1 class="text-xl font-bold text-gray-800 hidden sm:block">IELTS Simulator <span class="text-sky-700 font-medium">| Silbo Gomero</span></h1>
+            <h1 class="text-base font-bold text-gray-800 sm:hidden">IELTS <span class="text-sky-700">Silbo Gomero</span></h1>
+        </div>
+        <div class="flex items-center space-x-4">
+            <div class="hidden sm:flex flex-col items-end">
+                <span class="text-xs text-gray-500 font-bold uppercase tracking-wide">Progress</span>
+                <span id="progress-text" class="text-sm font-semibold text-sky-700">0 / 13 Answered</span>
+            </div>
+            <div class="flex items-center bg-gray-100 rounded-lg px-3 py-1.5 border border-gray-200">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span id="timer" class="font-mono font-bold text-gray-700 text-lg">20:00</span>
+            </div>
+        </div>
+        <div class="flex items-center gap-2 sm:space-x-3">
+            <button id="clear-highlights-btn" class="hidden sm:flex items-center justify-center px-3 py-1.5 rounded bg-sky-50 hover:bg-sky-100 text-sky-700 transition-colors focus:outline-none border border-sky-200 text-sm font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                Clear
+            </button>
+            <div class="flex items-center space-x-1 sm:space-x-2 bg-gray-50 p-1 rounded-lg border border-gray-200">
+                <button id="decrease-font-btn" class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded bg-white shadow-sm hover:bg-gray-100 text-gray-700 transition-colors focus:outline-none font-bold text-sm sm:text-base">A-</button>
+                <button id="increase-font-btn" class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded bg-white shadow-sm hover:bg-gray-100 text-gray-700 transition-colors focus:outline-none font-bold text-sm sm:text-base">A+</button>
+            </div>
+        </div>
+    </header>
+
+    <main id="content-panes" class="content-panes">
+        <!-- PASSAGE -->
+        <div id="left-pane" class="pane relative">
+            <div class="reading-passage">
+                <h3>Silbo Gomero</h3>
+                <p class="subtitle">The whistle 'language' of the Canary Islands</p>
+
+                <p>La Gomera is one of the Canary Islands situated in the Atlantic Ocean off the northwest coast of Africa. This small <span class="vocab-word" data-word="volcanic">volcanic</span> island is mountainous, with steep rocky slopes and deep, wooded <span class="vocab-word" data-word="ravines">ravines</span>, rising to 1,487 metres at its highest peak. It is also home to the best known of the world's whistle 'languages', a means of <span class="vocab-word" data-word="transmitting">transmitting</span> information over long distances which is perfectly adapted to the extreme <span class="vocab-word" data-word="terrain">terrain</span> of the island.</p>
+
+                <p>This 'language', known as 'Silbo' or 'Silbo Gomero' — from the Spanish word for 'whistle' — is now <span class="vocab-word" data-word="shedding light on">shedding light on</span> the language-processing abilities of the human brain, according to scientists. Researchers say that Silbo <span class="vocab-word" data-word="activates">activates</span> parts of the brain normally associated with spoken language, suggesting that the brain is remarkably <span class="vocab-word" data-word="flexible">flexible</span> in its ability to interpret sounds as language.</p>
+
+                <p>'Science has developed the idea of brain areas that are <span class="vocab-word" data-word="dedicated to">dedicated to</span> language, and we are starting to understand the scope of signals that can be recognised as language,' says David Corina, co-author of a recent study and associate professor of psychology at the University of Washington in Seattle.</p>
+
+                <p>Silbo is a <span class="vocab-word" data-word="substitute">substitute</span> for Spanish, with individual words <span class="vocab-word" data-word="recoded">recoded</span> into whistles which have high- and low-frequency tones. A whistler — or <em>silbador</em> — puts a finger in his or her mouth to increase the whistle's <span class="vocab-word" data-word="pitch">pitch</span>, while the other hand can be cupped to adjust the direction of the sound. 'There is much more <span class="vocab-word" data-word="ambiguity">ambiguity</span> in the whistled signal than in the spoken signal,' explains lead researcher Manuel Carreiras, psychology professor at the University of La Laguna on the Canary island of Tenerife. Because whistled 'words' can be hard to distinguish, <em>silbadores</em> rely on repetition, as well as awareness of context, to make themselves understood.</p>
+
+                <p>The <em>silbadores</em> of Gomera are traditionally shepherds and other isolated mountain folk, and their novel means of staying in touch allows them to communicate over distances of up to 10 kilometres. Carreiras explains that <em>silbadores</em> are able to pass a surprising amount of information via their whistles. 'In daily life they use whistles to communicate short commands, but any Spanish sentence could be whistled.' Silbo has proved particularly useful when fires have occurred on the island and rapid communication across large areas has been vital.</p>
+
+                <p>The study team used <span class="vocab-word" data-word="neuroimaging">neuroimaging</span> equipment to contrast the brain activity of <em>silbadores</em> while listening to whistled and spoken Spanish. Results showed the left <span class="vocab-word" data-word="temporal lobe">temporal lobe</span> of the brain, which is usually associated with spoken language, was engaged during the processing of Silbo. The researchers found that other key regions in the brain's <span class="vocab-word" data-word="frontal lobe">frontal lobe</span> also responded to the whistles, including those activated in response to sign language among deaf people. When the experiments were repeated with non-whistlers, however, <span class="vocab-word" data-word="activation">activation</span> was observed in all areas of the brain.</p>
+
+                <p>'Our results provide more evidence about the flexibility of human capacity for language in a variety of forms,' Corina says. 'These data suggest that left-hemisphere language regions are uniquely adapted for communicative purposes, independent of the <span class="vocab-word" data-word="modality">modality</span> of signal. The non-Silbo speakers were not recognising Silbo as a language. They had nothing to grab onto, so multiple areas of their brains were activated.'</p>
+
+                <p>Carreiras says the origins of Silbo Gomero remain <span class="vocab-word" data-word="obscure">obscure</span>, but that <span class="vocab-word" data-word="indigenous">indigenous</span> Canary Islanders, who were of North African origin, already had a whistled language when Spain conquered the volcanic islands in the 15th century. Whistled languages survive today in Papua New Guinea, Mexico, Vietnam, Guyana, China, Nepal, Senegal, and a few mountainous pockets in southern Europe. There are thought to be as many as 70 whistled languages still in use, though only 12 have been described and studied scientifically. This form of communication is an <span class="vocab-word" data-word="adaptation">adaptation</span> found among cultures where people are often isolated from each other, according to Julien Meyer, a researcher at the Institute of Human Sciences in Lyon, France. 'They are mostly used in mountains or dense forests,' he says. 'Whistled languages are quite clearly defined and represent an original adaptation of the spoken language for the needs of isolated human groups.'</p>
+
+                <p>But with modern communication technology now widely available, researchers say whistled languages like Silbo are threatened with <span class="vocab-word" data-word="extinction">extinction</span>. With <span class="vocab-word" data-word="dwindling">dwindling</span> numbers of Gomera islanders still <span class="vocab-word" data-word="fluent">fluent</span> in the language, Canaries' authorities are taking steps to try to ensure its survival. Since 1999, Silbo Gomero has been taught in all of the island's elementary schools. In addition, locals are seeking <span class="vocab-word" data-word="assistance">assistance</span> from the United Nations Educational, Scientific and Cultural Organization (UNESCO). 'The local authorities are trying to get an award from the organisation to declare [Silbo Gomero] as something that should be preserved for humanity,' Carreiras adds.</p>
+            </div>
+        </div>
+
+        <div id="splitter" class="splitter relative flex items-center justify-center group">
+            <div class="w-1 h-8 bg-gray-400 rounded-full opacity-50 group-hover:bg-gray-600 transition-colors"></div>
+        </div>
+
+        <!-- QUESTIONS -->
+        <div id="right-pane" class="pane">
+            <div id="questions-section" class="max-w-3xl mx-auto space-y-8 pb-10">
+
+                <!-- Q14-19: True/False/Not Given -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-sky-100 text-sky-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 14–19</span>
+                        <h4 class="font-bold text-gray-800">True / False / Not Given</h4>
+                    </div>
+                    <div class="mb-5 text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100 text-sm space-y-1">
+                        <p>Do the following statements agree with the information in the passage?</p>
+                        <p><span class="font-bold text-green-700">TRUE</span> — the statement agrees with the information</p>
+                        <p><span class="font-bold text-red-600">FALSE</span> — the statement contradicts the information</p>
+                        <p><span class="font-bold text-amber-600">NOT GIVEN</span> — there is no information on this</p>
+                    </div>
+                    <div class="space-y-5">
+                        <!-- Q14 -->
+                        <div class="q-item" id="container-q14-group">
+                            <p class="font-semibold text-gray-800 mb-2"><span class="font-bold text-sky-700 mr-2">14</span> La Gomera is the most mountainous of all the Canary Islands.</p>
+                            <div id="container-q14">
+                                <label class="tfng-label"><input type="radio" name="q14" value="true"><span class="font-semibold text-green-700">TRUE</span></label>
+                                <label class="tfng-label"><input type="radio" name="q14" value="false"><span class="font-semibold text-red-600">FALSE</span></label>
+                                <label class="tfng-label"><input type="radio" name="q14" value="not given"><span class="font-semibold text-amber-600">NOT GIVEN</span></label>
+                            </div>
+                        </div>
+                        <!-- Q15 -->
+                        <div class="q-item" id="container-q15-group">
+                            <p class="font-semibold text-gray-800 mb-2"><span class="font-bold text-sky-700 mr-2">15</span> Silbo is only appropriate for short and simple messages.</p>
+                            <div id="container-q15">
+                                <label class="tfng-label"><input type="radio" name="q15" value="true"><span class="font-semibold text-green-700">TRUE</span></label>
+                                <label class="tfng-label"><input type="radio" name="q15" value="false"><span class="font-semibold text-red-600">FALSE</span></label>
+                                <label class="tfng-label"><input type="radio" name="q15" value="not given"><span class="font-semibold text-amber-600">NOT GIVEN</span></label>
+                            </div>
+                        </div>
+                        <!-- Q16 -->
+                        <div class="q-item" id="container-q16-group">
+                            <p class="font-semibold text-gray-800 mb-2"><span class="font-bold text-sky-700 mr-2">16</span> In the brain-activity study, silbadores and non-whistlers produced different results.</p>
+                            <div id="container-q16">
+                                <label class="tfng-label"><input type="radio" name="q16" value="true"><span class="font-semibold text-green-700">TRUE</span></label>
+                                <label class="tfng-label"><input type="radio" name="q16" value="false"><span class="font-semibold text-red-600">FALSE</span></label>
+                                <label class="tfng-label"><input type="radio" name="q16" value="not given"><span class="font-semibold text-amber-600">NOT GIVEN</span></label>
+                            </div>
+                        </div>
+                        <!-- Q17 -->
+                        <div class="q-item" id="container-q17-group">
+                            <p class="font-semibold text-gray-800 mb-2"><span class="font-bold text-sky-700 mr-2">17</span> The Spanish introduced Silbo to the islands in the 15th century.</p>
+                            <div id="container-q17">
+                                <label class="tfng-label"><input type="radio" name="q17" value="true"><span class="font-semibold text-green-700">TRUE</span></label>
+                                <label class="tfng-label"><input type="radio" name="q17" value="false"><span class="font-semibold text-red-600">FALSE</span></label>
+                                <label class="tfng-label"><input type="radio" name="q17" value="not given"><span class="font-semibold text-amber-600">NOT GIVEN</span></label>
+                            </div>
+                        </div>
+                        <!-- Q18 -->
+                        <div class="q-item" id="container-q18-group">
+                            <p class="font-semibold text-gray-800 mb-2"><span class="font-bold text-sky-700 mr-2">18</span> There is precise data available regarding all of the whistle languages in existence today.</p>
+                            <div id="container-q18">
+                                <label class="tfng-label"><input type="radio" name="q18" value="true"><span class="font-semibold text-green-700">TRUE</span></label>
+                                <label class="tfng-label"><input type="radio" name="q18" value="false"><span class="font-semibold text-red-600">FALSE</span></label>
+                                <label class="tfng-label"><input type="radio" name="q18" value="not given"><span class="font-semibold text-amber-600">NOT GIVEN</span></label>
+                            </div>
+                        </div>
+                        <!-- Q19 -->
+                        <div class="q-item" id="container-q19-group">
+                            <p class="font-semibold text-gray-800 mb-2"><span class="font-bold text-sky-700 mr-2">19</span> The children of Gomera now learn Silbo.</p>
+                            <div id="container-q19">
+                                <label class="tfng-label"><input type="radio" name="q19" value="true"><span class="font-semibold text-green-700">TRUE</span></label>
+                                <label class="tfng-label"><input type="radio" name="q19" value="false"><span class="font-semibold text-red-600">FALSE</span></label>
+                                <label class="tfng-label"><input type="radio" name="q19" value="not given"><span class="font-semibold text-amber-600">NOT GIVEN</span></label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-5 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="14-19">Check Answers</button>
+                    </div>
+                </div>
+
+                <!-- Q20-26: Notes Completion -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-sky-100 text-sky-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 20–26</span>
+                        <h4 class="font-bold text-gray-800">Notes Completion</h4>
+                    </div>
+                    <p class="mb-5 text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100 text-sm">
+                        Complete the notes below. Choose <strong class="text-sky-700">ONE WORD ONLY</strong> from the passage for each answer.
+                    </p>
+                    <div class="notes-block">
+                        <h5>Silbo Gomero</h5>
+
+                        <h6>How Silbo is produced</h6>
+                        <ul>
+                            <li>high- and low-frequency tones represent different sounds in Spanish
+                                <span id="container-q20" class="inline-block mx-1"><strong class="text-sky-700 text-sm mr-1">20</strong><input type="text" name="q20" class="text-input text-input-word" placeholder="________" autocomplete="off" spellcheck="false"></span>
+                            </li>
+                            <li>pitch of whistle is controlled using silbador's
+                                <span id="container-q21" class="inline-block mx-1"><strong class="text-sky-700 text-sm mr-1">21</strong><input type="text" name="q21" class="text-input text-input-word" placeholder="________" autocomplete="off" spellcheck="false"></span>
+                            </li>
+                            <li><span id="container-q22" class="inline-block mx-1"><strong class="text-sky-700 text-sm mr-1">22</strong><input type="text" name="q22" class="text-input text-input-word" placeholder="________" autocomplete="off" spellcheck="false"></span>
+                                is changed with a cupped hand
+                            </li>
+                        </ul>
+
+                        <h6>How Silbo is used</h6>
+                        <ul>
+                            <li>has long been used by shepherds and people living in secluded locations</li>
+                            <li>in everyday use for the transmission of brief
+                                <span id="container-q23" class="inline-block mx-1"><strong class="text-sky-700 text-sm mr-1">23</strong><input type="text" name="q23" class="text-input text-input-word" placeholder="________" autocomplete="off" spellcheck="false"></span>
+                            </li>
+                            <li>can relay essential information quickly, e.g. to inform people about
+                                <span id="container-q24" class="inline-block mx-1"><strong class="text-sky-700 text-sm mr-1">24</strong><input type="text" name="q24" class="text-input text-input-word" placeholder="________" autocomplete="off" spellcheck="false"></span>
+                            </li>
+                        </ul>
+
+                        <h6>The future of Silbo</h6>
+                        <ul>
+                            <li>future under threat because of new
+                                <span id="container-q25" class="inline-block mx-1"><strong class="text-sky-700 text-sm mr-1">25</strong><input type="text" name="q25" class="text-input text-input-word" placeholder="________" autocomplete="off" spellcheck="false"></span>
+                            </li>
+                            <li>Canaries' authorities hoping to receive a UNESCO
+                                <span id="container-q26" class="inline-block mx-1"><strong class="text-sky-700 text-sm mr-1">26</strong><input type="text" name="q26" class="text-input text-input-word" placeholder="________" autocomplete="off" spellcheck="false"></span>
+                                to help preserve it
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="mt-4 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="20-26">Check Answers</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+</div>
+
+<div id="highlight-tooltip" class="highlight-tooltip">Highlight Text</div>
+
+<!-- Vocab Modal -->
+<div id="vocab-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
+    <div class="bg-white rounded-2xl shadow-2xl p-5 sm:p-8 w-full max-w-md relative transform transition-all scale-95 opacity-0" id="vocab-modal-content">
+        <button id="close-vocab-modal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-full w-8 h-8 flex items-center justify-center">&times;</button>
+        <div class="flex items-center mb-6 border-b pb-4 mt-2">
+            <h3 id="vocab-word" class="text-2xl sm:text-3xl font-extrabold text-gray-900 capitalize tracking-tight"></h3>
+        </div>
+        <div class="flex items-center mb-5">
+            <button id="play-audio-btn" class="flex items-center justify-center h-10 w-10 sm:h-12 sm:w-12 shrink-0 rounded-full bg-sky-50 text-sky-700 hover:bg-sky-600 hover:text-white mr-4 transition-all shadow-sm border border-sky-200">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>
+            </button>
+            <p id="vocab-pronunciation-text" class="text-gray-500 font-mono text-base sm:text-lg bg-gray-50 px-3 py-1 rounded-md border border-gray-100"></p>
+        </div>
+        <p id="vocab-meaning" class="text-gray-700 text-base sm:text-lg leading-relaxed"></p>
+    </div>
+</div>
+
+<!-- Alert Modal -->
+<div id="alert-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-[80]">
+    <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm relative transform transition-all scale-95 opacity-0 text-center" id="alert-modal-content">
+        <div id="alert-icon-container" class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 mb-4">
+            <svg class="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        </div>
+        <h3 id="alert-title" class="text-lg font-medium text-gray-900 mb-2">Notice</h3>
+        <p id="alert-message" class="text-sm text-gray-500 mb-6"></p>
+        <button id="close-alert-btn" class="w-full inline-flex justify-center rounded-md px-4 py-2 bg-sky-700 text-white font-medium hover:bg-sky-800 text-sm transition-colors">Got it</button>
+    </div>
+</div>
+
+<script>
+const vocabulary = {
+    'volcanic': { meaning: 'Relating to or produced by a volcano; of or resembling a volcano.', phonetic: '/vɒlˈkæn.ɪk/' },
+    'ravines': { meaning: 'Deep, narrow gorges with steep sides, typically formed by running water.', phonetic: '/rəˈviːnz/' },
+    'transmitting': { meaning: 'Sending or passing something from one place or person to another; broadcasting.', phonetic: '/trænsˈmɪt.ɪŋ/' },
+    'terrain': { meaning: 'A stretch of land, especially with regard to its physical features.', phonetic: '/təˈreɪn/' },
+    'shedding light on': { meaning: 'Helping to explain something or make it clearer; providing new information or insight about.', phonetic: '/ˈʃed.ɪŋ laɪt ɒn/' },
+    'activates': { meaning: 'Makes something start working or functioning; triggers a process.', phonetic: '/ˈæk.tɪ.veɪts/' },
+    'flexible': { meaning: 'Able to change or be changed easily according to the situation; adaptable.', phonetic: '/ˈflek.sɪ.bəl/' },
+    'dedicated to': { meaning: 'Devoted exclusively to a particular purpose or use.', phonetic: '/ˈded.ɪ.keɪ.tɪd tuː/' },
+    'substitute': { meaning: 'A person or thing that acts or can act as a replacement for another.', phonetic: '/ˈsʌb.stɪ.tjuːt/' },
+    'recoded': { meaning: 'Converted or translated into a different code or form.', phonetic: '/riːˈkəʊdɪd/' },
+    'pitch': { meaning: 'The quality of a sound governed by the rate of vibrations producing it; the degree of highness or lowness of a tone.', phonetic: '/pɪtʃ/' },
+    'ambiguity': { meaning: 'The quality of being open to more than one interpretation; inexactness or uncertainty of meaning.', phonetic: '/ˌæm.bɪˈɡjuː.ɪ.ti/' },
+    'neuroimaging': { meaning: 'The use of various techniques to directly or indirectly image the structure and function of the brain.', phonetic: '/ˌnjʊər.əʊˈɪm.ɪ.dʒɪŋ/' },
+    'temporal lobe': { meaning: 'One of the four major lobes of the cerebral cortex, involved in processing auditory information and language comprehension.', phonetic: '/ˈtem.pər.əl ləʊb/' },
+    'frontal lobe': { meaning: 'The largest lobe of the brain, associated with planning, decision-making, and speech production.', phonetic: '/ˈfrʌn.təl ləʊb/' },
+    'activation': { meaning: 'The process of making something active or causing a part of the brain to become active.', phonetic: '/ˌæk.tɪˈveɪ.ʃən/' },
+    'modality': { meaning: 'A particular mode in which something exists or is expressed; in linguistics, the form or channel of communication (e.g. speech, gesture, writing).', phonetic: '/məʊˈdæl.ɪ.ti/' },
+    'obscure': { meaning: 'Not clearly expressed or easily understood; of uncertain origin or not well known.', phonetic: '/əbˈskjʊər/' },
+    'indigenous': { meaning: 'Originating or occurring naturally in a particular place; native to a region.', phonetic: '/ɪnˈdɪdʒ.ɪ.nəs/' },
+    'adaptation': { meaning: 'The process of changing to suit different conditions; a version of something that has been changed to work in a new way.', phonetic: '/ˌæd.æpˈteɪ.ʃən/' },
+    'extinction': { meaning: 'The state or process of a species, language, or practice ceasing to exist.', phonetic: '/ɪkˈstɪŋk.ʃən/' },
+    'dwindling': { meaning: 'Gradually diminishing in size, amount, or strength.', phonetic: '/ˈdwɪn.dlɪŋ/' },
+    'fluent': { meaning: 'Able to express oneself easily and articulately in a language.', phonetic: '/ˈfluː.ənt/' },
+    'assistance': { meaning: 'The action of helping someone by sharing work; aid or support.', phonetic: '/əˈsɪs.təns/' }
+};
+
+const ANSWERS = {
+    q14: 'not given', q15: 'false', q16: 'true', q17: 'false', q18: 'false', q19: 'true',
+    q20: 'words', q21: 'finger', q22: 'direction', q23: 'commands', q24: 'fires', q25: 'technology', q26: 'award'
+};
+
+const explanations = {
+    q14: "NOT GIVEN: The passage describes La Gomera as mountainous with steep slopes, but makes no comparison with other Canary Islands regarding which is most mountainous.",
+    q15: "FALSE — Paragraph 5: '…in daily life they use whistles to communicate short commands, but any Spanish sentence could be whistled.' This directly contradicts the idea that Silbo is only for short/simple messages.",
+    q16: "TRUE — Paragraph 6: Silbadores showed activation in the left temporal lobe only, while 'when the experiments were repeated with non-whistlers, activation was observed in all areas of the brain.' The two groups produced clearly different results.",
+    q17: "FALSE — Paragraph 8: 'indigenous Canary Islanders…already had a whistled language when Spain conquered the volcanic islands in the 15th century.' Silbo existed before the Spanish arrived — the Spanish did not introduce it.",
+    q18: "FALSE — Paragraph 8: 'There are thought to be as many as 70 whistled languages still in use, though only 12 have been described and studied scientifically.' Precise data is NOT available for all — only 12 of 70 have been studied.",
+    q19: "TRUE — Paragraph 9: 'Since 1999, Silbo Gomero has been taught in all of the island's elementary schools.' Children on the island now learn Silbo.",
+    q20: "Paragraph 4: 'Silbo is a substitute for Spanish, with individual words recoded into whistles which have high- and low-frequency tones.' High/low frequency tones represent different Spanish words. Answer: words.",
+    q21: "Paragraph 4: 'A whistler — or silbador — puts a finger in his or her mouth to increase the whistle's pitch.' The finger controls the pitch. Answer: finger.",
+    q22: "Paragraph 4: '…while the other hand can be cupped to adjust the direction of the sound.' The cupped hand changes the direction. Answer: direction.",
+    q23: "Paragraph 5: 'In daily life they use whistles to communicate short commands…' Brief commands = short commands in daily use. Answer: commands.",
+    q24: "Paragraph 5: 'Silbo has proved particularly useful when fires have occurred on the island and rapid communication across large areas has been vital.' Fires = the key example of emergency use. Answer: fires.",
+    q25: "Paragraph 9: 'with modern communication technology now widely available, researchers say whistled languages like Silbo are threatened with extinction.' New technology = the threat. Answer: technology.",
+    q26: "Paragraph 9: 'The local authorities are trying to get an award from the organisation to declare [Silbo Gomero] as something that should be preserved for humanity.' They seek a UNESCO award. Answer: award."
+};
+
+const TOTAL_QUESTIONS = 13;
+
+document.addEventListener('DOMContentLoaded', () => {
+    const app = {
+        userAnswers: {}, answersChecked: {}, currentFontSize: 17, timeRemaining: 20*60,
+        leftPane: document.getElementById('left-pane'),
+        rightPane: document.getElementById('right-pane'),
+        highlightTooltip: document.getElementById('highlight-tooltip'),
+        vocabModal: document.getElementById('vocab-modal'),
+        vocabModalContent: document.getElementById('vocab-modal-content'),
+        closeVocabModalBtn: document.getElementById('close-vocab-modal'),
+        vocabWordEl: document.getElementById('vocab-word'),
+        vocabMeaningEl: document.getElementById('vocab-meaning'),
+        vocabPronunciationText: document.getElementById('vocab-pronunciation-text'),
+        playAudioBtn: document.getElementById('play-audio-btn'),
+        progressText: document.getElementById('progress-text'),
+        timerEl: document.getElementById('timer'),
+        alertModal: document.getElementById('alert-modal'),
+        alertModalContent: document.getElementById('alert-modal-content'),
+        closeAlertBtn: document.getElementById('close-alert-btn'),
+        alertTitleEl: document.getElementById('alert-title'),
+        alertMessageEl: document.getElementById('alert-message'),
+        alertIconContainer: document.getElementById('alert-icon-container'),
+
+        init() { this.setupEventListeners(); this.initSplitter(); this.initHighlighter(); this.updateCheckButtonsState(); this.startTimer(); },
+
+        startTimer() {
+            const interval = setInterval(() => {
+                if (this.timeRemaining <= 0) { clearInterval(interval); this.timerEl.textContent = "00:00"; this.showAlert("Time's Up!", "Your 20 minutes have expired.", "warning"); return; }
+                this.timeRemaining--;
+                const m = Math.floor(this.timeRemaining/60).toString().padStart(2,'0');
+                const s = (this.timeRemaining%60).toString().padStart(2,'0');
+                this.timerEl.textContent = `${m}:${s}`;
+                if (this.timeRemaining <= 300) this.timerEl.classList.add('text-red-500');
+            }, 1000);
+        },
+
+        setupEventListeners() {
+            document.getElementById('increase-font-btn').addEventListener('click', () => this.changeFontSize(1));
+            document.getElementById('decrease-font-btn').addEventListener('click', () => this.changeFontSize(-1));
+            document.getElementById('clear-highlights-btn').addEventListener('click', () => this.leftPane.querySelectorAll('mark').forEach(m => m.replaceWith(document.createTextNode(m.textContent))));
+            this.closeVocabModalBtn.addEventListener('click', () => this.closeModal());
+            this.vocabModal.addEventListener('click', (e) => { if (e.target === this.vocabModal) this.closeModal(); });
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') { if (!this.vocabModal.classList.contains('hidden')) this.closeModal(); if (!this.alertModal.classList.contains('hidden')) this.closeAlert(); }
+                if ((e.ctrlKey||e.metaKey) && e.key.toLowerCase() === 'f') { e.preventDefault(); this.showAlert("Disabled", "Find is disabled during the exam.", "warning"); }
+            });
+            document.addEventListener('visibilitychange', () => { if (document.hidden && this.timeRemaining > 0) this.showAlert("Warning", "Please do not switch tabs during the exam.", "warning"); });
+            window.addEventListener('beforeunload', (e) => { if (this.timeRemaining > 0 && this.timeRemaining < 20*60) { e.preventDefault(); e.returnValue = ''; } });
+            this.closeAlertBtn.addEventListener('click', () => this.closeAlert());
+            this.alertModal.addEventListener('click', (e) => { if (e.target === this.alertModal) this.closeAlert(); });
+            document.body.addEventListener('input', (e) => {
+                if (e.target.tagName === 'INPUT' && e.target.type === 'text') {
+                    this.userAnswers[e.target.name] = e.target.value.trim().toLowerCase();
+                    e.target.classList.remove('correct-answer','incorrect-answer');
+                    this.updateCheckButtonsState(); this.updateProgress();
+                }
+            });
+            document.body.addEventListener('change', (e) => {
+                if (e.target.type === 'radio') { this.userAnswers[e.target.name] = e.target.value; this.updateCheckButtonsState(); this.updateProgress(); }
+            });
+            this.leftPane.addEventListener('click', (e) => {
+                if (e.target.classList.contains('vocab-word')) this.openVocabModal(e.target.dataset.word);
+                if (e.target.tagName === 'MARK') e.target.replaceWith(document.createTextNode(e.target.textContent));
+            });
+            document.querySelectorAll('.check-btn').forEach(btn => btn.addEventListener('click', (e) => this.checkAnswers(e.target.dataset.range, e.target)));
+            this.playAudioBtn.addEventListener('click', () => {
+                const word = this.vocabWordEl.textContent; if (!word) return;
+                if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+                this.playAudioBtn.classList.remove('text-sky-700','bg-sky-50'); this.playAudioBtn.classList.add('bg-sky-600','text-white');
+                if ('speechSynthesis' in window) { const u = new SpeechSynthesisUtterance(word); u.lang = 'en-GB'; u.rate = 0.9; u.onend = () => this.resetAudioBtn(); u.onerror = () => this.resetAudioBtn(); window.speechSynthesis.speak(u); }
+                else setTimeout(() => this.resetAudioBtn(), 500);
+            });
+        },
+
+        updateProgress() {
+            let c = 0;
+            for (const k in ANSWERS) { if ((this.userAnswers[k] || '').trim()) c++; }
+            this.progressText.textContent = `${Math.min(c, TOTAL_QUESTIONS)} / ${TOTAL_QUESTIONS} Answered`;
+        },
+        resetAudioBtn() { this.playAudioBtn.classList.add('text-sky-700','bg-sky-50'); this.playAudioBtn.classList.remove('bg-sky-600','text-white'); },
+        changeFontSize(d) { this.currentFontSize = Math.max(14, Math.min(26, this.currentFontSize+d)); document.documentElement.style.setProperty('--app-font-size', `${this.currentFontSize}px`); },
+
+        openVocabModal(w) {
+            const d = vocabulary[w]; if (!d) return;
+            this.vocabWordEl.textContent = w; this.vocabMeaningEl.textContent = d.meaning; this.vocabPronunciationText.textContent = d.phonetic || '';
+            this.vocabModal.classList.remove('hidden');
+            setTimeout(() => { this.vocabModalContent.classList.remove('scale-95','opacity-0'); this.vocabModalContent.classList.add('scale-100','opacity-100'); }, 10);
+        },
+        closeModal() {
+            if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+            this.vocabModalContent.classList.remove('scale-100','opacity-100'); this.vocabModalContent.classList.add('scale-95','opacity-0');
+            this.resetAudioBtn(); setTimeout(() => this.vocabModal.classList.add('hidden'), 200);
+        },
+        showAlert(title, message, type='error') {
+            this.alertTitleEl.textContent = title; this.alertMessageEl.textContent = message;
+            const c = type === 'warning' ? 'yellow' : 'red';
+            this.alertIconContainer.className = `mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-${c}-100 mb-4`;
+            this.alertIconContainer.innerHTML = `<svg class="h-6 w-6 text-${c}-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>`;
+            this.alertModal.classList.remove('hidden');
+            setTimeout(() => { this.alertModalContent.classList.remove('scale-95','opacity-0'); this.alertModalContent.classList.add('scale-100','opacity-100'); }, 10);
+        },
+        closeAlert() {
+            this.alertModalContent.classList.remove('scale-100','opacity-100'); this.alertModalContent.classList.add('scale-95','opacity-0');
+            setTimeout(() => this.alertModal.classList.add('hidden'), 200);
+        },
+
+        isRangeAnswered(range) {
+            const [s, e] = range.split('-').map(Number);
+            for (let i = s; i <= e; i++) { if (!(this.userAnswers[`q${i}`] || '').trim()) return false; }
+            return true;
+        },
+
+        updateCheckButtonsState() {
+            document.querySelectorAll('.check-btn').forEach(btn => {
+                const range = btn.dataset.range;
+                if (this.answersChecked[range]) { btn.className = 'check-btn bg-gray-800 hover:bg-gray-900 text-white font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-pointer'; btn.textContent = 'Reset Answers'; return; }
+                const allDone = this.isRangeAnswered(range);
+                btn.className = allDone ? 'check-btn bg-sky-700 hover:bg-sky-800 text-white font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-pointer transform hover:-translate-y-0.5' : 'check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80';
+                btn.textContent = 'Check Answers';
+            });
+        },
+
+        checkAnswers(range, btn) {
+            if (this.answersChecked[range]) {
+                this.answersChecked[range] = false;
+                const [s, e] = range.split('-').map(Number);
+                for (let i = s; i <= e; i++) {
+                    const qId = `q${i}`; this.userAnswers[qId] = '';
+                    const inp = document.querySelector(`input[name="${qId}"][type="text"]`);
+                    if (inp) { inp.value = ''; inp.placeholder = '________'; inp.classList.remove('correct-answer','incorrect-answer'); }
+                    document.querySelectorAll(`input[name="${qId}"][type="radio"]`).forEach(r => { r.checked = false; const lbl = r.closest('label'); if (lbl) lbl.classList.remove('correct-answer','incorrect-answer','ng-answer'); });
+                    document.getElementById(`expl-${qId}`)?.remove();
+                }
+                this.updateCheckButtonsState(); this.updateProgress(); return;
+            }
+            if (!this.isRangeAnswered(range)) { this.showAlert("Incomplete Answers", "Please answer all questions in this section before checking.", "warning"); return; }
+            this.answersChecked[range] = true; this.updateCheckButtonsState();
+
+            const [s, e] = range.split('-').map(Number);
+            for (let i = s; i <= e; i++) {
+                const qId = `q${i}`;
+                const userAns = (this.userAnswers[qId] || '').toLowerCase().trim();
+                const correctAns = ANSWERS[qId];
+                const isCorrect = userAns === correctAns;
+                let feedbackHTML = '';
+
+                // Radio (T/F/NG)
+                const radios = document.querySelectorAll(`input[name="${qId}"][type="radio"]`);
+                if (radios.length > 0) {
+                    radios.forEach(r => {
+                        const lbl = r.closest('label'); if (!lbl) return;
+                        lbl.classList.remove('correct-answer','incorrect-answer','ng-answer');
+                        if (r.value === correctAns) { lbl.classList.add(correctAns === 'not given' ? 'ng-answer' : correctAns === 'true' ? 'correct-answer' : 'incorrect-answer'); }
+                        else if (r.checked && r.value !== correctAns) { lbl.classList.add('incorrect-answer'); }
+                    });
+                    if (!isCorrect) { const badge = correctAns === 'not given' ? 'ng-badge' : 'correct-badge'; feedbackHTML = `<span class="${badge}">Correct Answer: ${correctAns.toUpperCase()}</span><br>`; }
+                }
+                // Text input
+                const inp = document.querySelector(`input[name="${qId}"][type="text"]`);
+                if (inp) {
+                    inp.classList.remove('correct-answer','incorrect-answer');
+                    if (isCorrect) { inp.classList.add('correct-answer'); }
+                    else { inp.classList.add('incorrect-answer'); inp.value = ''; inp.placeholder = correctAns; feedbackHTML = `<span class="correct-badge">Correct Answer: ${correctAns}</span><br>`; }
+                }
+
+                if (explanations[qId] && !document.getElementById(`expl-${qId}`)) {
+                    const div = document.createElement('div'); div.id = `expl-${qId}`; div.className = 'explanation-box';
+                    div.innerHTML = `${feedbackHTML}<strong>Explanation:</strong> ${explanations[qId]}`;
+                    const grpContainer = document.getElementById(`container-${qId}-group`) || document.getElementById(`container-${qId}`);
+                    if (grpContainer) { const wrap = grpContainer.closest('.q-item') || grpContainer; wrap.insertAdjacentElement('afterend', div); }
+                }
+            }
+        },
+
+        initSplitter() {
+            let isDragging = false; const panes = document.getElementById('content-panes');
+            document.getElementById('splitter').addEventListener('mousedown', (e) => { e.preventDefault(); isDragging = true; document.body.style.cursor = 'col-resize'; });
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging || window.innerWidth <= 768) return;
+                const rect = panes.getBoundingClientRect(); const newLeft = e.clientX - rect.left;
+                if (newLeft > 200 && newLeft < rect.width - 200) panes.style.gridTemplateColumns = `${(newLeft/rect.width)*100}% 5px 1fr`;
+            });
+            document.addEventListener('mouseup', () => { if (isDragging) { isDragging = false; document.body.style.cursor = 'default'; } });
+        },
+
+        initHighlighter() {
+            document.body.addEventListener('mouseup', (e) => {
+                const sel = window.getSelection(); const text = sel.toString().trim();
+                if (text.length > 0) {
+                    const range = sel.getRangeAt(0);
+                    if (!this.leftPane.contains(range.commonAncestorContainer) && !this.rightPane.contains(range.commonAncestorContainer)) { this.highlightTooltip.style.display = 'none'; return; }
+                    this.highlightTooltip.style.left = `${e.pageX-30}px`; this.highlightTooltip.style.top = `${e.pageY-40}px`; this.highlightTooltip.style.display = 'block';
+                    this.highlightTooltip.onclick = () => {
+                        const mark = document.createElement('mark');
+                        try { range.surroundContents(mark); } catch(ex) { this.showAlert("Highlight Error", "Please select text within a single element.", "warning"); }
+                        finally { sel.removeAllRanges(); this.highlightTooltip.style.display = 'none'; }
+                    };
+                } else { this.highlightTooltip.style.display = 'none'; }
+            });
+            document.body.addEventListener('mousedown', () => { if (window.getSelection().toString().length === 0) this.highlightTooltip.style.display = 'none'; });
+        }
+    };
+    app.init();
+});
+</script>
+</body>
+</html>

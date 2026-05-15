@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IELTS Simulator - What is Exploration?</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --app-font-size: 17px; }
+        body { font-family: 'Inter', sans-serif; overscroll-behavior: none; background-color: #f3f4f6; }
+        .ielts-container { display: grid; grid-template-rows: auto 1fr; height: 100vh; }
+        .content-panes { display: grid; grid-template-columns: 1fr 5px 1fr; overflow: hidden; }
+        .pane { overflow-y: auto; padding: 2rem 3rem; font-size: var(--app-font-size); scroll-behavior: smooth; }
+        #left-pane { background-color: #fdfdfd; }
+        #right-pane { background-color: #f8fafc; }
+        .splitter { background-color: #cbd5e1; cursor: col-resize; z-index: 10; transition: background-color 0.2s; }
+        .splitter:hover, .splitter:active { background-color: #94a3b8; }
+        .reading-passage { font-family: 'Merriweather', serif; line-height: 1.9; color: #334155; text-align: justify; max-width: 800px; margin: 0 auto; }
+        .reading-passage p { margin-bottom: 1.5rem; text-indent: 1.5rem; }
+        .reading-passage h3 { font-family: 'Inter', sans-serif; color: #0f172a; margin-bottom: 0.25rem; font-weight: 700; font-size: 1.4em; text-align: center; text-indent: 0; text-transform: uppercase; letter-spacing: 0.04em; }
+        .q-item { padding: 1rem; border-radius: 0.5rem; transition: all 0.2s; background-color: white; border: 1px solid #e2e8f0; margin-bottom: 0.75rem; }
+        .select-input { border: 2px solid #cbd5e1; border-radius: 6px; padding: 4px 10px; font-weight: 600; color: #1e293b; transition: all 0.2s; background-color: #f8fafc; cursor: pointer; min-width: 4.5rem; }
+        .select-input:focus { outline: none; border-color: #059669; background-color: #fff; box-shadow: 0 0 0 3px rgba(5,150,105,0.12); }
+        .text-input { border: 2px solid #cbd5e1; border-radius: 6px; padding: 4px 8px; font-weight: 600; color: #1e293b; transition: all 0.2s; text-align: center; background-color: #f8fafc; }
+        .text-input:focus { outline: none; border-color: #059669; background-color: #fff; box-shadow: 0 0 0 3px rgba(5,150,105,0.12); }
+        .text-input-md { width: 11rem; }
+        .mc-label { display: flex; align-items: flex-start; padding: 0.65rem 1rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s; background-color: white; margin-bottom: 0.4rem; gap: 0.75rem; }
+        .mc-label:hover { background: #ecfdf5; border-color: #6ee7b7; }
+        .mc-label input { width: 1.1em; height: 1.1em; accent-color: #059669; flex-shrink: 0; margin-top: 0.2em; }
+        .select-correct { border-color: #22c55e !important; background-color: #f0fdf4 !important; color: #166534 !important; }
+        .select-incorrect { border-color: #ef4444 !important; background-color: #fef2f2 !important; color: #991b1b !important; }
+        .text-correct { border-color: #22c55e !important; background-color: #f0fdf4 !important; color: #166534 !important; }
+        .text-incorrect { border-color: #ef4444 !important; background-color: #fef2f2 !important; color: #991b1b !important; }
+        label.correct-answer { border-color: #22c55e !important; background-color: #f0fdf4 !important; }
+        label.incorrect-answer { border-color: #ef4444 !important; background-color: #fef2f2 !important; }
+        .explanation-box { animation: fadeIn 0.4s ease-out forwards; margin-top: 0.75rem; padding: 1rem; background-color: #ecfdf5; border-left: 4px solid #059669; border-radius: 0.5rem; font-size: 0.95rem; color: #064e3b; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .explanation-box .correct-badge { display: inline-block; background: #22c55e; color: white; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85em; margin-bottom: 0.5rem; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+        .vocab-word { color: #059669; font-weight: 600; cursor: pointer; border-bottom: 2px dotted #6ee7b7; transition: all 0.2s ease-in-out; padding: 0 2px; }
+        .vocab-word:hover { background-color: #d1fae5; border-bottom-style: solid; border-radius: 2px; }
+        .highlight-tooltip { position: absolute; background-color: #1e293b; color: white; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 500; z-index: 100; cursor: pointer; display: none; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        mark { background-color: #fef08a; border-radius: 3px; padding: 2px 0; cursor: pointer; }
+        mark:hover { background-color: #fca5a5; color: #7f1d1d; }
+        mark:hover::after { content: ' x'; font-weight: bold; font-size: 0.8em; opacity: 0.7; }
+        .summary-block { background: #ecfdf5; border: 1px solid #6ee7b7; border-radius: 0.75rem; padding: 1.5rem; margin-bottom: 1rem; line-height: 2.1; font-size: 0.97em; color: #064e3b; }
+        .summary-block h5 { font-family: 'Inter', sans-serif; font-weight: 700; color: #059669; font-size: 1em; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        .explorer-card { background: #f0fdf4; border: 1px solid #6ee7b7; border-radius: 0.5rem; padding: 0.75rem 1rem; margin-bottom: 0.4rem; }
+        .explorer-tag { display: inline-block; background: #059669; color: white; font-weight: 700; border-radius: 4px; padding: 1px 7px; font-size: 0.85em; margin-right: 6px; }
+        @media (max-width: 768px) {
+            .content-panes { display: flex; flex-direction: column; overflow-y: auto; }
+            .splitter { display: none; }
+            .pane { padding: 1.25rem 1rem; overflow-y: visible; height: auto; }
+            #left-pane { border-bottom: 2px dashed #cbd5e1; padding-bottom: 2rem; }
+        }
+    </style>
+</head>
+<body>
+<div id="test-container" class="ielts-container">
+    <header class="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 flex justify-between items-center z-20 shadow-sm flex-wrap gap-3">
+        <div class="flex items-center gap-2 sm:space-x-3">
+            <div class="bg-emerald-700 text-white p-1.5 sm:p-2 rounded-lg shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064"/>
+                </svg>
+            </div>
+            <h1 class="text-xl font-bold text-gray-800 hidden sm:block">IELTS Simulator <span class="text-emerald-700 font-medium">| What is Exploration?</span></h1>
+            <h1 class="text-base font-bold text-gray-800 sm:hidden">IELTS <span class="text-emerald-700">Exploration</span></h1>
+        </div>
+        <div class="flex items-center space-x-4">
+            <div class="hidden sm:flex flex-col items-end">
+                <span class="text-xs text-gray-500 font-bold uppercase tracking-wide">Progress</span>
+                <span id="progress-text" class="text-sm font-semibold text-emerald-700">0 / 14 Answered</span>
+            </div>
+            <div class="flex items-center bg-gray-100 rounded-lg px-3 py-1.5 border border-gray-200">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span id="timer" class="font-mono font-bold text-gray-700 text-lg">20:00</span>
+            </div>
+        </div>
+        <div class="flex items-center gap-2 sm:space-x-3">
+            <button id="clear-highlights-btn" class="hidden sm:flex items-center justify-center px-3 py-1.5 rounded bg-emerald-50 hover:bg-emerald-100 text-emerald-700 transition-colors focus:outline-none border border-emerald-200 text-sm font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                Clear
+            </button>
+            <div class="flex items-center space-x-1 sm:space-x-2 bg-gray-50 p-1 rounded-lg border border-gray-200">
+                <button id="decrease-font-btn" class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded bg-white shadow-sm hover:bg-gray-100 text-gray-700 transition-colors focus:outline-none font-bold text-sm sm:text-base">A-</button>
+                <button id="increase-font-btn" class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded bg-white shadow-sm hover:bg-gray-100 text-gray-700 transition-colors focus:outline-none font-bold text-sm sm:text-base">A+</button>
+            </div>
+        </div>
+    </header>
+
+    <main id="content-panes" class="content-panes">
+        <!-- PASSAGE -->
+        <div id="left-pane" class="pane relative">
+            <div class="reading-passage">
+                <h3>What is Exploration?</h3><br>
+                <p>We are all explorers. Our desire to discover, and then share that new-found knowledge, is part of what makes us human — indeed, this has played an important part in our success as a species. Long before the first caveman slumped down beside the fire and grunted news that there were plenty of <span class="vocab-word" data-word="wildebeest">wildebeest</span> over yonder, our ancestors had learnt the value of sending out <span class="vocab-word" data-word="scouts">scouts</span> to investigate the unknown. This <span class="vocab-word" data-word="questing">questing</span> nature of ours undoubtedly helped our species spread around the globe, just as it nowadays no doubt helps the last <span class="vocab-word" data-word="nomadic">nomadic</span> Penan maintain their existence in the <span class="vocab-word" data-word="depleted">depleted</span> forests of Borneo, and a visitor negotiate the subways of New York.</p>
+
+                <p>Over the years, we've come to think of explorers as a <span class="vocab-word" data-word="peculiar breed">peculiar breed</span> — different from the rest of us, different from those of us who are merely 'well travelled', even; and perhaps there <em>is</em> a type of person more suited to seeking out the new, a type of caveman more inclined to risk <span class="vocab-word" data-word="venturing out">venturing out</span>. That, however, doesn't take away from the fact that we all have this <span class="vocab-word" data-word="enquiring instinct">enquiring instinct</span>, even today; and that in all sorts of professions — whether artist, marine biologist or astronomer — borders of the unknown are being tested each day.</p>
+
+                <p>Thomas Hardy set some of his novels in Egdon Heath, a fictional area of <span class="vocab-word" data-word="uncultivated">uncultivated</span> land, and used the landscape to suggest the desires and fears of his characters. He is delving into matters we all recognise because they are common to humanity. This is surely an act of exploration, and into a world as remote as the author chooses. Explorer and travel writer Peter Fleming talks of the moment when the explorer returns to the existence he has left behind with his loved ones. The traveller 'who has for weeks or months seen himself only as a <span class="vocab-word" data-word="puny">puny</span> and <span class="vocab-word" data-word="irrelevant">irrelevant</span> alien crawling <span class="vocab-word" data-word="laboriously">laboriously</span> over a country in which he has no roots and no background, suddenly encounters his other self, a relatively solid figure, with a place in the minds of certain people'.</p>
+
+                <p>In this book about the exploration of the earth's surface, I have confined myself to those whose travels were real and who also aimed at more than personal discovery. But that still left me with another problem: the word 'explorer' has become associated with a past <span class="vocab-word" data-word="era">era</span>. We think back to a <span class="vocab-word" data-word="golden age">golden age</span>, as if exploration peaked somehow in the 19th century — as if the process of discovery is now on the decline, though the truth is that we have named only one and a half million of this planet's species, and there may be more than 10 million — and that's not including <span class="vocab-word" data-word="bacteria">bacteria</span>. We have studied only 5 per cent of the species we know. We have <span class="vocab-word" data-word="scarcely">scarcely</span> mapped the ocean floors, and know even less about ourselves; we fully understand the workings of only 10 per cent of our brains.</p>
+
+                <p>Here is how some of today's 'explorers' define the word. Ran Fiennes, <span class="vocab-word" data-word="dubbed">dubbed</span> the 'greatest living explorer', said, 'An explorer is someone who has done something that no human has done before — and also done something scientifically useful.' Chris Bonington, a leading mountaineer, felt exploration was to be found in the act of physically touching the unknown: 'You have to have gone somewhere new.' Then Robin Hanbury-Tenison, a <span class="vocab-word" data-word="campaigner">campaigner</span> on behalf of remote so-called 'tribal' peoples, said, 'A traveller simply records information about some far-off world, and reports back; but an explorer <em>changes</em> the world.' Wilfred Thesiger, who crossed Arabia's Empty Quarter in 1946, and belongs to an era of <span class="vocab-word" data-word="unmechanised">unmechanised</span> travel now lost to the rest of us, told me, 'If I'd gone across by camel when I could have gone by car, it would have been a <span class="vocab-word" data-word="stunt">stunt</span>.' To him, exploration meant bringing back information from a remote place <span class="vocab-word" data-word="regardless of">regardless of</span> any great self-discovery.</p>
+
+                <p>Each definition is slightly different — and tends to reflect the field of <span class="vocab-word" data-word="endeavour">endeavour</span> of each pioneer. It was the same whoever I asked: the prominent historian would say exploration was a thing of the past, the <span class="vocab-word" data-word="cutting-edge">cutting-edge</span> scientist would say it was of the present. And so on. They each set their own particular <span class="vocab-word" data-word="criteria">criteria</span>; the common factor in their approach being that they all had, unlike many of us who simply enjoy travel or discovering new things, both a very definite <span class="vocab-word" data-word="objective">objective</span> from the outset and also a desire to record their findings.</p>
+
+                <p>I'd best declare my own <span class="vocab-word" data-word="bias">bias</span>. As a writer, I'm interested in the exploration of ideas. I've done a great many <span class="vocab-word" data-word="expeditions">expeditions</span> and each one was unique. I've lived for months alone with isolated groups of people all around the world, even two 'uncontacted tribes'. But none of these things is of the slightest interest to anyone unless, through my books, I've found a new <span class="vocab-word" data-word="slant">slant</span>, explored a new idea. Why? Because the world has moved on. The time has long passed for the great continental voyages — another walk to the poles, another crossing of the Empty Quarter. We know how the land surface of our planet lies; exploration of it is now down to the details — the habits of <span class="vocab-word" data-word="microbes">microbes</span>, say, or the grazing behaviour of buffalo. Aside from the deep sea and deep underground, it's the era of <span class="vocab-word" data-word="specialists">specialists</span>. However, this is to <span class="vocab-word" data-word="disregard">disregard</span> the role the human mind has in conveying remote places; and this is what interests me: how a fresh <span class="vocab-word" data-word="interpretation">interpretation</span>, even of a well-travelled route, can give its readers new <span class="vocab-word" data-word="insights">insights</span>.</p>
+            </div>
+        </div>
+
+        <div id="splitter" class="splitter relative flex items-center justify-center group">
+            <div class="w-1 h-8 bg-gray-400 rounded-full opacity-50 group-hover:bg-gray-600 transition-colors"></div>
+        </div>
+
+        <!-- QUESTIONS -->
+        <div id="right-pane" class="pane">
+            <div id="questions-section" class="max-w-3xl mx-auto space-y-8 pb-10">
+
+                <!-- Q27-32: Multiple Choice -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-emerald-100 text-emerald-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 27–32</span>
+                        <h4 class="font-bold text-gray-800">Multiple Choice</h4>
+                    </div>
+                    <p class="mb-5 text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100 text-sm">Choose the correct letter, <strong>A</strong>, <strong>B</strong>, <strong>C</strong> or <strong>D</strong>.</p>
+                    <div class="space-y-5">
+
+                        <div class="q-item" id="container-q27-group">
+                            <p class="font-semibold text-gray-800 mb-3"><span class="font-bold text-emerald-700 mr-2">27</span> The writer refers to visitors to New York to illustrate the point that</p>
+                            <div id="container-q27">
+                                <label class="mc-label"><input type="radio" name="q27" value="a"><span><strong class="mr-2">A</strong> exploration is an intrinsic element of being human.</span></label>
+                                <label class="mc-label"><input type="radio" name="q27" value="b"><span><strong class="mr-2">B</strong> most people are enthusiastic about exploring.</span></label>
+                                <label class="mc-label"><input type="radio" name="q27" value="c"><span><strong class="mr-2">C</strong> exploration can lead to surprising results.</span></label>
+                                <label class="mc-label"><input type="radio" name="q27" value="d"><span><strong class="mr-2">D</strong> most people find exploration daunting.</span></label>
+                            </div>
+                        </div>
+
+                        <div class="q-item" id="container-q28-group">
+                            <p class="font-semibold text-gray-800 mb-3"><span class="font-bold text-emerald-700 mr-2">28</span> According to the second paragraph, what is the writer's view of explorers?</p>
+                            <div id="container-q28">
+                                <label class="mc-label"><input type="radio" name="q28" value="a"><span><strong class="mr-2">A</strong> Their discoveries have brought both benefits and disadvantages.</span></label>
+                                <label class="mc-label"><input type="radio" name="q28" value="b"><span><strong class="mr-2">B</strong> Their main value is in teaching others.</span></label>
+                                <label class="mc-label"><input type="radio" name="q28" value="c"><span><strong class="mr-2">C</strong> They act on an urge that is common to everyone.</span></label>
+                                <label class="mc-label"><input type="radio" name="q28" value="d"><span><strong class="mr-2">D</strong> They tend to be more attracted to certain professions than to others.</span></label>
+                            </div>
+                        </div>
+
+                        <div class="q-item" id="container-q29-group">
+                            <p class="font-semibold text-gray-800 mb-3"><span class="font-bold text-emerald-700 mr-2">29</span> The writer refers to a description of Egdon Heath to suggest that</p>
+                            <div id="container-q29">
+                                <label class="mc-label"><input type="radio" name="q29" value="a"><span><strong class="mr-2">A</strong> Hardy was writing about his own experience of exploration.</span></label>
+                                <label class="mc-label"><input type="radio" name="q29" value="b"><span><strong class="mr-2">B</strong> Hardy was mistaken about the nature of exploration.</span></label>
+                                <label class="mc-label"><input type="radio" name="q29" value="c"><span><strong class="mr-2">C</strong> Hardy's aim was to investigate people's emotional states.</span></label>
+                                <label class="mc-label"><input type="radio" name="q29" value="d"><span><strong class="mr-2">D</strong> Hardy's aim was to show the attraction of isolation.</span></label>
+                            </div>
+                        </div>
+
+                        <div class="q-item" id="container-q30-group">
+                            <p class="font-semibold text-gray-800 mb-3"><span class="font-bold text-emerald-700 mr-2">30</span> In the fourth paragraph, the writer refers to 'a golden age' to suggest that</p>
+                            <div id="container-q30">
+                                <label class="mc-label"><input type="radio" name="q30" value="a"><span><strong class="mr-2">A</strong> the amount of useful information produced by exploration has decreased.</span></label>
+                                <label class="mc-label"><input type="radio" name="q30" value="b"><span><strong class="mr-2">B</strong> fewer people are interested in exploring than in the 19th century.</span></label>
+                                <label class="mc-label"><input type="radio" name="q30" value="c"><span><strong class="mr-2">C</strong> recent developments have made exploration less exciting.</span></label>
+                                <label class="mc-label"><input type="radio" name="q30" value="d"><span><strong class="mr-2">D</strong> we are wrong to think that exploration is no longer necessary.</span></label>
+                            </div>
+                        </div>
+
+                        <div class="q-item" id="container-q31-group">
+                            <p class="font-semibold text-gray-800 mb-3"><span class="font-bold text-emerald-700 mr-2">31</span> In the sixth paragraph, when discussing the definition of exploration, the writer argues that</p>
+                            <div id="container-q31">
+                                <label class="mc-label"><input type="radio" name="q31" value="a"><span><strong class="mr-2">A</strong> people tend to relate exploration to their own professional interests.</span></label>
+                                <label class="mc-label"><input type="radio" name="q31" value="b"><span><strong class="mr-2">B</strong> certain people are likely to misunderstand the nature of exploration.</span></label>
+                                <label class="mc-label"><input type="radio" name="q31" value="c"><span><strong class="mr-2">C</strong> the generally accepted definition has changed over time.</span></label>
+                                <label class="mc-label"><input type="radio" name="q31" value="d"><span><strong class="mr-2">D</strong> historians and scientists have more valid definitions than the general public.</span></label>
+                            </div>
+                        </div>
+
+                        <div class="q-item" id="container-q32-group">
+                            <p class="font-semibold text-gray-800 mb-3"><span class="font-bold text-emerald-700 mr-2">32</span> In the last paragraph, the writer explains that he is interested in</p>
+                            <div id="container-q32">
+                                <label class="mc-label"><input type="radio" name="q32" value="a"><span><strong class="mr-2">A</strong> how someone's personality is reflected in their choice of places to visit.</span></label>
+                                <label class="mc-label"><input type="radio" name="q32" value="b"><span><strong class="mr-2">B</strong> the human ability to cast new light on places that may be familiar.</span></label>
+                                <label class="mc-label"><input type="radio" name="q32" value="c"><span><strong class="mr-2">C</strong> how travel writing has evolved to meet changing demands.</span></label>
+                                <label class="mc-label"><input type="radio" name="q32" value="d"><span><strong class="mr-2">D</strong> the feelings that writers develop about the places that they explore.</span></label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-5 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="27-32">Check Answers</button>
+                    </div>
+                </div>
+
+                <!-- Q33-37: Explorer Matching -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-emerald-100 text-emerald-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 33–37</span>
+                        <h4 class="font-bold text-gray-800">Matching — Explorers</h4>
+                    </div>
+                    <p class="mb-4 text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100 text-sm">Match each statement with the correct explorer <strong>A–E</strong>. <em>You may use any letter more than once.</em></p>
+                    <div class="mb-5 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div class="explorer-card"><span class="explorer-tag">A</span> Peter Fleming</div>
+                        <div class="explorer-card"><span class="explorer-tag">B</span> Ran Fiennes</div>
+                        <div class="explorer-card"><span class="explorer-tag">C</span> Chris Bonington</div>
+                        <div class="explorer-card"><span class="explorer-tag">D</span> Robin Hanbury-Tenison</div>
+                        <div class="explorer-card"><span class="explorer-tag">E</span> Wilfred Thesiger</div>
+                    </div>
+                    <div class="space-y-3">
+                        <div class="q-item flex items-start gap-3" id="container-q33">
+                            <select name="q33" class="select-input mt-0.5 shrink-0"><option value="">--</option><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option></select>
+                            <p class="text-gray-800 font-medium"><span class="font-bold text-emerald-700 mr-1">33</span> He referred to the relevance of the form of transport used.</p>
+                        </div>
+                        <div class="q-item flex items-start gap-3" id="container-q34">
+                            <select name="q34" class="select-input mt-0.5 shrink-0"><option value="">--</option><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option></select>
+                            <p class="text-gray-800 font-medium"><span class="font-bold text-emerald-700 mr-1">34</span> He described feelings on coming back home after a long journey.</p>
+                        </div>
+                        <div class="q-item flex items-start gap-3" id="container-q35">
+                            <select name="q35" class="select-input mt-0.5 shrink-0"><option value="">--</option><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option></select>
+                            <p class="text-gray-800 font-medium"><span class="font-bold text-emerald-700 mr-1">35</span> He worked for the benefit of specific groups of people.</p>
+                        </div>
+                        <div class="q-item flex items-start gap-3" id="container-q36">
+                            <select name="q36" class="select-input mt-0.5 shrink-0"><option value="">--</option><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option></select>
+                            <p class="text-gray-800 font-medium"><span class="font-bold text-emerald-700 mr-1">36</span> He did not consider learning about oneself an essential part of exploration.</p>
+                        </div>
+                        <div class="q-item flex items-start gap-3" id="container-q37">
+                            <select name="q37" class="select-input mt-0.5 shrink-0"><option value="">--</option><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option></select>
+                            <p class="text-gray-800 font-medium"><span class="font-bold text-emerald-700 mr-1">37</span> He defined exploration as being both unique and of value to others.</p>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="33-37">Check Answers</button>
+                    </div>
+                </div>
+
+                <!-- Q38-40: Summary Completion -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-emerald-100 text-emerald-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 38–40</span>
+                        <h4 class="font-bold text-gray-800">Summary Completion</h4>
+                    </div>
+                    <p class="mb-5 text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100 text-sm">Complete the summary below. Choose <strong class="text-emerald-700">NO MORE THAN TWO WORDS</strong> from the passage for each answer.</p>
+                    <div class="summary-block">
+                        <h5>The Writer's Own Bias</h5>
+                        <p>
+                            The writer has experience of a large number of
+                            <span id="container-q38" class="inline-block mx-1"><strong class="text-emerald-700 text-sm mr-1">38</strong><input type="text" name="q38" class="text-input text-input-md" placeholder="__________" autocomplete="off" spellcheck="false"></span>,
+                            and was the first stranger that certain previously
+                            <span id="container-q39" class="inline-block mx-1"><strong class="text-emerald-700 text-sm mr-1">39</strong><input type="text" name="q39" class="text-input text-input-md" placeholder="__________" autocomplete="off" spellcheck="false"></span>
+                            people had encountered. He believes there is no need for further exploration of Earth's
+                            <span id="container-q40" class="inline-block mx-1"><strong class="text-emerald-700 text-sm mr-1">40</strong><input type="text" name="q40" class="text-input text-input-md" placeholder="__________" autocomplete="off" spellcheck="false"></span>,
+                            except to answer specific questions such as how buffalo eat.
+                        </p>
+                    </div>
+                    <div class="mt-4 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="38-40">Check Answers</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+</div>
+
+<div id="highlight-tooltip" class="highlight-tooltip">Highlight Text</div>
+
+<!-- Vocab Modal -->
+<div id="vocab-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
+    <div class="bg-white rounded-2xl shadow-2xl p-5 sm:p-8 w-full max-w-md relative transform transition-all scale-95 opacity-0" id="vocab-modal-content">
+        <button id="close-vocab-modal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-full w-8 h-8 flex items-center justify-center">&times;</button>
+        <div class="flex items-center mb-6 border-b pb-4 mt-2">
+            <h3 id="vocab-word" class="text-2xl sm:text-3xl font-extrabold text-gray-900 capitalize tracking-tight"></h3>
+        </div>
+        <div class="flex items-center mb-5">
+            <button id="play-audio-btn" class="flex items-center justify-center h-10 w-10 sm:h-12 sm:w-12 shrink-0 rounded-full bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white mr-4 transition-all shadow-sm border border-emerald-200">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>
+            </button>
+            <p id="vocab-pronunciation-text" class="text-gray-500 font-mono text-base sm:text-lg bg-gray-50 px-3 py-1 rounded-md border border-gray-100"></p>
+        </div>
+        <p id="vocab-meaning" class="text-gray-700 text-base sm:text-lg leading-relaxed"></p>
+    </div>
+</div>
+
+<!-- Alert Modal -->
+<div id="alert-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-[80]">
+    <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm relative transform transition-all scale-95 opacity-0 text-center" id="alert-modal-content">
+        <div id="alert-icon-container" class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 mb-4">
+            <svg class="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        </div>
+        <h3 id="alert-title" class="text-lg font-medium text-gray-900 mb-2">Notice</h3>
+        <p id="alert-message" class="text-sm text-gray-500 mb-6"></p>
+        <button id="close-alert-btn" class="w-full inline-flex justify-center rounded-md px-4 py-2 bg-emerald-700 text-white font-medium hover:bg-emerald-800 text-sm transition-colors">Got it</button>
+    </div>
+</div>
+
+<script>
+const vocabulary = {
+    'wildebeest': { meaning: 'A large African antelope with a long head, a beard, a mane, and curved horns; also called a gnu.', phonetic: '/ˈwɪl.dɪ.biːst/' },
+    'scouts': { meaning: 'People sent ahead to gather information about unknown territory; advance explorers.', phonetic: '/skaʊts/' },
+    'questing': { meaning: 'Searching or seeking something eagerly; going on a quest for knowledge or discovery.', phonetic: '/ˈkwes.tɪŋ/' },
+    'nomadic': { meaning: 'Living the life of a nomad; wandering from place to place without a permanent home.', phonetic: '/nəʊˈmæd.ɪk/' },
+    'depleted': { meaning: 'Reduced in number or quantity; exhausted of resources.', phonetic: '/dɪˈpliː.tɪd/' },
+    'peculiar breed': { meaning: 'A distinct and unusual type of person; a category of people with special characteristics.', phonetic: '/pɪˈkjuː.li.ər briːd/' },
+    'venturing out': { meaning: 'Daring to go into unknown or dangerous territory; taking a risk to explore.', phonetic: '/ˈven.tʃər.ɪŋ aʊt/' },
+    'enquiring instinct': { meaning: 'An inborn tendency or drive to ask questions and seek knowledge about the unknown.', phonetic: '/ɪnˈkwaɪər.ɪŋ ˈɪn.stɪŋkt/' },
+    'uncultivated': { meaning: 'Not prepared or used for growing crops; (of land) wild and not farmed.', phonetic: '/ʌnˈkʌl.tɪ.veɪ.tɪd/' },
+    'puny': { meaning: 'Small, weak, and insignificant; lacking physical strength.', phonetic: '/ˈpjuː.ni/' },
+    'irrelevant': { meaning: 'Not connected with or relevant to something; not important in the current context.', phonetic: '/ɪˈrel.ɪ.vənt/' },
+    'laboriously': { meaning: 'In a way that requires considerable time and effort; with hard and sustained work.', phonetic: '/ləˈbɔː.ri.ə.sli/' },
+    'era': { meaning: 'A long and distinct period of history with a particular characteristic or feature.', phonetic: '/ˈɪər.ə/' },
+    'golden age': { meaning: 'A period in the past considered the most successful or prosperous; an idealized time.', phonetic: '/ˈɡəʊl.dən eɪdʒ/' },
+    'bacteria': { meaning: 'Microscopic single-celled organisms found everywhere on earth; some cause disease.', phonetic: '/bækˈtɪər.i.ə/' },
+    'scarcely': { meaning: 'Only just; almost not; barely; to a small degree.', phonetic: '/ˈskeəs.li/' },
+    'dubbed': { meaning: 'Given a particular name or title informally; nicknamed.', phonetic: '/dʌbd/' },
+    'campaigner': { meaning: 'A person who advocates actively for a cause or political movement.', phonetic: '/kæmˈpeɪ.nər/' },
+    'unmechanised': { meaning: 'Not using machinery or mechanical devices; done by hand or with simple tools.', phonetic: '/ʌnˈmek.ə.naɪzd/' },
+    'stunt': { meaning: 'An action done to attract attention but not of real value; a feat performed for publicity.', phonetic: '/stʌnt/' },
+    'regardless of': { meaning: 'Despite; without being affected by; paying no attention to.', phonetic: '/rɪˈɡɑːd.ləs ɒv/' },
+    'endeavour': { meaning: 'An attempt to achieve a goal; earnest effort; a serious purposeful activity.', phonetic: '/ɪnˈdev.ər/' },
+    'cutting-edge': { meaning: 'At the forefront of innovation and development; the most advanced and modern.', phonetic: '/ˈkʌt.ɪŋ edʒ/' },
+    'criteria': { meaning: 'Principles or standards by which something may be judged or decided; plural of criterion.', phonetic: '/kraɪˈtɪər.i.ə/' },
+    'objective': { meaning: 'A goal or aim; something that one is trying to achieve or accomplish.', phonetic: '/əbˈdʒek.tɪv/' },
+    'bias': { meaning: 'Prejudice in favour of or against something; a personal inclination or perspective.', phonetic: '/ˈbaɪ.əs/' },
+    'expeditions': { meaning: 'Journeys undertaken by a group with a purpose, especially for exploration or research.', phonetic: '/ˌek.spɪˈdɪʃ.ənz/' },
+    'slant': { meaning: 'A particular point of view or perspective; a way of approaching or presenting something.', phonetic: '/slɑːnt/' },
+    'microbes': { meaning: 'Microscopic organisms, especially bacteria; microorganisms that may cause disease.', phonetic: '/ˈmaɪ.krəʊbz/' },
+    'specialists': { meaning: 'People who concentrate on a specific area of study or activity; experts in a field.', phonetic: '/ˈspeʃ.ə.lɪsts/' },
+    'disregard': { meaning: 'To pay no attention to; to treat as unworthy of consideration; to ignore.', phonetic: '/ˌdɪs.rɪˈɡɑːd/' },
+    'interpretation': { meaning: 'The action of explaining the meaning of something; a particular way of understanding something.', phonetic: '/ɪnˌtɜː.prɪˈteɪ.ʃən/' },
+    'insights': { meaning: 'Deep understandings; accurate and deep intuitive understandings of a person or thing.', phonetic: '/ˈɪn.saɪts/' }
+};
+
+const MC_ANSWERS = { q27:'a', q28:'c', q29:'c', q30:'d', q31:'a', q32:'b' };
+const MATCHING_ANSWERS = { q33:'e', q34:'a', q35:'d', q36:'e', q37:'b' };
+const TEXT_ANSWERS = { q38:'expeditions', q39:'isolated', q40:'land surface' };
+const TEXT_ALTS = { q38:[], q39:['uncontacted'], q40:[] };
+
+const explanations = {
+    q27: "A — Paragraph 1: 'This questing nature of ours undoubtedly helped our species spread around the globe…and a visitor negotiate the subways of New York.' The New York visitor is used to illustrate that exploration is an intrinsic (built-in) part of human nature.",
+    q28: "C — Paragraph 2: 'That, however, doesn't take away from the fact that we all have this enquiring instinct, even today.' The writer argues that explorers simply act on an urge that all humans share.",
+    q29: "C — Paragraph 3: Hardy 'used the landscape to suggest the desires and fears of his characters.' This shows Hardy was investigating people's emotional states — their internal desires and fears.",
+    q30: "D — Paragraph 4: The writer uses the 'golden age' notion ironically, then counters it with evidence: we've named only 1.5m of 10m+ species, studied only 5% of known species, scarcely mapped ocean floors. The point is we are WRONG to think exploration is no longer needed.",
+    q31: "A — Paragraph 6: 'Each definition is slightly different — and tends to reflect the field of endeavour of each pioneer.' Historians say it's a thing of the past, scientists say it's of the present — each relates it to their own profession.",
+    q32: "B — Paragraph 7 (last sentence): 'how a fresh interpretation, even of a well-travelled route, can give its readers new insights.' The writer is interested in how humans can cast new light on familiar places.",
+    q33: "E — Wilfred Thesiger: 'If I'd gone across by camel when I could have gone by car, it would have been a stunt.' He explicitly referred to the relevance of the form of transport used.",
+    q34: "A — Peter Fleming: He 'talks of the moment when the explorer returns to the existence he has left behind with his loved ones.' He describes feelings on coming home after a long journey.",
+    q35: "D — Robin Hanbury-Tenison: described as 'a campaigner on behalf of remote so-called tribal peoples.' He worked for the benefit of specific groups of people.",
+    q36: "E — Wilfred Thesiger: 'exploration meant bringing back information from a remote place regardless of any great self-discovery.' He did not see self-discovery as essential to exploration.",
+    q37: "B — Ran Fiennes: 'An explorer is someone who has done something that no human has done before [unique] — and also done something scientifically useful [of value to others].' Both criteria are met.",
+    q38: "Paragraph 7: 'I've done a great many expeditions and each one was unique.' 'A large number of' = 'a great many'. Answer: expeditions.",
+    q39: "Paragraph 7: 'I've lived for months alone with isolated groups of people all around the world, even two uncontacted tribes.' The writer was the first stranger they encountered. Either 'isolated' or 'uncontacted' is accepted.",
+    q40: "Paragraph 7: 'We know how the land surface of our planet lies; exploration of it is now down to the details.' Answer: land surface."
+};
+
+const TOTAL_QUESTIONS = 14;
+
+document.addEventListener('DOMContentLoaded', () => {
+    const app = {
+        userAnswers: {}, answersChecked: {}, currentFontSize: 17, timeRemaining: 20*60,
+        leftPane: document.getElementById('left-pane'),
+        rightPane: document.getElementById('right-pane'),
+        highlightTooltip: document.getElementById('highlight-tooltip'),
+        vocabModal: document.getElementById('vocab-modal'),
+        vocabModalContent: document.getElementById('vocab-modal-content'),
+        closeVocabModalBtn: document.getElementById('close-vocab-modal'),
+        vocabWordEl: document.getElementById('vocab-word'),
+        vocabMeaningEl: document.getElementById('vocab-meaning'),
+        vocabPronunciationText: document.getElementById('vocab-pronunciation-text'),
+        playAudioBtn: document.getElementById('play-audio-btn'),
+        progressText: document.getElementById('progress-text'),
+        timerEl: document.getElementById('timer'),
+        alertModal: document.getElementById('alert-modal'),
+        alertModalContent: document.getElementById('alert-modal-content'),
+        closeAlertBtn: document.getElementById('close-alert-btn'),
+        alertTitleEl: document.getElementById('alert-title'),
+        alertMessageEl: document.getElementById('alert-message'),
+        alertIconContainer: document.getElementById('alert-icon-container'),
+
+        init() { this.setupEventListeners(); this.initSplitter(); this.initHighlighter(); this.updateCheckButtonsState(); this.startTimer(); },
+
+        startTimer() {
+            const interval = setInterval(() => {
+                if (this.timeRemaining <= 0) { clearInterval(interval); this.timerEl.textContent = "00:00"; this.showAlert("Time's Up!", "Your 20 minutes have expired.", "warning"); return; }
+                this.timeRemaining--;
+                const m = Math.floor(this.timeRemaining/60).toString().padStart(2,'0');
+                const s = (this.timeRemaining%60).toString().padStart(2,'0');
+                this.timerEl.textContent = `${m}:${s}`;
+                if (this.timeRemaining <= 300) this.timerEl.classList.add('text-red-500');
+            }, 1000);
+        },
+
+        setupEventListeners() {
+            document.getElementById('increase-font-btn').addEventListener('click', () => this.changeFontSize(1));
+            document.getElementById('decrease-font-btn').addEventListener('click', () => this.changeFontSize(-1));
+            document.getElementById('clear-highlights-btn').addEventListener('click', () => this.leftPane.querySelectorAll('mark').forEach(m => m.replaceWith(document.createTextNode(m.textContent))));
+            this.closeVocabModalBtn.addEventListener('click', () => this.closeModal());
+            this.vocabModal.addEventListener('click', (e) => { if (e.target === this.vocabModal) this.closeModal(); });
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') { if (!this.vocabModal.classList.contains('hidden')) this.closeModal(); if (!this.alertModal.classList.contains('hidden')) this.closeAlert(); }
+                if ((e.ctrlKey||e.metaKey) && e.key.toLowerCase() === 'f') { e.preventDefault(); this.showAlert("Disabled", "Find is disabled during the exam.", "warning"); }
+            });
+            document.addEventListener('visibilitychange', () => { if (document.hidden && this.timeRemaining > 0) this.showAlert("Warning", "Please do not switch tabs during the exam.", "warning"); });
+            window.addEventListener('beforeunload', (e) => { if (this.timeRemaining > 0 && this.timeRemaining < 20*60) { e.preventDefault(); e.returnValue = ''; } });
+            this.closeAlertBtn.addEventListener('click', () => this.closeAlert());
+            this.alertModal.addEventListener('click', (e) => { if (e.target === this.alertModal) this.closeAlert(); });
+            document.body.addEventListener('change', (e) => {
+                if (e.target.type === 'radio') { this.userAnswers[e.target.name] = e.target.value.toLowerCase(); this.updateCheckButtonsState(); this.updateProgress(); }
+                if (e.target.tagName === 'SELECT') { this.userAnswers[e.target.name] = e.target.value.toLowerCase(); e.target.classList.remove('select-correct','select-incorrect'); this.updateCheckButtonsState(); this.updateProgress(); }
+            });
+            document.body.addEventListener('input', (e) => {
+                if (e.target.tagName === 'INPUT' && e.target.type === 'text') { this.userAnswers[e.target.name] = e.target.value.trim().toLowerCase(); e.target.classList.remove('text-correct','text-incorrect'); this.updateCheckButtonsState(); this.updateProgress(); }
+            });
+            this.leftPane.addEventListener('click', (e) => {
+                if (e.target.classList.contains('vocab-word')) this.openVocabModal(e.target.dataset.word);
+                if (e.target.tagName === 'MARK') e.target.replaceWith(document.createTextNode(e.target.textContent));
+            });
+            document.querySelectorAll('.check-btn').forEach(btn => btn.addEventListener('click', (e) => this.checkAnswers(e.target.dataset.range, e.target)));
+            this.playAudioBtn.addEventListener('click', () => {
+                const word = this.vocabWordEl.textContent; if (!word) return;
+                if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+                this.playAudioBtn.classList.remove('text-emerald-700','bg-emerald-50'); this.playAudioBtn.classList.add('bg-emerald-600','text-white');
+                if ('speechSynthesis' in window) { const u = new SpeechSynthesisUtterance(word); u.lang = 'en-GB'; u.rate = 0.9; u.onend = () => this.resetAudioBtn(); u.onerror = () => this.resetAudioBtn(); window.speechSynthesis.speak(u); }
+                else setTimeout(() => this.resetAudioBtn(), 500);
+            });
+        },
+
+        updateProgress() {
+            let c = 0;
+            for (let i = 27; i <= 37; i++) { if ((this.userAnswers[`q${i}`] || '').trim()) c++; }
+            for (let i = 38; i <= 40; i++) { if ((this.userAnswers[`q${i}`] || '').trim()) c++; }
+            this.progressText.textContent = `${Math.min(c, TOTAL_QUESTIONS)} / ${TOTAL_QUESTIONS} Answered`;
+        },
+
+        resetAudioBtn() { this.playAudioBtn.classList.add('text-emerald-700','bg-emerald-50'); this.playAudioBtn.classList.remove('bg-emerald-600','text-white'); },
+        changeFontSize(d) { this.currentFontSize = Math.max(14, Math.min(26, this.currentFontSize+d)); document.documentElement.style.setProperty('--app-font-size', `${this.currentFontSize}px`); },
+        openVocabModal(w) {
+            const d = vocabulary[w]; if (!d) return;
+            this.vocabWordEl.textContent = w; this.vocabMeaningEl.textContent = d.meaning; this.vocabPronunciationText.textContent = d.phonetic || '';
+            this.vocabModal.classList.remove('hidden');
+            setTimeout(() => { this.vocabModalContent.classList.remove('scale-95','opacity-0'); this.vocabModalContent.classList.add('scale-100','opacity-100'); }, 10);
+        },
+        closeModal() {
+            if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+            this.vocabModalContent.classList.remove('scale-100','opacity-100'); this.vocabModalContent.classList.add('scale-95','opacity-0');
+            this.resetAudioBtn(); setTimeout(() => this.vocabModal.classList.add('hidden'), 200);
+        },
+        showAlert(title, message, type='error') {
+            this.alertTitleEl.textContent = title; this.alertMessageEl.textContent = message;
+            const c = type === 'warning' ? 'yellow' : 'red';
+            this.alertIconContainer.className = `mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-${c}-100 mb-4`;
+            this.alertIconContainer.innerHTML = `<svg class="h-6 w-6 text-${c}-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>`;
+            this.alertModal.classList.remove('hidden');
+            setTimeout(() => { this.alertModalContent.classList.remove('scale-95','opacity-0'); this.alertModalContent.classList.add('scale-100','opacity-100'); }, 10);
+        },
+        closeAlert() {
+            this.alertModalContent.classList.remove('scale-100','opacity-100'); this.alertModalContent.classList.add('scale-95','opacity-0');
+            setTimeout(() => this.alertModal.classList.add('hidden'), 200);
+        },
+
+        isRangeAnswered(range) {
+            const [s, e] = range.split('-').map(Number);
+            for (let i = s; i <= e; i++) { if (!(this.userAnswers[`q${i}`] || '').trim()) return false; }
+            return true;
+        },
+
+        updateCheckButtonsState() {
+            document.querySelectorAll('.check-btn').forEach(btn => {
+                const range = btn.dataset.range;
+                if (this.answersChecked[range]) { btn.className = 'check-btn bg-gray-800 hover:bg-gray-900 text-white font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-pointer'; btn.textContent = 'Reset Answers'; return; }
+                const allDone = this.isRangeAnswered(range);
+                btn.className = allDone ? 'check-btn bg-emerald-700 hover:bg-emerald-800 text-white font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-pointer transform hover:-translate-y-0.5' : 'check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80';
+                btn.textContent = 'Check Answers';
+            });
+        },
+
+        checkAnswers(range, btn) {
+            if (this.answersChecked[range]) {
+                this.answersChecked[range] = false;
+                const [s, e] = range.split('-').map(Number);
+                for (let i = s; i <= e; i++) {
+                    const qId = `q${i}`; this.userAnswers[qId] = '';
+                    document.querySelectorAll(`input[name="${qId}"][type="radio"]`).forEach(r => { r.checked = false; const lbl = r.closest('label'); if (lbl) lbl.classList.remove('correct-answer','incorrect-answer'); });
+                    const sel = document.querySelector(`select[name="${qId}"]`); if (sel) { sel.value = ''; sel.classList.remove('select-correct','select-incorrect'); }
+                    const inp = document.querySelector(`input[name="${qId}"][type="text"]`); if (inp) { inp.value = ''; inp.placeholder = '__________'; inp.classList.remove('text-correct','text-incorrect'); }
+                    document.getElementById(`expl-${qId}`)?.remove();
+                }
+                this.updateCheckButtonsState(); this.updateProgress(); return;
+            }
+            if (!this.isRangeAnswered(range)) { this.showAlert("Incomplete Answers", "Please answer all questions in this section before checking.", "warning"); return; }
+            this.answersChecked[range] = true; this.updateCheckButtonsState();
+
+            const [s, e] = range.split('-').map(Number);
+            for (let i = s; i <= e; i++) {
+                const qId = `q${i}`;
+                const userAns = (this.userAnswers[qId] || '').toLowerCase().trim();
+                let correctAns, isCorrect, feedbackHTML = '';
+
+                // Determine correct answer & type
+                if (MC_ANSWERS[qId]) {
+                    correctAns = MC_ANSWERS[qId]; isCorrect = userAns === correctAns;
+                    const radios = document.querySelectorAll(`input[name="${qId}"][type="radio"]`);
+                    radios.forEach(r => {
+                        const lbl = r.closest('label'); if (!lbl) return;
+                        lbl.classList.remove('correct-answer','incorrect-answer');
+                        if (r.value === correctAns) lbl.classList.add('correct-answer');
+                        else if (r.checked) lbl.classList.add('incorrect-answer');
+                    });
+                    if (!isCorrect) feedbackHTML = `<span class="correct-badge">Correct Answer: ${correctAns.toUpperCase()}</span><br>`;
+                } else if (MATCHING_ANSWERS[qId]) {
+                    correctAns = MATCHING_ANSWERS[qId]; isCorrect = userAns === correctAns;
+                    const sel = document.querySelector(`select[name="${qId}"]`);
+                    if (sel) { sel.classList.remove('select-correct','select-incorrect'); sel.classList.add(isCorrect ? 'select-correct' : 'select-incorrect'); if (!isCorrect) { feedbackHTML = `<span class="correct-badge">Correct: ${correctAns.toUpperCase()}</span><br>`; sel.value = correctAns.toUpperCase(); } }
+                } else if (TEXT_ANSWERS[qId]) {
+                    correctAns = TEXT_ANSWERS[qId];
+                    const alts = TEXT_ALTS[qId] || [];
+                    isCorrect = userAns === correctAns || alts.includes(userAns);
+                    const inp = document.querySelector(`input[name="${qId}"][type="text"]`);
+                    if (inp) { inp.classList.remove('text-correct','text-incorrect'); if (isCorrect) { inp.classList.add('text-correct'); } else { inp.classList.add('text-incorrect'); inp.value = ''; inp.placeholder = correctAns; feedbackHTML = `<span class="correct-badge">Correct Answer: ${correctAns}${alts.length ? ' / '+alts.join(' / ') : ''}</span><br>`; } }
+                }
+
+                if (explanations[qId] && !document.getElementById(`expl-${qId}`)) {
+                    const div = document.createElement('div'); div.id = `expl-${qId}`; div.className = 'explanation-box';
+                    div.innerHTML = `${feedbackHTML}<strong>Explanation:</strong> ${explanations[qId]}`;
+                    // Find insertion point
+                    const grpEl = document.getElementById(`container-${qId}-group`);
+                    const contEl = document.getElementById(`container-${qId}`);
+                    const insertAfter = grpEl ? grpEl.closest('.q-item') || grpEl : (contEl ? contEl.closest('.q-item') || contEl : null);
+                    if (insertAfter) insertAfter.insertAdjacentElement('afterend', div);
+                    else {
+                        // for summary inputs
+                        const inp2 = document.querySelector(`input[name="${qId}"]`);
+                        if (inp2) {
+                            const parentBlock = inp2.closest('.summary-block');
+                            if (parentBlock) parentBlock.insertAdjacentElement('afterend', div);
+                        }
+                    }
+                }
+            }
+        },
+
+        initSplitter() {
+            let isDragging = false; const panes = document.getElementById('content-panes');
+            document.getElementById('splitter').addEventListener('mousedown', (e) => { e.preventDefault(); isDragging = true; document.body.style.cursor = 'col-resize'; });
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging || window.innerWidth <= 768) return;
+                const rect = panes.getBoundingClientRect(); const newLeft = e.clientX - rect.left;
+                if (newLeft > 200 && newLeft < rect.width - 200) panes.style.gridTemplateColumns = `${(newLeft/rect.width)*100}% 5px 1fr`;
+            });
+            document.addEventListener('mouseup', () => { if (isDragging) { isDragging = false; document.body.style.cursor = 'default'; } });
+        },
+
+        initHighlighter() {
+            document.body.addEventListener('mouseup', (e) => {
+                const sel = window.getSelection(); const text = sel.toString().trim();
+                if (text.length > 0) {
+                    const range = sel.getRangeAt(0);
+                    if (!this.leftPane.contains(range.commonAncestorContainer) && !this.rightPane.contains(range.commonAncestorContainer)) { this.highlightTooltip.style.display = 'none'; return; }
+                    this.highlightTooltip.style.left = `${e.pageX-30}px`; this.highlightTooltip.style.top = `${e.pageY-40}px`; this.highlightTooltip.style.display = 'block';
+                    this.highlightTooltip.onclick = () => {
+                        const mark = document.createElement('mark');
+                        try { range.surroundContents(mark); } catch(ex) { this.showAlert("Highlight Error", "Please select text within a single element.", "warning"); }
+                        finally { sel.removeAllRanges(); this.highlightTooltip.style.display = 'none'; }
+                    };
+                } else { this.highlightTooltip.style.display = 'none'; }
+            });
+            document.body.addEventListener('mousedown', () => { if (window.getSelection().toString().length === 0) this.highlightTooltip.style.display = 'none'; });
+        }
+    };
+    app.init();
+});
+</script>
+</body>
+</html>

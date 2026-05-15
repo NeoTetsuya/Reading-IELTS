@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IELTS Simulator - Driverless Cars</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --app-font-size: 17px; }
+        body { font-family: 'Inter', sans-serif; overscroll-behavior: none; background-color: #f3f4f6; }
+        .ielts-container { display: grid; grid-template-rows: auto 1fr; height: 100vh; }
+        .content-panes { display: grid; grid-template-columns: 1fr 5px 1fr; overflow: hidden; }
+        .pane { overflow-y: auto; padding: 2rem 3rem; font-size: var(--app-font-size); scroll-behavior: smooth; }
+        #left-pane { background-color: #fdfdfd; }
+        #right-pane { background-color: #f8fafc; }
+        .splitter { background-color: #cbd5e1; cursor: col-resize; z-index: 10; transition: background-color 0.2s; }
+        .splitter:hover, .splitter:active { background-color: #94a3b8; }
+        .reading-passage { font-family: 'Merriweather', serif; line-height: 1.9; color: #334155; text-align: justify; max-width: 800px; margin: 0 auto; }
+        .reading-passage p { margin-bottom: 1.5rem; text-indent: 1.5rem; }
+        .reading-passage h3 { font-family: 'Inter', sans-serif; color: #0f172a; margin-bottom: 0.25rem; font-weight: 700; font-size: 1.4em; text-align: center; text-indent: 0; text-transform: uppercase; letter-spacing: 0.04em; }
+        .para-label { font-family: 'Inter', sans-serif; font-weight: 800; color: #1d4ed8; font-size: 1em; display: inline-block; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 5px; padding: 1px 8px; margin-bottom: 0.5rem; }
+        .q-item { padding: 1rem; border-radius: 0.5rem; transition: all 0.2s; background-color: white; border: 1px solid #e2e8f0; margin-bottom: 0.75rem; }
+        .select-input { border: 2px solid #cbd5e1; border-radius: 6px; padding: 4px 10px; font-weight: 600; color: #1e293b; transition: all 0.2s; background-color: #f8fafc; cursor: pointer; min-width: 4.5rem; }
+        .select-input:focus { outline: none; border-color: #1d4ed8; background-color: #fff; box-shadow: 0 0 0 3px rgba(29,78,216,0.12); }
+        .text-input { border: 2px solid #cbd5e1; border-radius: 6px; padding: 4px 8px; font-weight: 600; color: #1e293b; transition: all 0.2s; text-align: center; background-color: #f8fafc; }
+        .text-input:focus { outline: none; border-color: #1d4ed8; background-color: #fff; box-shadow: 0 0 0 3px rgba(29,78,216,0.12); }
+        .text-input-md { width: 11rem; }
+        .mc-label { display: flex; align-items: flex-start; padding: 0.65rem 1rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s; background-color: white; margin-bottom: 0.4rem; gap: 0.75rem; }
+        .mc-label:hover { background: #eff6ff; border-color: #93c5fd; }
+        .mc-label input { width: 1.1em; height: 1.1em; accent-color: #1d4ed8; flex-shrink: 0; margin-top: 0.2em; }
+        .select-correct { border-color: #22c55e !important; background-color: #f0fdf4 !important; color: #166534 !important; }
+        .select-incorrect { border-color: #ef4444 !important; background-color: #fef2f2 !important; color: #991b1b !important; }
+        .text-correct { border-color: #22c55e !important; background-color: #f0fdf4 !important; color: #166534 !important; }
+        .text-incorrect { border-color: #ef4444 !important; background-color: #fef2f2 !important; color: #991b1b !important; }
+        label.correct-answer { border-color: #22c55e !important; background-color: #f0fdf4 !important; }
+        label.incorrect-answer { border-color: #ef4444 !important; background-color: #fef2f2 !important; }
+        label.partial-answer { border-color: #f59e0b !important; background-color: #fffbeb !important; }
+        .explanation-box { animation: fadeIn 0.4s ease-out forwards; margin-top: 0.75rem; padding: 1rem; background-color: #eff6ff; border-left: 4px solid #1d4ed8; border-radius: 0.5rem; font-size: 0.95rem; color: #1e3a5f; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .explanation-box .correct-badge { display: inline-block; background: #22c55e; color: white; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85em; margin-bottom: 0.5rem; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+        .vocab-word { color: #1d4ed8; font-weight: 600; cursor: pointer; border-bottom: 2px dotted #93c5fd; transition: all 0.2s ease-in-out; padding: 0 2px; }
+        .vocab-word:hover { background-color: #dbeafe; border-bottom-style: solid; border-radius: 2px; }
+        .highlight-tooltip { position: absolute; background-color: #1e293b; color: white; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 500; z-index: 100; cursor: pointer; display: none; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        mark { background-color: #fef08a; border-radius: 3px; padding: 2px 0; cursor: pointer; }
+        mark:hover { background-color: #fca5a5; color: #7f1d1d; }
+        mark:hover::after { content: ' x'; font-weight: bold; font-size: 0.8em; opacity: 0.7; }
+        .summary-block { background: #eff6ff; border: 1px solid #93c5fd; border-radius: 0.75rem; padding: 1.5rem; margin-bottom: 1rem; line-height: 2.1; font-size: 0.97em; color: #1e3a5f; }
+        .summary-block h5 { font-family: 'Inter', sans-serif; font-weight: 700; color: #1d4ed8; font-size: 1em; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        .choose-two-notice { background: #dbeafe; border: 1px solid #93c5fd; border-radius: 0.5rem; padding: 0.5rem 1rem; font-size: 0.85em; color: #1e3a5f; font-weight: 600; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+        @media (max-width: 768px) {
+            .content-panes { display: flex; flex-direction: column; overflow-y: auto; }
+            .splitter { display: none; }
+            .pane { padding: 1.25rem 1rem; overflow-y: visible; height: auto; }
+            #left-pane { border-bottom: 2px dashed #cbd5e1; padding-bottom: 2rem; }
+        }
+    </style>
+</head>
+<body>
+<div id="test-container" class="ielts-container">
+    <header class="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 flex justify-between items-center z-20 shadow-sm flex-wrap gap-3">
+        <div class="flex items-center gap-2 sm:space-x-3">
+            <div class="bg-blue-700 text-white p-1.5 sm:p-2 rounded-lg shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/>
+                </svg>
+            </div>
+            <h1 class="text-xl font-bold text-gray-800 hidden sm:block">IELTS Simulator <span class="text-blue-700 font-medium">| Driverless Cars</span></h1>
+            <h1 class="text-base font-bold text-gray-800 sm:hidden">IELTS <span class="text-blue-700">Driverless Cars</span></h1>
+        </div>
+        <div class="flex items-center space-x-4">
+            <div class="hidden sm:flex flex-col items-end">
+                <span class="text-xs text-gray-500 font-bold uppercase tracking-wide">Progress</span>
+                <span id="progress-text" class="text-sm font-semibold text-blue-700">0 / 13 Answered</span>
+            </div>
+            <div class="flex items-center bg-gray-100 rounded-lg px-3 py-1.5 border border-gray-200">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span id="timer" class="font-mono font-bold text-gray-700 text-lg">20:00</span>
+            </div>
+        </div>
+        <div class="flex items-center gap-2 sm:space-x-3">
+            <button id="clear-highlights-btn" class="hidden sm:flex items-center justify-center px-3 py-1.5 rounded bg-blue-50 hover:bg-blue-100 text-blue-700 transition-colors focus:outline-none border border-blue-200 text-sm font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                Clear
+            </button>
+            <div class="flex items-center space-x-1 sm:space-x-2 bg-gray-50 p-1 rounded-lg border border-gray-200">
+                <button id="decrease-font-btn" class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded bg-white shadow-sm hover:bg-gray-100 text-gray-700 transition-colors focus:outline-none font-bold text-sm sm:text-base">A-</button>
+                <button id="increase-font-btn" class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded bg-white shadow-sm hover:bg-gray-100 text-gray-700 transition-colors focus:outline-none font-bold text-sm sm:text-base">A+</button>
+            </div>
+        </div>
+    </header>
+
+    <main id="content-panes" class="content-panes">
+        <!-- PASSAGE -->
+        <div id="left-pane" class="pane relative">
+            <div class="reading-passage">
+                <h3>Driverless Cars</h3><br>
+                <div class="mb-4">
+                    <span class="para-label">A</span>
+                    <p>The <span class="vocab-word" data-word="automotive sector">automotive sector</span> is well used to adapting to <span class="vocab-word" data-word="automation">automation</span> in manufacturing. The implementation of <span class="vocab-word" data-word="robotic">robotic</span> car manufacture from the 1970s onwards led to significant cost savings and improvements in the <span class="vocab-word" data-word="reliability">reliability</span> and flexibility of vehicle mass production. A new challenge to vehicle production is now on the horizon and, again, it comes from automation. However, this time it is not to do with the manufacturing process, but with the vehicles themselves.</p>
+                    <p>Research projects on vehicle automation are not new. Vehicles with limited self-driving capabilities have been around for more than 50 years, resulting in significant contributions towards <span class="vocab-word" data-word="driver assistance systems">driver assistance systems</span>. But since Google announced in 2010 that it had been <span class="vocab-word" data-word="trialling">trialling</span> self-driving cars on the streets of California, progress in this field has quickly gathered pace.</p>
+                </div>
+                <div class="mb-4">
+                    <span class="para-label">B</span>
+                    <p>There are many reasons why technology is advancing so fast. One <span class="vocab-word" data-word="frequently cited">frequently cited</span> motive is safety; indeed, research at the UK's Transport Research Laboratory has demonstrated that more than 90 percent of road <span class="vocab-word" data-word="collisions">collisions</span> involve <span class="vocab-word" data-word="human error">human error</span> as a <span class="vocab-word" data-word="contributory factor">contributory factor</span>, and it is the primary cause in the vast majority. Automation may help to reduce the <span class="vocab-word" data-word="incidence">incidence</span> of this.</p>
+                    <p>Another aim is to free the time people spend driving for other purposes. If the vehicle can do some or all of the driving, it may be possible to be productive, to socialise or simply to relax while automation systems have responsibility for safe control of the vehicle. If the vehicle can do the driving, those who are challenged by existing <span class="vocab-word" data-word="mobility models">mobility models</span> — such as older or disabled travellers — may be able to enjoy significantly greater travel <span class="vocab-word" data-word="autonomy">autonomy</span>.</p>
+                </div>
+                <div class="mb-4">
+                    <span class="para-label">C</span>
+                    <p>Beyond these direct benefits, we can consider the wider <span class="vocab-word" data-word="implications">implications</span> for transport and society, and how manufacturing processes might need to respond as a result. At present, the average car spends more than 90 percent of its life <span class="vocab-word" data-word="parked">parked</span>. Automation means that initiatives for <span class="vocab-word" data-word="car-sharing">car-sharing</span> become much more <span class="vocab-word" data-word="viable">viable</span>, particularly in <span class="vocab-word" data-word="urban areas">urban areas</span> with significant travel demand. If a significant proportion of the population choose to use shared automated vehicles, mobility demand can be met by far fewer vehicles.</p>
+                </div>
+                <div class="mb-4">
+                    <span class="para-label">D</span>
+                    <p>The Massachusetts Institute of Technology investigated automated mobility in Singapore, finding that fewer than 30 percent of the vehicles currently used would be required if fully automated car sharing could be implemented. If this is the case, it might mean that we need to manufacture far fewer vehicles to meet demand. However, the number of trips being taken would probably increase, partly because empty vehicles would have to be moved from one customer to the next.</p>
+                    <p>Modelling work by the University of Michigan Transportation Research Institute suggests automated vehicles might reduce vehicle <span class="vocab-word" data-word="ownership">ownership</span> by 43 percent, but that vehicles' average annual <span class="vocab-word" data-word="mileage">mileage</span> double as a result. As a consequence, each vehicle would be used more intensively, and might need replacing sooner. This faster rate of <span class="vocab-word" data-word="turnover">turnover</span> may mean that vehicle production will not necessarily decrease.</p>
+                </div>
+                <div class="mb-4">
+                    <span class="para-label">E</span>
+                    <p>Automation may prompt other changes in vehicle manufacture. If we move to a model where consumers are tending not to own a single vehicle but to purchase access to a range of vehicle through a <span class="vocab-word" data-word="mobility provider">mobility provider</span>, drivers will have the freedom to select one that best suits their needs for a particular journey, rather than making a <span class="vocab-word" data-word="compromise">compromise</span> across all their requirements.</p>
+                    <p>Since, for most of the time, most of the seats in most cars are <span class="vocab-word" data-word="unoccupied">unoccupied</span>, this may boost production of a smaller, more efficient range of vehicles that suit the needs of individuals. Specialised vehicles may then be available for <span class="vocab-word" data-word="exceptional">exceptional</span> journeys, such as going on a family camping trip or helping a son or daughter move to university.</p>
+                </div>
+                <div class="mb-4">
+                    <span class="para-label">F</span>
+                    <p>There are a number of <span class="vocab-word" data-word="hurdles">hurdles</span> to overcome in delivering automated vehicles to our roads. These include the technical difficulties in ensuring that the vehicle works reliably in the infinite range of traffic, weather and road situations it might encounter; the <span class="vocab-word" data-word="regulatory">regulatory</span> challenges in understanding how <span class="vocab-word" data-word="liability">liability</span> and enforcement might change when drivers are no longer essential for vehicle operation; and the <span class="vocab-word" data-word="societal">societal</span> changes that may be required for communities to trust and accept automated vehicles as being a valuable part of the mobility <span class="vocab-word" data-word="landscape">landscape</span>.</p>
+                </div>
+                <div class="mb-4">
+                    <span class="para-label">G</span>
+                    <p>It's clear that there are many challenges that need to be addressed but, through <span class="vocab-word" data-word="robust">robust</span> and targeted research, these can most probably be <span class="vocab-word" data-word="conquered">conquered</span> within the next 10 years. Mobility will change in such potentially significant ways and in association with so many other technological developments, such as <span class="vocab-word" data-word="telepresence">telepresence</span> and virtual reality, that it is hard to make <span class="vocab-word" data-word="concrete">concrete</span> predictions about the future. However, one thing is certain: change is coming, and the need to be flexible in response to this will be vital for those involved in manufacturing the vehicles that will deliver future mobility.</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="splitter" class="splitter relative flex items-center justify-center group">
+            <div class="w-1 h-8 bg-gray-400 rounded-full opacity-50 group-hover:bg-gray-600 transition-colors"></div>
+        </div>
+
+        <!-- QUESTIONS -->
+        <div id="right-pane" class="pane">
+            <div id="questions-section" class="max-w-3xl mx-auto space-y-8 pb-10">
+
+                <!-- Q14-18: Paragraph Matching -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-blue-100 text-blue-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 14–18</span>
+                        <h4 class="font-bold text-gray-800">Paragraph Matching (A–G)</h4>
+                    </div>
+                    <p class="mb-5 text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100 text-sm">The passage has seven paragraphs, <strong>A–G</strong>. Which section contains the following information? Write the correct letter in the box.</p>
+                    <div class="space-y-3">
+                        <div class="q-item flex items-start gap-3" id="container-q14">
+                            <select name="q14" class="select-input mt-0.5 shrink-0"><option value="">--</option><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option><option>F</option><option>G</option></select>
+                            <p class="text-gray-800 font-medium"><span class="font-bold text-blue-700 mr-1">14</span> Reference to the amount of time when a car is not in use</p>
+                        </div>
+                        <div class="q-item flex items-start gap-3" id="container-q15">
+                            <select name="q15" class="select-input mt-0.5 shrink-0"><option value="">--</option><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option><option>F</option><option>G</option></select>
+                            <p class="text-gray-800 font-medium"><span class="font-bold text-blue-700 mr-1">15</span> Mention of several advantages of driverless vehicles for individual road-users</p>
+                        </div>
+                        <div class="q-item flex items-start gap-3" id="container-q16">
+                            <select name="q16" class="select-input mt-0.5 shrink-0"><option value="">--</option><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option><option>F</option><option>G</option></select>
+                            <p class="text-gray-800 font-medium"><span class="font-bold text-blue-700 mr-1">16</span> Reference to the opportunity of choosing the most appropriate vehicle for each trip</p>
+                        </div>
+                        <div class="q-item flex items-start gap-3" id="container-q17">
+                            <select name="q17" class="select-input mt-0.5 shrink-0"><option value="">--</option><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option><option>F</option><option>G</option></select>
+                            <p class="text-gray-800 font-medium"><span class="font-bold text-blue-700 mr-1">17</span> An estimate of how long it will take to overcome a number of problems</p>
+                        </div>
+                        <div class="q-item flex items-start gap-3" id="container-q18">
+                            <select name="q18" class="select-input mt-0.5 shrink-0"><option value="">--</option><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option><option>F</option><option>G</option></select>
+                            <p class="text-gray-800 font-medium"><span class="font-bold text-blue-700 mr-1">18</span> A suggestion that the use of driverless cars may have no effect on the number of vehicles manufactured</p>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="14-18">Check Answers</button>
+                    </div>
+                </div>
+
+                <!-- Q19-22: Summary Completion -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-blue-100 text-blue-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 19–22</span>
+                        <h4 class="font-bold text-gray-800">Summary Completion</h4>
+                    </div>
+                    <p class="mb-5 text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100 text-sm">
+                        Complete the summary below. Choose <strong class="text-blue-700">NO MORE THAN TWO WORDS</strong> from the passage for each answer.
+                    </p>
+                    <div class="summary-block">
+                        <h5>The impact of driverless cars</h5>
+                        <p>
+                            Figures from the Transport Research Laboratory indicate that most motor accidents are partly due to
+                            <span id="container-q19" class="inline-block mx-1"><strong class="text-blue-700 text-sm mr-1">19</strong><input type="text" name="q19" class="text-input text-input-md" placeholder="__________" autocomplete="off" spellcheck="false"></span>,
+                            so the introduction of driverless vehicles will result in greater safety. In addition to the direct benefits of automation, it may bring other advantages. For example, schemes for
+                            <span id="container-q20" class="inline-block mx-1"><strong class="text-blue-700 text-sm mr-1">20</strong><input type="text" name="q20" class="text-input text-input-md" placeholder="__________" autocomplete="off" spellcheck="false"></span>
+                            will be more workable, especially in towns and cities, resulting in fewer cars on the road.
+                        </p>
+                        <p class="mt-3">
+                            According to the University of Michigan Transportation Research Institute, there could be a 43 percent drop in
+                            <span id="container-q21" class="inline-block mx-1"><strong class="text-blue-700 text-sm mr-1">21</strong><input type="text" name="q21" class="text-input text-input-md" placeholder="__________" autocomplete="off" spellcheck="false"></span>
+                            of cars. However, this would mean that the yearly
+                            <span id="container-q22" class="inline-block mx-1"><strong class="text-blue-700 text-sm mr-1">22</strong><input type="text" name="q22" class="text-input text-input-md" placeholder="__________" autocomplete="off" spellcheck="false"></span>
+                            of each car would, on average, be twice as high as it currently is. This would lead to a higher turnover of vehicles, and therefore no reduction in automotive manufacturing.
+                        </p>
+                    </div>
+                    <div class="mt-4 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="19-22">Check Answers</button>
+                    </div>
+                </div>
+
+                <!-- Q23-24: Choose TWO benefits -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-blue-100 text-blue-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 23–24</span>
+                        <h4 class="font-bold text-gray-800">Choose TWO Letters</h4>
+                    </div>
+                    <p class="mb-3 text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100 text-sm">Which <strong>TWO</strong> benefits of automated vehicles does the writer mention?</p>
+                    <div class="choose-two-notice">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        Select exactly 2 options. A 3rd selection will be blocked.
+                    </div>
+                    <div id="container-q23-24" class="space-y-2">
+                        <label class="mc-label"><input type="checkbox" name="q23_24" value="a" class="choose2"><span><strong class="mr-2">A</strong> Car travellers could enjoy considerable cost savings.</span></label>
+                        <label class="mc-label"><input type="checkbox" name="q23_24" value="b" class="choose2"><span><strong class="mr-2">B</strong> It would be easier to find parking spaces in urban areas.</span></label>
+                        <label class="mc-label"><input type="checkbox" name="q23_24" value="c" class="choose2"><span><strong class="mr-2">C</strong> Travellers could spend journeys doing something other than driving.</span></label>
+                        <label class="mc-label"><input type="checkbox" name="q23_24" value="d" class="choose2"><span><strong class="mr-2">D</strong> People who find driving physically difficult could travel independently.</span></label>
+                        <label class="mc-label"><input type="checkbox" name="q23_24" value="e" class="choose2"><span><strong class="mr-2">E</strong> A reduction in the number of cars would mean a reduction in pollution.</span></label>
+                    </div>
+                    <div class="mt-4 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="23-24">Check Answers</button>
+                    </div>
+                </div>
+
+                <!-- Q25-26: Choose TWO challenges -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-blue-100 text-blue-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 25–26</span>
+                        <h4 class="font-bold text-gray-800">Choose TWO Letters</h4>
+                    </div>
+                    <p class="mb-3 text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100 text-sm">Which <strong>TWO</strong> challenges to automated vehicle development does the writer mention?</p>
+                    <div class="choose-two-notice">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        Select exactly 2 options. A 3rd selection will be blocked.
+                    </div>
+                    <div id="container-q25-26" class="space-y-2">
+                        <label class="mc-label"><input type="checkbox" name="q25_26" value="a" class="choose2"><span><strong class="mr-2">A</strong> Making sure the general public has confidence in automated vehicles</span></label>
+                        <label class="mc-label"><input type="checkbox" name="q25_26" value="b" class="choose2"><span><strong class="mr-2">B</strong> Managing the pace of transition from conventional to automated vehicles</span></label>
+                        <label class="mc-label"><input type="checkbox" name="q25_26" value="c" class="choose2"><span><strong class="mr-2">C</strong> Deciding how to compensate professional drivers who become redundant</span></label>
+                        <label class="mc-label"><input type="checkbox" name="q25_26" value="d" class="choose2"><span><strong class="mr-2">D</strong> Setting up the infrastructure to make roads suitable for automated vehicles</span></label>
+                        <label class="mc-label"><input type="checkbox" name="q25_26" value="e" class="choose2"><span><strong class="mr-2">E</strong> Getting automated vehicles to adapt to various different driving conditions</span></label>
+                    </div>
+                    <div class="mt-4 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="25-26">Check Answers</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+</div>
+
+<div id="highlight-tooltip" class="highlight-tooltip">Highlight Text</div>
+
+<!-- Vocab Modal -->
+<div id="vocab-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
+    <div class="bg-white rounded-2xl shadow-2xl p-5 sm:p-8 w-full max-w-md relative transform transition-all scale-95 opacity-0" id="vocab-modal-content">
+        <button id="close-vocab-modal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-full w-8 h-8 flex items-center justify-center">&times;</button>
+        <div class="flex items-center mb-6 border-b pb-4 mt-2">
+            <h3 id="vocab-word" class="text-2xl sm:text-3xl font-extrabold text-gray-900 capitalize tracking-tight"></h3>
+        </div>
+        <div class="flex items-center mb-5">
+            <button id="play-audio-btn" class="flex items-center justify-center h-10 w-10 sm:h-12 sm:w-12 shrink-0 rounded-full bg-blue-50 text-blue-700 hover:bg-blue-600 hover:text-white mr-4 transition-all shadow-sm border border-blue-200">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>
+            </button>
+            <p id="vocab-pronunciation-text" class="text-gray-500 font-mono text-base sm:text-lg bg-gray-50 px-3 py-1 rounded-md border border-gray-100"></p>
+        </div>
+        <p id="vocab-meaning" class="text-gray-700 text-base sm:text-lg leading-relaxed"></p>
+    </div>
+</div>
+
+<!-- Alert Modal -->
+<div id="alert-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-[80]">
+    <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm relative transform transition-all scale-95 opacity-0 text-center" id="alert-modal-content">
+        <div id="alert-icon-container" class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 mb-4">
+            <svg class="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        </div>
+        <h3 id="alert-title" class="text-lg font-medium text-gray-900 mb-2">Notice</h3>
+        <p id="alert-message" class="text-sm text-gray-500 mb-6"></p>
+        <button id="close-alert-btn" class="w-full inline-flex justify-center rounded-md px-4 py-2 bg-blue-700 text-white font-medium hover:bg-blue-800 text-sm transition-colors">Got it</button>
+    </div>
+</div>
+
+<script>
+const vocabulary = {
+    'automotive sector': { meaning: 'The industry concerned with the design, development, manufacture, marketing, and sale of motor vehicles.', phonetic: '/ˌɔː.təˈməʊ.tɪv ˈsek.tər/' },
+    'automation': { meaning: 'The use of technology and machines to perform tasks with minimal human intervention.', phonetic: '/ˌɔː.təˈmeɪ.ʃən/' },
+    'robotic': { meaning: 'Relating to robots; using programmed machines to perform tasks automatically.', phonetic: '/rəˈbɒt.ɪk/' },
+    'reliability': { meaning: 'The quality of being consistently good in quality or performance; dependability.', phonetic: '/rɪˌlaɪ.əˈbɪl.ɪ.ti/' },
+    'driver assistance systems': { meaning: 'Electronic technologies that assist drivers in the driving process, such as lane-keeping assist or automatic braking.', phonetic: '/ˈdraɪ.vər əˈsɪs.təns ˈsɪs.təmz/' },
+    'trialling': { meaning: 'Testing something in practice to see if it works; conducting trials.', phonetic: '/ˈtraɪ.ə.lɪŋ/' },
+    'frequently cited': { meaning: 'Often mentioned or referred to as a source or reason; commonly quoted.', phonetic: '/ˈfriː.kwənt.li ˈsaɪ.tɪd/' },
+    'collisions': { meaning: 'Instances of one moving object or person striking violently against another; crashes.', phonetic: '/kəˈlɪʒ.ənz/' },
+    'human error': { meaning: 'A mistake caused by a person rather than by equipment or a system failure.', phonetic: '/ˈhjuː.mən ˈer.ər/' },
+    'contributory factor': { meaning: 'Something that plays a part in bringing about a result or situation, though not the sole cause.', phonetic: '/kənˈtrɪb.jʊ.tər.i ˈfæk.tər/' },
+    'incidence': { meaning: 'The extent or frequency of occurrence of something, especially something undesirable.', phonetic: '/ˈɪn.sɪ.dəns/' },
+    'mobility models': { meaning: 'Systems or ways in which people move from one place to another, including public transport, driving, etc.', phonetic: '/məʊˈbɪl.ɪ.ti ˈmɒd.əlz/' },
+    'autonomy': { meaning: 'The right or condition of self-government; freedom from external control; independence.', phonetic: '/ɔːˈtɒn.ə.mi/' },
+    'implications': { meaning: 'The possible future effects or consequences of an action or event.', phonetic: '/ˌɪm.plɪˈkeɪ.ʃənz/' },
+    'parked': { meaning: 'Left (a vehicle) temporarily in a location not occupied by traffic; stationary and not in use.', phonetic: '/pɑːkt/' },
+    'car-sharing': { meaning: 'An arrangement in which a car is shared by a number of people who pay for its use as needed.', phonetic: '/ˈkɑː ˌʃeər.ɪŋ/' },
+    'viable': { meaning: 'Capable of working successfully; feasible; practical and able to function.', phonetic: '/ˈvaɪ.ə.bəl/' },
+    'urban areas': { meaning: 'Regions that are highly populated and developed, such as cities and large towns.', phonetic: '/ˈɜː.bən ˈeər.i.əz/' },
+    'ownership': { meaning: 'The act, state, or right of possessing something; the fact of owning something.', phonetic: '/ˈəʊ.nə.ʃɪp/' },
+    'mileage': { meaning: 'The number of miles travelled; the distance covered by a vehicle.', phonetic: '/ˈmaɪ.lɪdʒ/' },
+    'turnover': { meaning: 'The rate at which goods are sold and replaced; in vehicles, the rate of replacing old with new.', phonetic: '/ˈtɜːn.əʊ.vər/' },
+    'mobility provider': { meaning: 'A company or service that gives customers access to various forms of transportation on demand.', phonetic: '/məʊˈbɪl.ɪ.ti prəˈvaɪ.dər/' },
+    'compromise': { meaning: 'An agreement or settlement in which each side makes concessions; a middle ground.', phonetic: '/ˈkɒm.prə.maɪz/' },
+    'unoccupied': { meaning: 'Not occupied; empty; not being used by anyone.', phonetic: '/ʌnˈɒk.jʊ.paɪd/' },
+    'exceptional': { meaning: 'Unusual; not typical; out of the ordinary.', phonetic: '/ɪkˈsep.ʃən.əl/' },
+    'hurdles': { meaning: 'Difficulties or obstacles that need to be overcome.', phonetic: '/ˈhɜː.dəlz/' },
+    'regulatory': { meaning: 'Relating to rules or laws that control an activity; of or relating to regulations.', phonetic: '/ˈreɡ.jʊ.lə.tər.i/' },
+    'liability': { meaning: 'The state of being legally responsible for something; legal accountability.', phonetic: '/ˌlaɪ.əˈbɪl.ɪ.ti/' },
+    'societal': { meaning: 'Relating to society or social relations; concerning the structure or organisation of society.', phonetic: '/səˈsaɪ.ɪ.təl/' },
+    'landscape': { meaning: 'The distinctive features of a situation or field; used figuratively to describe a broader context.', phonetic: '/ˈlænd.skeɪp/' },
+    'robust': { meaning: 'Strong and effective; able to withstand or overcome adverse conditions.', phonetic: '/rəʊˈbʌst/' },
+    'conquered': { meaning: 'Successfully overcome; defeated; brought under control.', phonetic: '/ˈkɒŋ.kəd/' },
+    'telepresence': { meaning: 'The use of technology to appear to be present, or to give the impression of being present, in a different place.', phonetic: '/ˈtel.ɪˌprez.əns/' },
+    'concrete': { meaning: 'Existing in a material or physical form; specific and definite, not abstract.', phonetic: '/ˈkɒŋ.kriːt/' }
+};
+
+// CORRECT ANSWERS
+const PARAGRAPH_ANSWERS = { q14: 'c', q15: 'b', q16: 'e', q17: 'g', q18: 'd' };
+const TEXT_ANSWERS = { q19: 'human error', q20: 'car-sharing', q21: 'ownership', q22: 'mileage' };
+const CHOOSE2_ANSWERS = { '23-24': ['c','d'], '25-26': ['a','e'] };
+
+const explanations = {
+    q14: "C — Paragraph C: 'At present, the average car spends more than 90 percent of its life parked.' This directly references the amount of time a car is not in use.",
+    q15: "B — Paragraph B: Multiple individual benefits are listed — safety (fewer accidents), freed-up time (be productive/relax), and greater independence for older/disabled travellers.",
+    q16: "E — Paragraph E: 'drivers will have the freedom to select one that best suits their needs for a particular journey' + 'Specialised vehicles may then be available for exceptional journeys.'",
+    q17: "G — Paragraph G: 'through robust and targeted research, these can most probably be conquered within the next 10 years.' — a specific time estimate for overcoming challenges.",
+    q18: "D — Paragraph D: 'This faster rate of turnover may mean that vehicle production will not necessarily decrease.' — suggests driverless cars may have no effect on manufacturing numbers.",
+    q19: "Section B: 'more than 90 percent of road collisions involve human error as a contributory factor' — human error is the cause of most accidents. Answer: human error.",
+    q20: "Section C: 'Automation means that initiatives for car-sharing become much more viable, particularly in urban areas.' — car-sharing schemes become more workable. Answer: car-sharing.",
+    q21: "Section D: 'automated vehicles might reduce vehicle ownership by 43 percent' — a 43% drop in ownership. Answer: ownership.",
+    q22: "Section D: 'vehicles' average annual mileage double as a result' — the yearly mileage doubles. Answer: mileage.",
+    'q23-24': "C & D — Both from Section B: (C) 'it may be possible to be productive, to socialise or simply to relax while automation systems have responsibility for safe control' → travellers can do other things; (D) 'older or disabled travellers may be able to enjoy significantly greater travel autonomy' → physically challenged people can travel independently. A, B, E are not mentioned.",
+    'q25-26': "A & E — Both from Section F: (E) 'the technical difficulties in ensuring that the vehicle works reliably in the infinite range of traffic, weather and road situations' → adapting to various driving conditions; (A) 'societal changes that may be required for communities to trust and accept automated vehicles' → public confidence. B, C, D are not mentioned."
+};
+
+const TOTAL_QUESTIONS = 13; // 5 + 4 + 2 + 2
+
+document.addEventListener('DOMContentLoaded', () => {
+    const app = {
+        userAnswers: {}, answersChecked: {}, currentFontSize: 17, timeRemaining: 20*60,
+        leftPane: document.getElementById('left-pane'),
+        rightPane: document.getElementById('right-pane'),
+        highlightTooltip: document.getElementById('highlight-tooltip'),
+        vocabModal: document.getElementById('vocab-modal'),
+        vocabModalContent: document.getElementById('vocab-modal-content'),
+        closeVocabModalBtn: document.getElementById('close-vocab-modal'),
+        vocabWordEl: document.getElementById('vocab-word'),
+        vocabMeaningEl: document.getElementById('vocab-meaning'),
+        vocabPronunciationText: document.getElementById('vocab-pronunciation-text'),
+        playAudioBtn: document.getElementById('play-audio-btn'),
+        progressText: document.getElementById('progress-text'),
+        timerEl: document.getElementById('timer'),
+        alertModal: document.getElementById('alert-modal'),
+        alertModalContent: document.getElementById('alert-modal-content'),
+        closeAlertBtn: document.getElementById('close-alert-btn'),
+        alertTitleEl: document.getElementById('alert-title'),
+        alertMessageEl: document.getElementById('alert-message'),
+        alertIconContainer: document.getElementById('alert-icon-container'),
+
+        init() { this.setupEventListeners(); this.initSplitter(); this.initHighlighter(); this.initChooseTwo(); this.updateCheckButtonsState(); this.startTimer(); },
+
+        startTimer() {
+            const interval = setInterval(() => {
+                if (this.timeRemaining <= 0) { clearInterval(interval); this.timerEl.textContent = "00:00"; this.showAlert("Time's Up!", "Your 20 minutes have expired.", "warning"); return; }
+                this.timeRemaining--;
+                const m = Math.floor(this.timeRemaining/60).toString().padStart(2,'0');
+                const s = (this.timeRemaining%60).toString().padStart(2,'0');
+                this.timerEl.textContent = `${m}:${s}`;
+                if (this.timeRemaining <= 300) this.timerEl.classList.add('text-red-500');
+            }, 1000);
+        },
+
+        initChooseTwo() {
+            ['q23_24', 'q25_26'].forEach(name => {
+                document.querySelectorAll(`input[name="${name}"]`).forEach(cb => {
+                    cb.addEventListener('change', () => {
+                        const checked = [...document.querySelectorAll(`input[name="${name}"]:checked`)];
+                        if (checked.length > 2) { cb.checked = false; this.showAlert("Limit Reached", "You can only select 2 options for this question.", "warning"); return; }
+                        const vals = [...document.querySelectorAll(`input[name="${name}"]:checked`)].map(c => c.value);
+                        this.userAnswers[name] = vals;
+                        this.updateCheckButtonsState(); this.updateProgress();
+                    });
+                });
+            });
+        },
+
+        setupEventListeners() {
+            document.getElementById('increase-font-btn').addEventListener('click', () => this.changeFontSize(1));
+            document.getElementById('decrease-font-btn').addEventListener('click', () => this.changeFontSize(-1));
+            document.getElementById('clear-highlights-btn').addEventListener('click', () => this.leftPane.querySelectorAll('mark').forEach(m => m.replaceWith(document.createTextNode(m.textContent))));
+            this.closeVocabModalBtn.addEventListener('click', () => this.closeModal());
+            this.vocabModal.addEventListener('click', (e) => { if (e.target === this.vocabModal) this.closeModal(); });
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') { if (!this.vocabModal.classList.contains('hidden')) this.closeModal(); if (!this.alertModal.classList.contains('hidden')) this.closeAlert(); }
+                if ((e.ctrlKey||e.metaKey) && e.key.toLowerCase() === 'f') { e.preventDefault(); this.showAlert("Disabled", "Find is disabled during the exam.", "warning"); }
+            });
+            document.addEventListener('visibilitychange', () => { if (document.hidden && this.timeRemaining > 0) this.showAlert("Warning", "Please do not switch tabs during the exam.", "warning"); });
+            window.addEventListener('beforeunload', (e) => { if (this.timeRemaining > 0 && this.timeRemaining < 20*60) { e.preventDefault(); e.returnValue = ''; } });
+            this.closeAlertBtn.addEventListener('click', () => this.closeAlert());
+            this.alertModal.addEventListener('click', (e) => { if (e.target === this.alertModal) this.closeAlert(); });
+            document.body.addEventListener('change', (e) => {
+                if (e.target.tagName === 'SELECT') { this.userAnswers[e.target.name] = e.target.value.toLowerCase(); e.target.classList.remove('select-correct','select-incorrect'); this.updateCheckButtonsState(); this.updateProgress(); }
+            });
+            document.body.addEventListener('input', (e) => {
+                if (e.target.tagName === 'INPUT' && e.target.type === 'text') { this.userAnswers[e.target.name] = e.target.value.trim().toLowerCase(); e.target.classList.remove('text-correct','text-incorrect'); this.updateCheckButtonsState(); this.updateProgress(); }
+            });
+            this.leftPane.addEventListener('click', (e) => {
+                if (e.target.classList.contains('vocab-word')) this.openVocabModal(e.target.dataset.word);
+                if (e.target.tagName === 'MARK') e.target.replaceWith(document.createTextNode(e.target.textContent));
+            });
+            document.querySelectorAll('.check-btn').forEach(btn => btn.addEventListener('click', (e) => this.checkAnswers(e.target.dataset.range, e.target)));
+            this.playAudioBtn.addEventListener('click', () => {
+                const word = this.vocabWordEl.textContent; if (!word) return;
+                if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+                this.playAudioBtn.classList.remove('text-blue-700','bg-blue-50'); this.playAudioBtn.classList.add('bg-blue-600','text-white');
+                if ('speechSynthesis' in window) { const u = new SpeechSynthesisUtterance(word); u.lang = 'en-GB'; u.rate = 0.9; u.onend = () => this.resetAudioBtn(); u.onerror = () => this.resetAudioBtn(); window.speechSynthesis.speak(u); }
+                else setTimeout(() => this.resetAudioBtn(), 500);
+            });
+        },
+
+        updateProgress() {
+            let c = 0;
+            // Q14-18
+            for (let i = 14; i <= 18; i++) { if ((this.userAnswers[`q${i}`] || '').trim()) c++; }
+            // Q19-22
+            for (let i = 19; i <= 22; i++) { if ((this.userAnswers[`q${i}`] || '').trim()) c++; }
+            // Q23-24
+            const s23 = (this.userAnswers['q23_24'] || []);
+            if (s23.length === 2) c += 2;
+            // Q25-26
+            const s25 = (this.userAnswers['q25_26'] || []);
+            if (s25.length === 2) c += 2;
+            this.progressText.textContent = `${Math.min(c, TOTAL_QUESTIONS)} / ${TOTAL_QUESTIONS} Answered`;
+        },
+
+        resetAudioBtn() { this.playAudioBtn.classList.add('text-blue-700','bg-blue-50'); this.playAudioBtn.classList.remove('bg-blue-600','text-white'); },
+        changeFontSize(d) { this.currentFontSize = Math.max(14, Math.min(26, this.currentFontSize+d)); document.documentElement.style.setProperty('--app-font-size', `${this.currentFontSize}px`); },
+        openVocabModal(w) {
+            const d = vocabulary[w]; if (!d) return;
+            this.vocabWordEl.textContent = w; this.vocabMeaningEl.textContent = d.meaning; this.vocabPronunciationText.textContent = d.phonetic || '';
+            this.vocabModal.classList.remove('hidden');
+            setTimeout(() => { this.vocabModalContent.classList.remove('scale-95','opacity-0'); this.vocabModalContent.classList.add('scale-100','opacity-100'); }, 10);
+        },
+        closeModal() {
+            if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+            this.vocabModalContent.classList.remove('scale-100','opacity-100'); this.vocabModalContent.classList.add('scale-95','opacity-0');
+            this.resetAudioBtn(); setTimeout(() => this.vocabModal.classList.add('hidden'), 200);
+        },
+        showAlert(title, message, type='error') {
+            this.alertTitleEl.textContent = title; this.alertMessageEl.textContent = message;
+            const c = type === 'warning' ? 'yellow' : 'red';
+            this.alertIconContainer.className = `mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-${c}-100 mb-4`;
+            this.alertIconContainer.innerHTML = `<svg class="h-6 w-6 text-${c}-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>`;
+            this.alertModal.classList.remove('hidden');
+            setTimeout(() => { this.alertModalContent.classList.remove('scale-95','opacity-0'); this.alertModalContent.classList.add('scale-100','opacity-100'); }, 10);
+        },
+        closeAlert() {
+            this.alertModalContent.classList.remove('scale-100','opacity-100'); this.alertModalContent.classList.add('scale-95','opacity-0');
+            setTimeout(() => this.alertModal.classList.add('hidden'), 200);
+        },
+
+        isRangeAnswered(range) {
+            if (range === '14-18') { for (let i = 14; i <= 18; i++) { if (!(this.userAnswers[`q${i}`] || '').trim()) return false; } return true; }
+            if (range === '19-22') { for (let i = 19; i <= 22; i++) { if (!(this.userAnswers[`q${i}`] || '').trim()) return false; } return true; }
+            if (range === '23-24') { return (this.userAnswers['q23_24'] || []).length === 2; }
+            if (range === '25-26') { return (this.userAnswers['q25_26'] || []).length === 2; }
+            return false;
+        },
+
+        updateCheckButtonsState() {
+            document.querySelectorAll('.check-btn').forEach(btn => {
+                const range = btn.dataset.range;
+                if (this.answersChecked[range]) { btn.className = 'check-btn bg-gray-800 hover:bg-gray-900 text-white font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-pointer'; btn.textContent = 'Reset Answers'; return; }
+                const allDone = this.isRangeAnswered(range);
+                btn.className = allDone ? 'check-btn bg-blue-700 hover:bg-blue-800 text-white font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-pointer transform hover:-translate-y-0.5' : 'check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80';
+                btn.textContent = 'Check Answers';
+            });
+        },
+
+        checkAnswers(range, btn) {
+            if (this.answersChecked[range]) {
+                this.answersChecked[range] = false;
+                if (range === '14-18' || range === '19-22') {
+                    const [s, e] = range.split('-').map(Number);
+                    for (let i = s; i <= e; i++) {
+                        const qId = `q${i}`; this.userAnswers[qId] = '';
+                        const sel = document.querySelector(`select[name="${qId}"]`); if (sel) { sel.value = ''; sel.classList.remove('select-correct','select-incorrect'); }
+                        const inp = document.querySelector(`input[name="${qId}"][type="text"]`); if (inp) { inp.value = ''; inp.placeholder = '__________'; inp.classList.remove('text-correct','text-incorrect'); }
+                        document.getElementById(`expl-${qId}`)?.remove();
+                    }
+                } else if (range === '23-24' || range === '25-26') {
+                    const name = range === '23-24' ? 'q23_24' : 'q25_26';
+                    this.userAnswers[name] = [];
+                    document.querySelectorAll(`input[name="${name}"]`).forEach(cb => { cb.checked = false; const lbl = cb.closest('label'); if (lbl) lbl.classList.remove('correct-answer','incorrect-answer'); });
+                    document.querySelectorAll(`input[name="${name}"]`).forEach(cb => cb.disabled = false);
+                    document.getElementById(`expl-${range}`)?.remove();
+                }
+                this.updateCheckButtonsState(); this.updateProgress(); return;
+            }
+
+            if (!this.isRangeAnswered(range)) { this.showAlert("Incomplete Answers", "Please answer all questions in this section before checking.", "warning"); return; }
+            this.answersChecked[range] = true; this.updateCheckButtonsState();
+
+            // Paragraph matching + summary
+            if (range === '14-18' || range === '19-22') {
+                const [s, e] = range.split('-').map(Number);
+                for (let i = s; i <= e; i++) {
+                    const qId = `q${i}`;
+                    const userAns = (this.userAnswers[qId] || '').toLowerCase().trim();
+                    let correctAns, isCorrect, feedbackHTML = '';
+
+                    if (i <= 18) {
+                        correctAns = PARAGRAPH_ANSWERS[qId];
+                        isCorrect = userAns === correctAns;
+                        const sel = document.querySelector(`select[name="${qId}"]`);
+                        if (sel) { sel.classList.remove('select-correct','select-incorrect'); sel.classList.add(isCorrect ? 'select-correct' : 'select-incorrect'); if (!isCorrect) { feedbackHTML = `<span class="correct-badge">Correct: Paragraph ${correctAns.toUpperCase()}</span><br>`; sel.value = correctAns.toUpperCase(); } }
+                    } else {
+                        // text inputs for Q19-22
+                        const ansMap = { q19: 'human error', q20: 'car-sharing', q21: 'ownership', q22: 'mileage' };
+                        correctAns = ansMap[qId];
+                        const validAnswers = [correctAns, 'car sharing'];
+                        isCorrect = validAnswers.includes(userAns);
+                        const inp = document.querySelector(`input[name="${qId}"][type="text"]`);
+                        if (inp) { inp.classList.remove('text-correct','text-incorrect'); if (isCorrect) { inp.classList.add('text-correct'); } else { inp.classList.add('text-incorrect'); inp.value = ''; inp.placeholder = correctAns; feedbackHTML = `<span class="correct-badge">Correct Answer: ${correctAns}</span><br>`; } }
+                    }
+
+                    if (explanations[qId] && !document.getElementById(`expl-${qId}`)) {
+                        const div = document.createElement('div'); div.id = `expl-${qId}`; div.className = 'explanation-box';
+                        div.innerHTML = `${feedbackHTML}<strong>Explanation:</strong> ${explanations[qId]}`;
+                        const cont = document.getElementById(`container-${qId}`);
+                        if (cont) cont.insertAdjacentElement('afterend', div);
+                    }
+                }
+            }
+
+            // Choose TWO
+            if (range === '23-24' || range === '25-26') {
+                const name = range === '23-24' ? 'q23_24' : 'q25_26';
+                const correct = CHOOSE2_ANSWERS[range];
+                const userSel = this.userAnswers[name] || [];
+                const isCorrect = correct.every(v => userSel.includes(v)) && userSel.every(v => correct.includes(v));
+                document.querySelectorAll(`input[name="${name}"]`).forEach(cb => {
+                    cb.disabled = true;
+                    const lbl = cb.closest('label'); if (!lbl) return;
+                    lbl.classList.remove('correct-answer','incorrect-answer');
+                    if (correct.includes(cb.value)) lbl.classList.add('correct-answer');
+                    else if (cb.checked && !correct.includes(cb.value)) lbl.classList.add('incorrect-answer');
+                });
+                if (!document.getElementById(`expl-${range}`)) {
+                    const feedbackHTML = isCorrect ? '' : `<span class="correct-badge">Correct Answers: ${correct.map(v=>v.toUpperCase()).join(' and ')}</span><br>`;
+                    const div = document.createElement('div'); div.id = `expl-${range}`; div.className = 'explanation-box';
+                    div.innerHTML = `${feedbackHTML}<strong>Explanation:</strong> ${explanations[`q${range.split('-')[0]}-${range.split('-')[1]}`] || explanations[`q23-24`] || explanations[`q25-26`] || explanations[`${range.replace('-','-')}`]}`;
+                    // fallback key lookup
+                    const expKey = range === '23-24' ? 'q23-24' : 'q25-26';
+                    div.innerHTML = `${feedbackHTML}<strong>Explanation:</strong> ${explanations[expKey]}`;
+                    const cont = document.getElementById(`container-${range.replace('-','-')}-${range.split('-')[0]}-${range.split('-')[1]}`) || document.getElementById(`container-q${range.split('-')[0]}-${range.split('-')[1]}`);
+                    const secDiv = document.querySelector(`[data-range="${range}"]`)?.closest('.p-6');
+                    if (secDiv) secDiv.insertAdjacentElement('afterend', div);
+                }
+            }
+        },
+
+        initSplitter() {
+            let isDragging = false; const panes = document.getElementById('content-panes');
+            document.getElementById('splitter').addEventListener('mousedown', (e) => { e.preventDefault(); isDragging = true; document.body.style.cursor = 'col-resize'; });
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging || window.innerWidth <= 768) return;
+                const rect = panes.getBoundingClientRect(); const newLeft = e.clientX - rect.left;
+                if (newLeft > 200 && newLeft < rect.width - 200) panes.style.gridTemplateColumns = `${(newLeft/rect.width)*100}% 5px 1fr`;
+            });
+            document.addEventListener('mouseup', () => { if (isDragging) { isDragging = false; document.body.style.cursor = 'default'; } });
+        },
+
+        initHighlighter() {
+            document.body.addEventListener('mouseup', (e) => {
+                const sel = window.getSelection(); const text = sel.toString().trim();
+                if (text.length > 0) {
+                    const range = sel.getRangeAt(0);
+                    if (!this.leftPane.contains(range.commonAncestorContainer) && !this.rightPane.contains(range.commonAncestorContainer)) { this.highlightTooltip.style.display = 'none'; return; }
+                    this.highlightTooltip.style.left = `${e.pageX-30}px`; this.highlightTooltip.style.top = `${e.pageY-40}px`; this.highlightTooltip.style.display = 'block';
+                    this.highlightTooltip.onclick = () => {
+                        const mark = document.createElement('mark');
+                        try { range.surroundContents(mark); } catch(ex) { this.showAlert("Highlight Error", "Please select text within a single element.", "warning"); }
+                        finally { sel.removeAllRanges(); this.highlightTooltip.style.display = 'none'; }
+                    };
+                } else { this.highlightTooltip.style.display = 'none'; }
+            });
+            document.body.addEventListener('mousedown', () => { if (window.getSelection().toString().length === 0) this.highlightTooltip.style.display = 'none'; });
+        }
+    };
+    app.init();
+});
+</script>
+</body>
+</html>

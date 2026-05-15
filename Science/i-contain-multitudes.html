@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IELTS Simulator - I Contain Multitudes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --app-font-size: 17px; }
+        body { font-family: 'Inter', sans-serif; overscroll-behavior: none; background-color: #f3f4f6; }
+        .ielts-container { display: grid; grid-template-rows: auto 1fr; height: 100vh; }
+        .content-panes { display: grid; grid-template-columns: 1fr 5px 1fr; overflow: hidden; }
+        .pane { overflow-y: auto; padding: 2rem 3rem; font-size: var(--app-font-size); scroll-behavior: smooth; }
+        #left-pane { background-color: #fdfdfd; }
+        #right-pane { background-color: #f8fafc; }
+        .splitter { background-color: #cbd5e1; cursor: col-resize; z-index: 10; transition: background-color 0.2s; }
+        .splitter:hover, .splitter:active { background-color: #94a3b8; }
+        .reading-passage { font-family: 'Merriweather', serif; line-height: 1.9; color: #334155; text-align: justify; max-width: 800px; margin: 0 auto; }
+        .reading-passage p { margin-bottom: 1.5rem; text-indent: 1.5rem; }
+        .reading-passage h3 { font-family: 'Inter', sans-serif; color: #0f172a; margin-bottom: 0.1rem; font-weight: 700; font-size: 1.4em; text-align: center; text-indent: 0; text-transform: uppercase; letter-spacing: 0.04em; }
+        .reading-passage .subtitle { font-family: 'Inter', sans-serif; color: #64748b; font-size: 0.95em; text-align: center; text-indent: 0; margin-bottom: 1.8rem; font-style: italic; }
+        .q-item { padding: 1rem; border-radius: 0.5rem; transition: all 0.2s; background-color: white; border: 1px solid #e2e8f0; margin-bottom: 0.75rem; }
+        .mc-label { display: flex; align-items: flex-start; padding: 0.65rem 1rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s; background-color: white; margin-bottom: 0.4rem; gap: 0.75rem; }
+        .mc-label:hover { background: #fdf2ff; border-color: #d8b4fe; }
+        .mc-label input { width: 1.1em; height: 1.1em; accent-color: #7e22ce; flex-shrink: 0; margin-top: 0.2em; }
+        .yng-label { display: flex; align-items: center; padding: 0.6rem 1rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s; background-color: white; margin-bottom: 0.4rem; gap: 0.75rem; }
+        .yng-label:hover { background: #fdf2ff; border-color: #d8b4fe; }
+        .yng-label input { width: 1.1em; height: 1.1em; accent-color: #7e22ce; flex-shrink: 0; }
+        .select-input { border: 2px solid #cbd5e1; border-radius: 6px; padding: 4px 10px; font-weight: 600; color: #1e293b; transition: all 0.2s; background-color: #f8fafc; cursor: pointer; min-width: 3.5rem; }
+        .select-input:focus { outline: none; border-color: #7e22ce; background-color: #fff; box-shadow: 0 0 0 3px rgba(126,34,206,0.12); }
+        .select-correct { border-color: #22c55e !important; background-color: #f0fdf4 !important; color: #166534 !important; }
+        .select-incorrect { border-color: #ef4444 !important; background-color: #fef2f2 !important; color: #991b1b !important; }
+        label.correct-answer { border-color: #22c55e !important; background-color: #f0fdf4 !important; }
+        label.incorrect-answer { border-color: #ef4444 !important; background-color: #fef2f2 !important; }
+        label.yes-answer { border-color: #22c55e !important; background-color: #f0fdf4 !important; }
+        label.no-answer { border-color: #ef4444 !important; background-color: #fef2f2 !important; }
+        label.ng-answer { border-color: #f59e0b !important; background-color: #fffbeb !important; }
+        label.incorrect-sel { border-color: #ef4444 !important; background-color: #fef2f2 !important; }
+        .explanation-box { animation: fadeIn 0.4s ease-out forwards; margin-top: 0.75rem; padding: 1rem; background-color: #faf5ff; border-left: 4px solid #7e22ce; border-radius: 0.5rem; font-size: 0.95rem; color: #3b0764; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .explanation-box .correct-badge { display: inline-block; background: #22c55e; color: white; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85em; margin-bottom: 0.5rem; }
+        .explanation-box .yes-badge { display: inline-block; background: #22c55e; color: white; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85em; margin-bottom: 0.5rem; }
+        .explanation-box .no-badge { display: inline-block; background: #ef4444; color: white; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85em; margin-bottom: 0.5rem; }
+        .explanation-box .ng-badge { display: inline-block; background: #f59e0b; color: white; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85em; margin-bottom: 0.5rem; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+        .vocab-word { color: #7e22ce; font-weight: 600; cursor: pointer; border-bottom: 2px dotted #c084fc; transition: all 0.2s ease-in-out; padding: 0 2px; }
+        .vocab-word:hover { background-color: #f3e8ff; border-bottom-style: solid; border-radius: 2px; }
+        .highlight-tooltip { position: absolute; background-color: #1e293b; color: white; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 500; z-index: 100; cursor: pointer; display: none; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        mark { background-color: #fef08a; border-radius: 3px; padding: 2px 0; cursor: pointer; }
+        mark:hover { background-color: #fca5a5; color: #7f1d1d; }
+        mark:hover::after { content: ' x'; font-weight: bold; font-size: 0.8em; opacity: 0.7; }
+        .summary-block { background: #faf5ff; border: 1px solid #c084fc; border-radius: 0.75rem; padding: 1.5rem; margin-bottom: 1rem; color: #3b0764; font-size: 0.97em; line-height: 2.2; }
+        .summary-block h5 { font-family: 'Inter', sans-serif; font-weight: 700; color: #7e22ce; font-size: 1em; margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        .word-bank { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1.25rem; padding: 1rem; background: #f3e8ff; border-radius: 0.5rem; border: 1px solid #d8b4fe; }
+        .word-bank-item { background: white; border: 1px solid #c084fc; border-radius: 4px; padding: 3px 10px; font-size: 0.88em; font-weight: 600; color: #5b21b6; }
+        @media (max-width: 768px) {
+            .content-panes { display: flex; flex-direction: column; overflow-y: auto; }
+            .splitter { display: none; }
+            .pane { padding: 1.25rem 1rem; overflow-y: visible; height: auto; }
+            #left-pane { border-bottom: 2px dashed #cbd5e1; padding-bottom: 2rem; }
+        }
+    </style>
+</head>
+<body>
+<div id="test-container" class="ielts-container">
+    <header class="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 flex justify-between items-center z-20 shadow-sm flex-wrap gap-3">
+        <div class="flex items-center gap-2 sm:space-x-3">
+            <div class="bg-purple-800 text-white p-1.5 sm:p-2 rounded-lg shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                </svg>
+            </div>
+            <h1 class="text-xl font-bold text-gray-800 hidden sm:block">IELTS Simulator <span class="text-purple-800 font-medium">| I Contain Multitudes</span></h1>
+            <h1 class="text-base font-bold text-gray-800 sm:hidden">IELTS <span class="text-purple-800">Multitudes</span></h1>
+        </div>
+        <div class="flex items-center space-x-4">
+            <div class="hidden sm:flex flex-col items-end">
+                <span class="text-xs text-gray-500 font-bold uppercase tracking-wide">Progress</span>
+                <span id="progress-text" class="text-sm font-semibold text-purple-800">0 / 13 Answered</span>
+            </div>
+            <div class="flex items-center bg-gray-100 rounded-lg px-3 py-1.5 border border-gray-200">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span id="timer" class="font-mono font-bold text-gray-700 text-lg">20:00</span>
+            </div>
+        </div>
+        <div class="flex items-center gap-2 sm:space-x-3">
+            <button id="clear-highlights-btn" class="hidden sm:flex items-center justify-center px-3 py-1.5 rounded bg-purple-50 hover:bg-purple-100 text-purple-800 transition-colors focus:outline-none border border-purple-200 text-sm font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                Clear
+            </button>
+            <div class="flex items-center space-x-1 sm:space-x-2 bg-gray-50 p-1 rounded-lg border border-gray-200">
+                <button id="decrease-font-btn" class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded bg-white shadow-sm hover:bg-gray-100 text-gray-700 transition-colors focus:outline-none font-bold text-sm sm:text-base">A-</button>
+                <button id="increase-font-btn" class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded bg-white shadow-sm hover:bg-gray-100 text-gray-700 transition-colors focus:outline-none font-bold text-sm sm:text-base">A+</button>
+            </div>
+        </div>
+    </header>
+
+    <main id="content-panes" class="content-panes">
+        <!-- PASSAGE -->
+        <div id="left-pane" class="pane relative">
+            <div class="reading-passage">
+                <h3>I Contain Multitudes</h3>
+                <p class="subtitle">Wendy Moore reviews Ed Yong's book about microbes</p>
+
+                <p><span class="vocab-word" data-word="Microbes">Microbes</span>, most of them <span class="vocab-word" data-word="bacteria">bacteria</span>, have populated this planet since long before animal life developed and they will <span class="vocab-word" data-word="outlive">outlive</span> us. Invisible to the <span class="vocab-word" data-word="naked eye">naked eye</span>, they are <span class="vocab-word" data-word="ubiquitous">ubiquitous</span>. They inhabit the soil, air, rocks and water and are present within every form of life, from seaweed and coral to dogs and humans. And, as Yong explains in his utterly absorbing and hugely important book, we mess with them at our peril.</p>
+
+                <p>Every species has its own colony of microbes, called a '<span class="vocab-word" data-word="microbiome">microbiome</span>', and these microbes vary not only between species but also between individuals and within different parts of each individual. What is amazing is that while the number of human cells in the average person is about 30 trillion, the number of <span class="vocab-word" data-word="microbial">microbial</span> ones is higher — about 39 trillion. At best, Yong informs us, we are only 50 per cent human. Indeed, some scientists even suggest we should think of each species and its microbes as a single unit, dubbed a '<span class="vocab-word" data-word="holobiont">holobiont</span>'.</p>
+
+                <p>In each human there are microbes that live only in the stomach, the mouth or the armpit and by and large they do so peacefully. So 'bad' microbes are just microbes out of context. Microbes that sit <span class="vocab-word" data-word="contentedly">contentedly</span> in the human gut (where there are more microbes than there are stars in the galaxy) can become deadly if they find their way into the <span class="vocab-word" data-word="bloodstream">bloodstream</span>. These communities are constantly changing too. The right hand shares just one sixth of its microbes with the left hand. And, of course, we are surrounded by microbes. Every time we eat, we swallow a million microbes in each gram of food; we are continually <span class="vocab-word" data-word="swapping">swapping</span> microbes with other humans, pets and the world at large.</p>
+
+                <p>It's a fascinating topic and Yong, a young British science journalist, is an extraordinarily <span class="vocab-word" data-word="adept">adept</span> guide. Writing with lightness and <span class="vocab-word" data-word="panache">panache</span>, he has a <span class="vocab-word" data-word="knack">knack</span> of explaining complex science in terms that are both easy to understand and totally <span class="vocab-word" data-word="enthralling">enthralling</span>. Yong is on a mission. Leading us gently by the hand, he takes us into the world of microbes — a bizarre, alien planet — in a bid to persuade us to love them as much as he does. By the end, we do.</p>
+
+                <p>For most of human history we had no idea that microbes existed. The first man to see these extraordinarily <span class="vocab-word" data-word="potent">potent</span> creatures was a Dutch lens-maker called Antony van <span class="vocab-word" data-word="Leeuwenhoek">Leeuwenhoek</span> in the 1670s. Using microscopes of his own design that could magnify up to 270 times, he examined a drop of water from a nearby lake and found it <span class="vocab-word" data-word="teeming">teeming</span> with tiny creatures he called '<span class="vocab-word" data-word="animalcules">animalcules</span>'. It wasn't until nearly two hundred years later that the research of French biologist Louis Pasteur indicated that some microbes caused disease. It was Pasteur's '<span class="vocab-word" data-word="germ theory">germ theory</span>' that gave bacteria the poor image that endures today.</p>
+
+                <p>Yong's book is in many ways a <span class="vocab-word" data-word="plea">plea</span> for microbial <span class="vocab-word" data-word="tolerance">tolerance</span>, pointing out that while fewer than one hundred species of bacteria bring disease, many thousands more play a vital role in maintaining our health. The book also acknowledges that our attitude towards bacteria is not a simple one. We tend to see the dangers posed by bacteria, yet at the same time we are sold yoghurts and drinks that supposedly nurture 'friendly' bacteria. In reality, says Yong, bacteria should not be viewed as either friends or foes, villains or heroes. Instead we should realise we have a <span class="vocab-word" data-word="symbiotic">symbiotic</span> relationship, that can be <span class="vocab-word" data-word="mutually beneficial">mutually beneficial</span> or mutually destructive.</p>
+
+                <p>What then do these millions of organisms do? The answer is pretty much everything. New research is now <span class="vocab-word" data-word="unravelling">unravelling</span> the ways in which bacteria aid digestion, <span class="vocab-word" data-word="regulate">regulate</span> our immune systems, eliminate toxins, produce vitamins, affect our behaviour and even <span class="vocab-word" data-word="combat obesity">combat obesity</span>. 'They actually help us become who we are,' says Yong. But we are facing a growing problem. Our <span class="vocab-word" data-word="obsession">obsession</span> with hygiene, our overuse of <span class="vocab-word" data-word="antibiotics">antibiotics</span> and our unhealthy, low-fibre diets are <span class="vocab-word" data-word="disrupting">disrupting</span> the bacterial balance and may be responsible for soaring rates of <span class="vocab-word" data-word="allergies">allergies</span> and immune problems, such as <span class="vocab-word" data-word="inflammatory bowel disease">inflammatory bowel disease</span> (IBD).</p>
+
+                <p>The most recent research actually turns accepted <span class="vocab-word" data-word="norms">norms</span> upside down. For example, there are studies indicating that the excessive use of household <span class="vocab-word" data-word="detergents">detergents</span> and <span class="vocab-word" data-word="antibacterial">antibacterial</span> products actually destroys the microbes that normally keep the more dangerous germs at bay. Other studies show that keeping a dog as a pet gives children early exposure to a diverse range of bacteria, which may help protect them against allergies later.</p>
+
+                <p>The readers of Yong's book must be prepared for a decidedly <span class="vocab-word" data-word="unglamorous">unglamorous</span> world. Among the less appealing case studies is one about a <span class="vocab-word" data-word="fungus">fungus</span> that is wiping out entire populations of frogs and that can be halted by a rare microbial bacterium. Another is about squid that carry <span class="vocab-word" data-word="luminescent">luminescent</span> bacteria that protect them against <span class="vocab-word" data-word="predators">predators</span>. However, if you can overcome your <span class="vocab-word" data-word="distaste">distaste</span> for some of the investigations, the reasons for Yong's enthusiasm become clear. The microbial world is a place of wonder. Already, in an attempt to stop mosquitoes spreading <span class="vocab-word" data-word="dengue fever">dengue fever</span> — a disease that infects 400 million people a year — mosquitoes are being loaded with a bacterium to block the disease. In the future, our ability to <span class="vocab-word" data-word="manipulate">manipulate</span> microbes means we could construct buildings with useful microbes built into their walls to fight off infections. Just imagine a <span class="vocab-word" data-word="neonatal">neonatal</span> hospital ward coated in a specially mixed cocktail of microbes so that babies get the best start in life.</p>
+            </div>
+        </div>
+
+        <div id="splitter" class="splitter relative flex items-center justify-center group">
+            <div class="w-1 h-8 bg-gray-400 rounded-full opacity-50 group-hover:bg-gray-600 transition-colors"></div>
+        </div>
+
+        <!-- QUESTIONS -->
+        <div id="right-pane" class="pane">
+            <div id="questions-section" class="max-w-3xl mx-auto space-y-8 pb-10">
+
+                <!-- Q14-16: Multiple Choice -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-purple-100 text-purple-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 14–16</span>
+                        <h4 class="font-bold text-gray-800">Multiple Choice</h4>
+                    </div>
+                    <p class="mb-5 text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100 text-sm">Choose the correct letter, <strong>A</strong>, <strong>B</strong>, <strong>C</strong> or <strong>D</strong>.</p>
+                    <div class="space-y-5">
+                        <!-- Q14 -->
+                        <div class="q-item" id="container-q14-group">
+                            <p class="font-semibold text-gray-800 mb-3"><span class="font-bold text-purple-800 mr-2">14</span> What point does the writer make about microbes in the first paragraph?</p>
+                            <div id="container-q14">
+                                <label class="mc-label"><input type="radio" name="q14" value="a"><span><strong class="mr-2">A</strong> They adapt quickly to their environment.</span></label>
+                                <label class="mc-label"><input type="radio" name="q14" value="b"><span><strong class="mr-2">B</strong> The risk they pose has been exaggerated.</span></label>
+                                <label class="mc-label"><input type="radio" name="q14" value="c"><span><strong class="mr-2">C</strong> They are more plentiful in animal life than plant life.</span></label>
+                                <label class="mc-label"><input type="radio" name="q14" value="d"><span><strong class="mr-2">D</strong> They will continue to exist for longer than the human race.</span></label>
+                            </div>
+                        </div>
+                        <!-- Q15 -->
+                        <div class="q-item" id="container-q15-group">
+                            <p class="font-semibold text-gray-800 mb-3"><span class="font-bold text-purple-800 mr-2">15</span> In the second paragraph, the writer is impressed by the fact that</p>
+                            <div id="container-q15">
+                                <label class="mc-label"><input type="radio" name="q15" value="a"><span><strong class="mr-2">A</strong> each species tends to have vastly different microbes.</span></label>
+                                <label class="mc-label"><input type="radio" name="q15" value="b"><span><strong class="mr-2">B</strong> some parts of the body contain relatively few microbes.</span></label>
+                                <label class="mc-label"><input type="radio" name="q15" value="c"><span><strong class="mr-2">C</strong> the average individual has more microbial cells than human ones.</span></label>
+                                <label class="mc-label"><input type="radio" name="q15" value="d"><span><strong class="mr-2">D</strong> scientists have limited understanding of how microbial cells behave.</span></label>
+                            </div>
+                        </div>
+                        <!-- Q16 -->
+                        <div class="q-item" id="container-q16-group">
+                            <p class="font-semibold text-gray-800 mb-3"><span class="font-bold text-purple-800 mr-2">16</span> What is the writer doing in the fifth paragraph?</p>
+                            <div id="container-q16">
+                                <label class="mc-label"><input type="radio" name="q16" value="a"><span><strong class="mr-2">A</strong> explaining how a discovery was made</span></label>
+                                <label class="mc-label"><input type="radio" name="q16" value="b"><span><strong class="mr-2">B</strong> comparing scientists' theories about microbes</span></label>
+                                <label class="mc-label"><input type="radio" name="q16" value="c"><span><strong class="mr-2">C</strong> describing confusion among scientists</span></label>
+                                <label class="mc-label"><input type="radio" name="q16" value="d"><span><strong class="mr-2">D</strong> giving details of how microbes cause disease</span></label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-5 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="14-16">Check Answers</button>
+                    </div>
+                </div>
+
+                <!-- Q17-20: Summary with word bank -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-purple-100 text-purple-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 17–20</span>
+                        <h4 class="font-bold text-gray-800">Summary Completion — Word Bank</h4>
+                    </div>
+                    <p class="mb-4 text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100 text-sm">
+                        Complete the summary using the list of words <strong>A–H</strong> below. Write the correct letter in each box.
+                    </p>
+                    <div class="summary-block">
+                        <h5>We should be more tolerant of microbes</h5>
+                        <p>
+                            Yong's book argues that we should be more tolerant of microbes. Many have a beneficial effect, and only a relatively small number lead to
+                            <span id="container-q17" class="inline-block mx-1"><strong class="text-purple-800 text-sm mr-1">17</strong><select name="q17" class="select-input"><option value="">--</option><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option><option>F</option><option>G</option><option>H</option></select></span>.
+                            And although it is misleading to think of microbes as 'friendly', we should also stop thinking of them as the enemy. In fact, we should accept that our relationship with microbes is one based on
+                            <span id="container-q18" class="inline-block mx-1"><strong class="text-purple-800 text-sm mr-1">18</strong><select name="q18" class="select-input"><option value="">--</option><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option><option>F</option><option>G</option><option>H</option></select></span>.
+                        </p>
+                        <br>
+                        <p>
+                            New research shows that microbes have numerous benefits for humans. Amongst other things, they aid digestion, remove poisons, produce vitamins and may even help reduce obesity. However, there is a growing problem. Our poor
+                            <span id="container-q19" class="inline-block mx-1"><strong class="text-purple-800 text-sm mr-1">19</strong><select name="q19" class="select-input"><option value="">--</option><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option><option>F</option><option>G</option><option>H</option></select></span>,
+                            our overuse of antibiotics, and our excessive focus on
+                            <span id="container-q20" class="inline-block mx-1"><strong class="text-purple-800 text-sm mr-1">20</strong><select name="q20" class="select-input"><option value="">--</option><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option><option>F</option><option>G</option><option>H</option></select></span>
+                            are upsetting the bacterial balance and may be contributing to the huge increase in allergies and immune system problems.
+                        </p>
+                        <div class="word-bank">
+                            <span class="word-bank-item"><strong>A</strong> solution</span>
+                            <span class="word-bank-item"><strong>B</strong> partnership</span>
+                            <span class="word-bank-item"><strong>C</strong> destruction</span>
+                            <span class="word-bank-item"><strong>D</strong> exaggeration</span>
+                            <span class="word-bank-item"><strong>E</strong> cleanliness</span>
+                            <span class="word-bank-item"><strong>F</strong> regulations</span>
+                            <span class="word-bank-item"><strong>G</strong> illness</span>
+                            <span class="word-bank-item"><strong>H</strong> nutrition</span>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="17-20">Check Answers</button>
+                    </div>
+                </div>
+
+                <!-- Q21-26: Yes / No / Not Given -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-purple-100 text-purple-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 21–26</span>
+                        <h4 class="font-bold text-gray-800">Yes / No / Not Given</h4>
+                    </div>
+                    <div class="mb-5 text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100 text-sm space-y-1">
+                        <p>Do the following statements agree with the <em>claims</em> of the writer?</p>
+                        <p><span class="font-bold text-green-700">YES</span> — the statement agrees with the claims of the writer</p>
+                        <p><span class="font-bold text-red-600">NO</span> — the statement contradicts the claims of the writer</p>
+                        <p><span class="font-bold text-amber-500">NOT GIVEN</span> — it is impossible to say what the writer thinks about this</p>
+                    </div>
+                    <div class="space-y-4">
+                        <!-- Q21 -->
+                        <div class="q-item" id="container-q21-group">
+                            <p class="font-semibold text-gray-800 mb-2"><span class="font-bold text-purple-800 mr-2">21</span> It is possible that using antibacterial products in the home fails to have the desired effect.</p>
+                            <div id="container-q21">
+                                <label class="yng-label"><input type="radio" name="q21" value="yes"><span class="font-semibold text-green-700">YES</span></label>
+                                <label class="yng-label"><input type="radio" name="q21" value="no"><span class="font-semibold text-red-600">NO</span></label>
+                                <label class="yng-label"><input type="radio" name="q21" value="not given"><span class="font-semibold text-amber-500">NOT GIVEN</span></label>
+                            </div>
+                        </div>
+                        <!-- Q22 -->
+                        <div class="q-item" id="container-q22-group">
+                            <p class="font-semibold text-gray-800 mb-2"><span class="font-bold text-purple-800 mr-2">22</span> It is a good idea to ensure that children come into contact with as few bacteria as possible.</p>
+                            <div id="container-q22">
+                                <label class="yng-label"><input type="radio" name="q22" value="yes"><span class="font-semibold text-green-700">YES</span></label>
+                                <label class="yng-label"><input type="radio" name="q22" value="no"><span class="font-semibold text-red-600">NO</span></label>
+                                <label class="yng-label"><input type="radio" name="q22" value="not given"><span class="font-semibold text-amber-500">NOT GIVEN</span></label>
+                            </div>
+                        </div>
+                        <!-- Q23 -->
+                        <div class="q-item" id="container-q23-group">
+                            <p class="font-semibold text-gray-800 mb-2"><span class="font-bold text-purple-800 mr-2">23</span> Yong's book contains more case studies than are necessary.</p>
+                            <div id="container-q23">
+                                <label class="yng-label"><input type="radio" name="q23" value="yes"><span class="font-semibold text-green-700">YES</span></label>
+                                <label class="yng-label"><input type="radio" name="q23" value="no"><span class="font-semibold text-red-600">NO</span></label>
+                                <label class="yng-label"><input type="radio" name="q23" value="not given"><span class="font-semibold text-amber-500">NOT GIVEN</span></label>
+                            </div>
+                        </div>
+                        <!-- Q24 -->
+                        <div class="q-item" id="container-q24-group">
+                            <p class="font-semibold text-gray-800 mb-2"><span class="font-bold text-purple-800 mr-2">24</span> The case study about bacteria that prevent squid from being attacked may have limited appeal.</p>
+                            <div id="container-q24">
+                                <label class="yng-label"><input type="radio" name="q24" value="yes"><span class="font-semibold text-green-700">YES</span></label>
+                                <label class="yng-label"><input type="radio" name="q24" value="no"><span class="font-semibold text-red-600">NO</span></label>
+                                <label class="yng-label"><input type="radio" name="q24" value="not given"><span class="font-semibold text-amber-500">NOT GIVEN</span></label>
+                            </div>
+                        </div>
+                        <!-- Q25 -->
+                        <div class="q-item" id="container-q25-group">
+                            <p class="font-semibold text-gray-800 mb-2"><span class="font-bold text-purple-800 mr-2">25</span> Efforts to control dengue fever have been surprisingly successful.</p>
+                            <div id="container-q25">
+                                <label class="yng-label"><input type="radio" name="q25" value="yes"><span class="font-semibold text-green-700">YES</span></label>
+                                <label class="yng-label"><input type="radio" name="q25" value="no"><span class="font-semibold text-red-600">NO</span></label>
+                                <label class="yng-label"><input type="radio" name="q25" value="not given"><span class="font-semibold text-amber-500">NOT GIVEN</span></label>
+                            </div>
+                        </div>
+                        <!-- Q26 -->
+                        <div class="q-item" id="container-q26-group">
+                            <p class="font-semibold text-gray-800 mb-2"><span class="font-bold text-purple-800 mr-2">26</span> Microbes that reduce the risk of infection have already been put inside the walls of some hospital wards.</p>
+                            <div id="container-q26">
+                                <label class="yng-label"><input type="radio" name="q26" value="yes"><span class="font-semibold text-green-700">YES</span></label>
+                                <label class="yng-label"><input type="radio" name="q26" value="no"><span class="font-semibold text-red-600">NO</span></label>
+                                <label class="yng-label"><input type="radio" name="q26" value="not given"><span class="font-semibold text-amber-500">NOT GIVEN</span></label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-5 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="21-26">Check Answers</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+</div>
+
+<div id="highlight-tooltip" class="highlight-tooltip">Highlight Text</div>
+
+<!-- Vocab Modal -->
+<div id="vocab-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
+    <div class="bg-white rounded-2xl shadow-2xl p-5 sm:p-8 w-full max-w-md relative transform transition-all scale-95 opacity-0" id="vocab-modal-content">
+        <button id="close-vocab-modal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-full w-8 h-8 flex items-center justify-center">&times;</button>
+        <div class="flex items-center mb-6 border-b pb-4 mt-2">
+            <h3 id="vocab-word" class="text-2xl sm:text-3xl font-extrabold text-gray-900 capitalize tracking-tight"></h3>
+        </div>
+        <div class="flex items-center mb-5">
+            <button id="play-audio-btn" class="flex items-center justify-center h-10 w-10 sm:h-12 sm:w-12 shrink-0 rounded-full bg-purple-50 text-purple-800 hover:bg-purple-700 hover:text-white mr-4 transition-all shadow-sm border border-purple-200">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>
+            </button>
+            <p id="vocab-pronunciation-text" class="text-gray-500 font-mono text-base sm:text-lg bg-gray-50 px-3 py-1 rounded-md border border-gray-100"></p>
+        </div>
+        <p id="vocab-meaning" class="text-gray-700 text-base sm:text-lg leading-relaxed"></p>
+    </div>
+</div>
+
+<!-- Alert Modal -->
+<div id="alert-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-[80]">
+    <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm relative transform transition-all scale-95 opacity-0 text-center" id="alert-modal-content">
+        <div id="alert-icon-container" class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 mb-4">
+            <svg class="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        </div>
+        <h3 id="alert-title" class="text-lg font-medium text-gray-900 mb-2">Notice</h3>
+        <p id="alert-message" class="text-sm text-gray-500 mb-6"></p>
+        <button id="close-alert-btn" class="w-full inline-flex justify-center rounded-md px-4 py-2 bg-purple-800 text-white font-medium hover:bg-purple-900 text-sm transition-colors">Got it</button>
+    </div>
+</div>
+
+<script>
+const vocabulary = {
+    'Microbes': { meaning: 'Microscopic organisms, especially bacteria, viruses, or fungi, that can cause disease. Too small to be seen with the naked eye.', phonetic: '/ˈmaɪ.krəʊbz/' },
+    'bacteria': { meaning: 'Single-celled microscopic organisms found everywhere; some cause disease, many are harmless or beneficial.', phonetic: '/bækˈtɪər.i.ə/' },
+    'outlive': { meaning: 'To live or last longer than someone or something else.', phonetic: '/ˌaʊtˈlɪv/' },
+    'naked eye': { meaning: 'The ability to see without the use of a telescope, microscope, or other instrument.', phonetic: '/ˈneɪ.kɪd aɪ/' },
+    'ubiquitous': { meaning: 'Present, appearing, or found everywhere; seeming to be everywhere at once.', phonetic: '/juːˈbɪk.wɪ.təs/' },
+    'microbiome': { meaning: 'The community of microorganisms (bacteria, fungi, viruses) living in or on a particular organism, environment, or body part.', phonetic: '/ˌmaɪ.krəʊˈbaɪ.əʊm/' },
+    'microbial': { meaning: 'Relating to or caused by microbes (microorganisms).', phonetic: '/maɪˈkrəʊ.bi.əl/' },
+    'holobiont': { meaning: 'A biological term for a host organism together with all its associated microorganisms, considered as a single ecological unit.', phonetic: '/ˌhɒl.əʊˈbaɪ.ɒnt/' },
+    'contentedly': { meaning: 'In a happy and satisfied manner; without desire for change.', phonetic: '/kənˈten.tɪd.li/' },
+    'bloodstream': { meaning: 'The blood circulating through the body within the blood vessels.', phonetic: '/ˈblʌd.striːm/' },
+    'swapping': { meaning: 'Exchanging one thing for another; trading or switching.', phonetic: '/ˈswɒp.ɪŋ/' },
+    'adept': { meaning: 'Very skilled or proficient at something; highly competent.', phonetic: '/əˈdept/' },
+    'panache': { meaning: 'A confident and flamboyant manner; a grand and impressive style.', phonetic: '/pəˈnæʃ/' },
+    'knack': { meaning: 'A special skill or talent for doing something; an innate ability.', phonetic: '/næk/' },
+    'enthralling': { meaning: 'Capturing and holding the complete attention; extremely interesting or charming.', phonetic: '/ɪnˈθrɔːl.ɪŋ/' },
+    'potent': { meaning: 'Having great power, influence, or effect; very strong.', phonetic: '/ˈpəʊ.tənt/' },
+    'Leeuwenhoek': { meaning: 'Antony van Leeuwenhoek (1632–1723): a Dutch tradesman and scientist who made important contributions to microscopy and is considered the "father of microbiology".', phonetic: '/ˈleɪ.wən.hʊk/' },
+    'teeming': { meaning: 'Swarming or overflowing with something; present in large numbers.', phonetic: '/ˈtiː.mɪŋ/' },
+    'animalcules': { meaning: 'A historical term for microscopic organisms observed through early microscopes; tiny living creatures visible only under magnification.', phonetic: '/ˌæn.ɪˈmæl.kjuːlz/' },
+    'germ theory': { meaning: 'The scientific theory that many diseases are caused by microorganisms such as bacteria, viruses, or fungi.', phonetic: '/dʒɜːm ˈθɪər.i/' },
+    'plea': { meaning: 'An earnest appeal or request; an argument made in favour of something.', phonetic: '/pliː/' },
+    'tolerance': { meaning: 'The ability to accept or endure something; willingness to accept different views or behaviours.', phonetic: '/ˈtɒl.ər.əns/' },
+    'symbiotic': { meaning: 'Relating to symbiosis — a close, long-term relationship between two different species that benefits at least one of them.', phonetic: '/ˌsɪm.baɪˈɒt.ɪk/' },
+    'mutually beneficial': { meaning: 'Advantageous to both parties involved; good for each side of a relationship.', phonetic: '/ˈmjuː.tʃu.ə.li ˌben.ɪˈfɪʃ.əl/' },
+    'unravelling': { meaning: 'Gradually solving or explaining something complex; undoing or making clear what was tangled or confused.', phonetic: '/ʌnˈræv.əl.ɪŋ/' },
+    'regulate': { meaning: 'To control or maintain the rate or speed of a process; to supervise according to a rule.', phonetic: '/ˈreɡ.jʊ.leɪt/' },
+    'combat obesity': { meaning: 'To fight against or reduce excess body weight; to tackle the condition of being seriously overweight.', phonetic: '/ˈkɒm.bæt əʊˈbiː.sɪ.ti/' },
+    'obsession': { meaning: 'An idea or thought that continually preoccupies or intrudes on a person\'s mind; an unhealthy fixation.', phonetic: '/əbˈseʃ.ən/' },
+    'antibiotics': { meaning: 'Medicines that inhibit the growth of or destroy bacteria; used to treat bacterial infections.', phonetic: '/ˌæn.ti.baɪˈɒt.ɪks/' },
+    'disrupting': { meaning: 'Causing disturbance or problems; interrupting the normal continuity of something.', phonetic: '/dɪsˈrʌp.tɪŋ/' },
+    'allergies': { meaning: 'Hypersensitive immune reactions to substances that are normally harmless, such as pollen or certain foods.', phonetic: '/ˈæl.ə.dʒiz/' },
+    'inflammatory bowel disease': { meaning: 'A term for chronic inflammation of the digestive tract, including conditions like Crohn\'s disease and ulcerative colitis.', phonetic: '/ɪnˈflæm.ə.tɔːr.i ˈbaʊ.əl dɪˈziːz/' },
+    'norms': { meaning: 'Standards or patterns of behaviour considered normal or typical in a society or group.', phonetic: '/nɔːmz/' },
+    'detergents': { meaning: 'Cleaning agents (soap or chemical substances) used for washing and cleaning.', phonetic: '/dɪˈtɜː.dʒənts/' },
+    'antibacterial': { meaning: 'Effective in killing or inhibiting the growth of bacteria; used to describe products designed to destroy bacteria.', phonetic: '/ˌæn.ti.bækˈtɪər.i.əl/' },
+    'unglamorous': { meaning: 'Lacking glamour; not attractive, exciting, or impressive; dull or unpleasant.', phonetic: '/ʌnˈɡlæm.ər.əs/' },
+    'fungus': { meaning: 'A type of organism (e.g. mushrooms, moulds, yeasts) that is neither plant nor animal; some cause disease.', phonetic: '/ˈfʌŋ.ɡəs/' },
+    'luminescent': { meaning: 'Emitting light not caused by heat; glowing in the dark; bioluminescent.', phonetic: '/ˌluː.mɪˈnes.ənt/' },
+    'predators': { meaning: 'Animals that naturally hunt, kill, and eat other animals.', phonetic: '/ˈpred.ə.tɔːz/' },
+    'distaste': { meaning: 'Mild dislike or aversion; a feeling of discomfort or disapproval.', phonetic: '/dɪsˈteɪst/' },
+    'dengue fever': { meaning: 'A mosquito-borne tropical disease caused by dengue viruses, characterised by fever, headache, and rash; infects millions annually.', phonetic: '/ˈdeŋ.ɡi ˈfiː.vər/' },
+    'manipulate': { meaning: 'To handle or control something cleverly or skillfully; to influence in a subtle or indirect way.', phonetic: '/məˈnɪp.jʊ.leɪt/' },
+    'neonatal': { meaning: 'Relating to newborn children (within the first 28 days of life).', phonetic: '/ˌniː.əʊˈneɪ.təl/' }
+};
+
+const MC_ANSWERS = { q14:'d', q15:'c', q16:'a' };
+const SEL_ANSWERS = { q17:'g', q18:'b', q19:'h', q20:'e' };
+const YNG_ANSWERS = { q21:'yes', q22:'no', q23:'not given', q24:'yes', q25:'not given', q26:'no' };
+
+const explanations = {
+    q14: "D — Paragraph 1, sentence 1: 'they will outlive us.' 'Outlive' means to continue to exist for longer. Options A, B, C are not mentioned in the first paragraph.",
+    q15: "C — Paragraph 2: 'What is amazing is that while the number of human cells in the average person is about 30 trillion, the number of microbial ones is higher — about 39 trillion.' The writer uses the word 'amazing' (= impressed) to highlight that there are MORE microbial cells than human cells. Options A, B, D are not what the writer describes as amazing.",
+    q16: "A — Paragraph 5 traces the history of the discovery of microbes: Leeuwenhoek first saw them in the 1670s; Pasteur later theorised about germ theory. The whole paragraph explains how microbes were first discovered — answer A.",
+    q17: "G (illness) — Paragraph 6: 'fewer than one hundred species of bacteria bring disease.' Disease = illness. The summary says 'a relatively small number lead to [illness].'",
+    q18: "B (partnership) — Paragraph 6: 'we should realise we have a symbiotic relationship.' Symbiotic relationship = partnership between organisms. The summary says 'our relationship with microbes is one based on [partnership].'",
+    q19: "H (nutrition) — Paragraph 7: 'our unhealthy, low-fibre diets are disrupting the bacterial balance.' Diet = nutrition. The summary refers to 'our poor [nutrition]' as one of the growing problems.",
+    q20: "E (cleanliness) — Paragraph 7: 'Our obsession with hygiene.' Hygiene = cleanliness. The summary says 'our excessive focus on [cleanliness].'",
+    q21: "YES — Paragraph 8: 'studies indicating that the excessive use of household detergents and antibacterial products actually destroys the microbes that normally keep the more dangerous germs at bay.' This confirms that antibacterial products may FAIL to achieve their desired protective effect — the opposite of what they're meant to do.",
+    q22: "NO — Paragraph 8: 'keeping a dog as a pet gives children early exposure to a diverse range of bacteria, which may help protect them against allergies later.' This implies early exposure to bacteria is BENEFICIAL for children — contradicting the idea that they should come into contact with as few bacteria as possible.",
+    q23: "NOT GIVEN — The reviewer describes some case studies as 'less appealing' but never says there are MORE case studies than necessary. We cannot determine the writer's opinion on the number of case studies.",
+    q24: "YES — Paragraph 9: 'Among the less appealing case studies is one about a fungus...Another is about squid that carry luminescent bacteria...' The squid case study is listed among the 'less appealing' ones, confirming it may have limited appeal.",
+    q25: "NOT GIVEN — Paragraph 9 only states that mosquitoes 'are being loaded with a bacterium to block the disease' — an ongoing attempt. Whether it has been 'surprisingly successful' is not mentioned.",
+    q26: "NO — Paragraph 9: 'In the future, our ability to manipulate microbes means we could construct buildings with useful microbes built into their walls.' The word 'future' and 'could' make clear this has NOT happened yet — contradicting the statement that microbes have 'already been put inside the walls of some hospital wards.'"
+};
+
+const TOTAL_QUESTIONS = 13;
+
+document.addEventListener('DOMContentLoaded', () => {
+    const app = {
+        userAnswers: {}, answersChecked: {}, currentFontSize: 17, timeRemaining: 20*60,
+        leftPane: document.getElementById('left-pane'),
+        rightPane: document.getElementById('right-pane'),
+        highlightTooltip: document.getElementById('highlight-tooltip'),
+        vocabModal: document.getElementById('vocab-modal'),
+        vocabModalContent: document.getElementById('vocab-modal-content'),
+        closeVocabModalBtn: document.getElementById('close-vocab-modal'),
+        vocabWordEl: document.getElementById('vocab-word'),
+        vocabMeaningEl: document.getElementById('vocab-meaning'),
+        vocabPronunciationText: document.getElementById('vocab-pronunciation-text'),
+        playAudioBtn: document.getElementById('play-audio-btn'),
+        progressText: document.getElementById('progress-text'),
+        timerEl: document.getElementById('timer'),
+        alertModal: document.getElementById('alert-modal'),
+        alertModalContent: document.getElementById('alert-modal-content'),
+        closeAlertBtn: document.getElementById('close-alert-btn'),
+        alertTitleEl: document.getElementById('alert-title'),
+        alertMessageEl: document.getElementById('alert-message'),
+        alertIconContainer: document.getElementById('alert-icon-container'),
+
+        init() { this.setupEventListeners(); this.initSplitter(); this.initHighlighter(); this.updateCheckButtonsState(); this.startTimer(); },
+
+        startTimer() {
+            const interval = setInterval(() => {
+                if (this.timeRemaining <= 0) { clearInterval(interval); this.timerEl.textContent = "00:00"; this.showAlert("Time's Up!", "Your 20 minutes have expired.", "warning"); return; }
+                this.timeRemaining--;
+                const m = Math.floor(this.timeRemaining/60).toString().padStart(2,'0');
+                const s = (this.timeRemaining%60).toString().padStart(2,'0');
+                this.timerEl.textContent = `${m}:${s}`;
+                if (this.timeRemaining <= 300) this.timerEl.classList.add('text-red-500');
+            }, 1000);
+        },
+
+        setupEventListeners() {
+            document.getElementById('increase-font-btn').addEventListener('click', () => this.changeFontSize(1));
+            document.getElementById('decrease-font-btn').addEventListener('click', () => this.changeFontSize(-1));
+            document.getElementById('clear-highlights-btn').addEventListener('click', () => this.leftPane.querySelectorAll('mark').forEach(m => m.replaceWith(document.createTextNode(m.textContent))));
+            this.closeVocabModalBtn.addEventListener('click', () => this.closeModal());
+            this.vocabModal.addEventListener('click', (e) => { if (e.target === this.vocabModal) this.closeModal(); });
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') { if (!this.vocabModal.classList.contains('hidden')) this.closeModal(); if (!this.alertModal.classList.contains('hidden')) this.closeAlert(); }
+                if ((e.ctrlKey||e.metaKey) && e.key.toLowerCase() === 'f') { e.preventDefault(); this.showAlert("Disabled", "Find is disabled during the exam.", "warning"); }
+            });
+            document.addEventListener('visibilitychange', () => { if (document.hidden && this.timeRemaining > 0) this.showAlert("Warning", "Please do not switch tabs during the exam.", "warning"); });
+            window.addEventListener('beforeunload', (e) => { if (this.timeRemaining > 0 && this.timeRemaining < 20*60) { e.preventDefault(); e.returnValue = ''; } });
+            this.closeAlertBtn.addEventListener('click', () => this.closeAlert());
+            this.alertModal.addEventListener('click', (e) => { if (e.target === this.alertModal) this.closeAlert(); });
+            document.body.addEventListener('change', (e) => {
+                if (e.target.type === 'radio') { this.userAnswers[e.target.name] = e.target.value.toLowerCase(); this.updateCheckButtonsState(); this.updateProgress(); }
+                if (e.target.tagName === 'SELECT') { this.userAnswers[e.target.name] = e.target.value.toLowerCase(); e.target.classList.remove('select-correct','select-incorrect'); this.updateCheckButtonsState(); this.updateProgress(); }
+            });
+            this.leftPane.addEventListener('click', (e) => {
+                if (e.target.classList.contains('vocab-word')) this.openVocabModal(e.target.dataset.word || e.target.textContent.trim());
+                if (e.target.tagName === 'MARK') e.target.replaceWith(document.createTextNode(e.target.textContent));
+            });
+            document.querySelectorAll('.check-btn').forEach(btn => btn.addEventListener('click', (e) => this.checkAnswers(e.target.dataset.range, e.target)));
+            this.playAudioBtn.addEventListener('click', () => {
+                const word = this.vocabWordEl.textContent; if (!word) return;
+                if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+                this.playAudioBtn.classList.remove('text-purple-800','bg-purple-50'); this.playAudioBtn.classList.add('bg-purple-700','text-white');
+                if ('speechSynthesis' in window) { const u = new SpeechSynthesisUtterance(word); u.lang = 'en-GB'; u.rate = 0.9; u.onend = () => this.resetAudioBtn(); u.onerror = () => this.resetAudioBtn(); window.speechSynthesis.speak(u); }
+                else setTimeout(() => this.resetAudioBtn(), 500);
+            });
+        },
+
+        updateProgress() {
+            let c = 0;
+            const all = ['q14','q15','q16','q17','q18','q19','q20','q21','q22','q23','q24','q25','q26'];
+            all.forEach(k => { if ((this.userAnswers[k] || '').trim()) c++; });
+            this.progressText.textContent = `${Math.min(c, TOTAL_QUESTIONS)} / ${TOTAL_QUESTIONS} Answered`;
+        },
+
+        resetAudioBtn() { this.playAudioBtn.classList.add('text-purple-800','bg-purple-50'); this.playAudioBtn.classList.remove('bg-purple-700','text-white'); },
+        changeFontSize(d) { this.currentFontSize = Math.max(14, Math.min(26, this.currentFontSize+d)); document.documentElement.style.setProperty('--app-font-size', `${this.currentFontSize}px`); },
+        openVocabModal(w) {
+            const d = vocabulary[w]; if (!d) return;
+            this.vocabWordEl.textContent = w; this.vocabMeaningEl.textContent = d.meaning; this.vocabPronunciationText.textContent = d.phonetic || '';
+            this.vocabModal.classList.remove('hidden');
+            setTimeout(() => { this.vocabModalContent.classList.remove('scale-95','opacity-0'); this.vocabModalContent.classList.add('scale-100','opacity-100'); }, 10);
+        },
+        closeModal() {
+            if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+            this.vocabModalContent.classList.remove('scale-100','opacity-100'); this.vocabModalContent.classList.add('scale-95','opacity-0');
+            this.resetAudioBtn(); setTimeout(() => this.vocabModal.classList.add('hidden'), 200);
+        },
+        showAlert(title, message, type='error') {
+            this.alertTitleEl.textContent = title; this.alertMessageEl.textContent = message;
+            const c = type === 'warning' ? 'yellow' : 'red';
+            this.alertIconContainer.className = `mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-${c}-100 mb-4`;
+            this.alertIconContainer.innerHTML = `<svg class="h-6 w-6 text-${c}-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>`;
+            this.alertModal.classList.remove('hidden');
+            setTimeout(() => { this.alertModalContent.classList.remove('scale-95','opacity-0'); this.alertModalContent.classList.add('scale-100','opacity-100'); }, 10);
+        },
+        closeAlert() {
+            this.alertModalContent.classList.remove('scale-100','opacity-100'); this.alertModalContent.classList.add('scale-95','opacity-0');
+            setTimeout(() => this.alertModal.classList.add('hidden'), 200);
+        },
+
+        isRangeAnswered(range) {
+            const [s, e] = range.split('-').map(Number);
+            for (let i = s; i <= e; i++) { if (!(this.userAnswers[`q${i}`] || '').trim()) return false; }
+            return true;
+        },
+
+        updateCheckButtonsState() {
+            document.querySelectorAll('.check-btn').forEach(btn => {
+                const range = btn.dataset.range;
+                if (this.answersChecked[range]) { btn.className = 'check-btn bg-gray-800 hover:bg-gray-900 text-white font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-pointer'; btn.textContent = 'Reset Answers'; return; }
+                const allDone = this.isRangeAnswered(range);
+                btn.className = allDone ? 'check-btn bg-purple-800 hover:bg-purple-900 text-white font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-pointer transform hover:-translate-y-0.5' : 'check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80';
+                btn.textContent = 'Check Answers';
+            });
+        },
+
+        checkAnswers(range, btn) {
+            if (this.answersChecked[range]) {
+                this.answersChecked[range] = false;
+                const [s, e] = range.split('-').map(Number);
+                for (let i = s; i <= e; i++) {
+                    const qId = `q${i}`; this.userAnswers[qId] = '';
+                    document.querySelectorAll(`input[name="${qId}"][type="radio"]`).forEach(r => { r.checked = false; const lbl = r.closest('label'); if (lbl) lbl.classList.remove('correct-answer','incorrect-answer','yes-answer','no-answer','ng-answer','incorrect-sel'); });
+                    const sel = document.querySelector(`select[name="${qId}"]`); if (sel) { sel.value = ''; sel.classList.remove('select-correct','select-incorrect'); }
+                    document.getElementById(`expl-${qId}`)?.remove();
+                }
+                this.updateCheckButtonsState(); this.updateProgress(); return;
+            }
+            if (!this.isRangeAnswered(range)) { this.showAlert("Incomplete Answers", "Please answer all questions in this section before checking.", "warning"); return; }
+            this.answersChecked[range] = true; this.updateCheckButtonsState();
+
+            const [s, e] = range.split('-').map(Number);
+            for (let i = s; i <= e; i++) {
+                const qId = `q${i}`;
+                const userAns = (this.userAnswers[qId] || '').toLowerCase().trim();
+                let correctAns, isCorrect, feedbackHTML = '';
+
+                if (MC_ANSWERS[qId]) {
+                    correctAns = MC_ANSWERS[qId]; isCorrect = userAns === correctAns;
+                    document.querySelectorAll(`input[name="${qId}"][type="radio"]`).forEach(r => {
+                        const lbl = r.closest('label'); if (!lbl) return;
+                        lbl.classList.remove('correct-answer','incorrect-answer');
+                        if (r.value === correctAns) lbl.classList.add('correct-answer');
+                        else if (r.checked) lbl.classList.add('incorrect-answer');
+                    });
+                    if (!isCorrect) feedbackHTML = `<span class="correct-badge">Correct Answer: ${correctAns.toUpperCase()}</span><br>`;
+                } else if (SEL_ANSWERS[qId]) {
+                    correctAns = SEL_ANSWERS[qId]; isCorrect = userAns === correctAns;
+                    const sel = document.querySelector(`select[name="${qId}"]`);
+                    if (sel) { sel.classList.remove('select-correct','select-incorrect'); sel.classList.add(isCorrect ? 'select-correct' : 'select-incorrect'); if (!isCorrect) { feedbackHTML = `<span class="correct-badge">Correct: ${correctAns.toUpperCase()}</span><br>`; sel.value = correctAns.toUpperCase(); } }
+                } else if (YNG_ANSWERS[qId]) {
+                    correctAns = YNG_ANSWERS[qId]; isCorrect = userAns === correctAns;
+                    document.querySelectorAll(`input[name="${qId}"][type="radio"]`).forEach(r => {
+                        const lbl = r.closest('label'); if (!lbl) return;
+                        lbl.classList.remove('yes-answer','no-answer','ng-answer','incorrect-sel');
+                        if (r.value === correctAns) lbl.classList.add(correctAns === 'yes' ? 'yes-answer' : correctAns === 'no' ? 'no-answer' : 'ng-answer');
+                        else if (r.checked) lbl.classList.add('incorrect-sel');
+                    });
+                    if (!isCorrect) {
+                        const badge = correctAns === 'yes' ? 'yes-badge' : correctAns === 'no' ? 'no-badge' : 'ng-badge';
+                        feedbackHTML = `<span class="${badge}">Correct Answer: ${correctAns.toUpperCase()}</span><br>`;
+                    }
+                }
+
+                if (explanations[qId] && !document.getElementById(`expl-${qId}`)) {
+                    const div = document.createElement('div'); div.id = `expl-${qId}`; div.className = 'explanation-box';
+                    div.innerHTML = `${feedbackHTML}<strong>Explanation:</strong> ${explanations[qId]}`;
+                    const grpEl = document.getElementById(`container-${qId}-group`);
+                    const contEl = document.getElementById(`container-${qId}`);
+                    if (grpEl) { const qItem = grpEl.closest('.q-item') || grpEl; qItem.insertAdjacentElement('afterend', div); }
+                    else if (contEl) {
+                        const sel2 = document.querySelector(`select[name="${qId}"]`);
+                        if (sel2) { const sb = sel2.closest('.summary-block'); if (sb) sb.insertAdjacentElement('afterend', div); }
+                    }
+                }
+            }
+        },
+
+        initSplitter() {
+            let isDragging = false; const panes = document.getElementById('content-panes');
+            document.getElementById('splitter').addEventListener('mousedown', (e) => { e.preventDefault(); isDragging = true; document.body.style.cursor = 'col-resize'; });
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging || window.innerWidth <= 768) return;
+                const rect = panes.getBoundingClientRect(); const newLeft = e.clientX - rect.left;
+                if (newLeft > 200 && newLeft < rect.width - 200) panes.style.gridTemplateColumns = `${(newLeft/rect.width)*100}% 5px 1fr`;
+            });
+            document.addEventListener('mouseup', () => { if (isDragging) { isDragging = false; document.body.style.cursor = 'default'; } });
+        },
+
+        initHighlighter() {
+            document.body.addEventListener('mouseup', (e) => {
+                const sel = window.getSelection(); const text = sel.toString().trim();
+                if (text.length > 0) {
+                    const range = sel.getRangeAt(0);
+                    if (!this.leftPane.contains(range.commonAncestorContainer) && !this.rightPane.contains(range.commonAncestorContainer)) { this.highlightTooltip.style.display = 'none'; return; }
+                    this.highlightTooltip.style.left = `${e.pageX-30}px`; this.highlightTooltip.style.top = `${e.pageY-40}px`; this.highlightTooltip.style.display = 'block';
+                    this.highlightTooltip.onclick = () => {
+                        const mark = document.createElement('mark');
+                        try { range.surroundContents(mark); } catch(ex) { this.showAlert("Highlight Error", "Please select text within a single element.", "warning"); }
+                        finally { sel.removeAllRanges(); this.highlightTooltip.style.display = 'none'; }
+                    };
+                } else { this.highlightTooltip.style.display = 'none'; }
+            });
+            document.body.addEventListener('mousedown', () => { if (window.getSelection().toString().length === 0) this.highlightTooltip.style.display = 'none'; });
+        }
+    };
+    app.init();
+});
+</script>
+</body>
+</html>

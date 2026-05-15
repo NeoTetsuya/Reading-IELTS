@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IELTS Simulator - The Return of the Huarango</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --app-font-size: 17px; }
+        body { font-family: 'Inter', sans-serif; overscroll-behavior: none; background-color: #f3f4f6; }
+        .ielts-container { display: grid; grid-template-rows: auto 1fr; height: 100vh; }
+        .content-panes { display: grid; grid-template-columns: 1fr 5px 1fr; overflow: hidden; }
+        .pane { overflow-y: auto; padding: 2rem 3rem; font-size: var(--app-font-size); scroll-behavior: smooth; }
+        #left-pane { background-color: #fdfdfd; }
+        #right-pane { background-color: #f8fafc; }
+        .splitter { background-color: #cbd5e1; cursor: col-resize; z-index: 10; transition: background-color 0.2s; }
+        .splitter:hover, .splitter:active { background-color: #94a3b8; }
+        .reading-passage { font-family: 'Merriweather', serif; line-height: 1.9; color: #334155; text-align: justify; max-width: 800px; margin: 0 auto; }
+        .reading-passage p { margin-bottom: 1.5rem; text-indent: 1.5rem; }
+        .reading-passage h3 { font-family: 'Inter', sans-serif; color: #0f172a; margin-bottom: 0.25rem; font-weight: 700; font-size: 1.5em; text-align: center; text-indent: 0; text-transform: uppercase; letter-spacing: 0.05em; }
+        .reading-passage .subtitle { font-family: 'Inter', sans-serif; color: #64748b; font-size: 0.95em; text-align: center; text-indent: 0; margin-bottom: 1.5rem; font-style: italic; }
+        .q-item { padding: 1rem; border-radius: 0.5rem; transition: all 0.2s; background-color: white; border: 1px solid #e2e8f0; margin-bottom: 0.75rem; }
+        .text-input { border: 2px solid #cbd5e1; border-radius: 6px; padding: 4px 8px; font-weight: 600; color: #1e293b; transition: all 0.2s; text-align: center; background-color: #f8fafc; }
+        .text-input:focus { outline: none; border-color: #15803d; background-color: #fff; box-shadow: 0 0 0 3px rgba(21,128,61,0.12); }
+        .text-input-word { width: 9rem; }
+        .text-input-two { width: 12rem; }
+        .select-input { border: 2px solid #cbd5e1; border-radius: 6px; padding: 4px 10px; font-weight: 600; color: #1e293b; transition: all 0.2s; background-color: #f8fafc; cursor: pointer; }
+        .select-input:focus { outline: none; border-color: #15803d; background-color: #fff; box-shadow: 0 0 0 3px rgba(21,128,61,0.12); }
+        .correct-answer { border-color: #22c55e !important; background-color: #f0fdf4 !important; color: #166534 !important; }
+        .incorrect-answer { border-color: #ef4444 !important; background-color: #fef2f2 !important; color: #991b1b !important; }
+        .ng-answer { border-color: #f59e0b !important; background-color: #fffbeb !important; color: #92400e !important; }
+        .explanation-box { animation: fadeIn 0.4s ease-out forwards; margin-top: 0.75rem; padding: 1rem; background-color: #f0fdf4; border-left: 4px solid #15803d; border-radius: 0.5rem; font-size: 0.95rem; color: #14532d; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .explanation-box .correct-badge { display: inline-block; background: #22c55e; color: white; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85em; margin-bottom: 0.5rem; }
+        .explanation-box .ng-badge { display: inline-block; background: #f59e0b; color: white; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85em; margin-bottom: 0.5rem; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+        .vocab-word { color: #15803d; font-weight: 600; cursor: pointer; border-bottom: 2px dotted #86efac; transition: all 0.2s ease-in-out; padding: 0 2px; }
+        .vocab-word:hover { background-color: #dcfce7; border-bottom-style: solid; border-radius: 2px; }
+        .highlight-tooltip { position: absolute; background-color: #1e293b; color: white; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 500; z-index: 100; cursor: pointer; display: none; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        mark { background-color: #fef08a; border-radius: 3px; padding: 2px 0; cursor: pointer; }
+        mark:hover { background-color: #fca5a5; color: #7f1d1d; }
+        mark:hover::after { content: ' x'; font-weight: bold; font-size: 0.8em; opacity: 0.7; }
+        .tfng-label { display: flex; align-items: center; padding: 0.6rem 1rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s; background-color: white; margin-bottom: 0.4rem; gap: 0.75rem; }
+        .tfng-label:hover { background: #f0fdf4; border-color: #86efac; }
+        .tfng-label input { width: 1.1em; height: 1.1em; accent-color: #15803d; flex-shrink: 0; }
+        label.correct-answer { border-color: #22c55e !important; background-color: #f0fdf4 !important; }
+        label.incorrect-answer { border-color: #ef4444 !important; background-color: #fef2f2 !important; }
+        .notes-block { background: #f0fdf4; border: 1px solid #86efac; border-radius: 0.75rem; padding: 1.5rem; margin-bottom: 1rem; }
+        .notes-block h5 { font-family: 'Inter', sans-serif; font-weight: 700; color: #15803d; font-size: 1em; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        .notes-block ul { list-style: disc; padding-left: 1.5rem; }
+        .notes-block ul li { margin-bottom: 0.6rem; line-height: 1.7; }
+        .table-block { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
+        .table-block th { background: #15803d; color: white; padding: 0.6rem 1rem; text-align: left; font-size: 0.9em; font-family: 'Inter', sans-serif; }
+        .table-block td { padding: 0.6rem 1rem; border: 1px solid #d1fae5; font-family: 'Inter', sans-serif; font-size: 0.95em; }
+        .table-block tr:nth-child(even) td { background: #f0fdf4; }
+        @media (max-width: 768px) {
+            .content-panes { display: flex; flex-direction: column; overflow-y: auto; }
+            .splitter { display: none; }
+            .pane { padding: 1.25rem 1rem; overflow-y: visible; height: auto; }
+            #left-pane { border-bottom: 2px dashed #cbd5e1; padding-bottom: 2rem; }
+        }
+    </style>
+</head>
+<body>
+<div id="test-container" class="ielts-container">
+    <header class="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 flex justify-between items-center z-20 shadow-sm flex-wrap gap-3">
+        <div class="flex items-center gap-2 sm:space-x-3">
+            <div class="bg-green-700 text-white p-1.5 sm:p-2 rounded-lg shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+                </svg>
+            </div>
+            <h1 class="text-xl font-bold text-gray-800 hidden sm:block">IELTS Simulator <span class="text-green-700 font-medium">| The Return of the Huarango</span></h1>
+            <h1 class="text-base font-bold text-gray-800 sm:hidden">IELTS <span class="text-green-700">Huarango</span></h1>
+        </div>
+        <div class="flex items-center space-x-4">
+            <div class="hidden sm:flex flex-col items-end">
+                <span class="text-xs text-gray-500 font-bold uppercase tracking-wide">Progress</span>
+                <span id="progress-text" class="text-sm font-semibold text-green-700">0 / 13 Answered</span>
+            </div>
+            <div class="flex items-center bg-gray-100 rounded-lg px-3 py-1.5 border border-gray-200">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span id="timer" class="font-mono font-bold text-gray-700 text-lg">20:00</span>
+            </div>
+        </div>
+        <div class="flex items-center gap-2 sm:space-x-3">
+            <button id="clear-highlights-btn" class="hidden sm:flex items-center justify-center px-3 py-1.5 rounded bg-green-50 hover:bg-green-100 text-green-700 transition-colors focus:outline-none border border-green-200 text-sm font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                Clear
+            </button>
+            <div class="flex items-center space-x-1 sm:space-x-2 bg-gray-50 p-1 rounded-lg border border-gray-200">
+                <button id="decrease-font-btn" class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded bg-white shadow-sm hover:bg-gray-100 text-gray-700 transition-colors focus:outline-none font-bold text-sm sm:text-base">A-</button>
+                <button id="increase-font-btn" class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded bg-white shadow-sm hover:bg-gray-100 text-gray-700 transition-colors focus:outline-none font-bold text-sm sm:text-base">A+</button>
+            </div>
+        </div>
+    </header>
+
+    <main id="content-panes" class="content-panes">
+        <!-- LEFT: PASSAGE -->
+        <div id="left-pane" class="pane relative">
+            <div class="reading-passage">
+                <h3>The Return of the Huarango</h3>
+                <p class="subtitle">The arid valleys of southern Peru are welcoming the return of a native plant</p>
+
+                <p>The south coast of Peru is a narrow, 2,000-kilometre-long strip of <span class="vocab-word" data-word="desert">desert</span> squeezed between the Andes and the Pacific Ocean. It is also one of the most <span class="vocab-word" data-word="fragile">fragile</span> <span class="vocab-word" data-word="ecosystems">ecosystems</span> on Earth. It hardly ever rains there, and the only year-round source of water is located tens of metres below the surface. This is why the huarango tree is so suited to life there: it has the longest roots of any tree in the world. They stretch down 50-80 metres and, as well as sucking up water for the tree, they bring it into the higher <span class="vocab-word" data-word="subsoil">subsoil</span>, creating a water source for other plant life.</p>
+
+                <p>Dr David Beresford-Jones, <span class="vocab-word" data-word="archaeobotanist">archaeobotanist</span> at Cambridge University, has been studying the role of the huarango tree in landscape change in the Lower Ica Valley in southern Peru. He believes the huarango was key to the ancient people's <span class="vocab-word" data-word="diet">diet</span> and, because it could reach deep water sources, it allowed local people to <span class="vocab-word" data-word="withstand">withstand</span> years of <span class="vocab-word" data-word="drought">drought</span> when their other crops failed. But over the centuries huarango trees were gradually replaced with crops. Cutting down native woodland leads to <span class="vocab-word" data-word="erosion">erosion</span>, as there is nothing to keep the soil in place. So when the huarangos go, the land turns into a desert. Nothing grows at all in the Lower Ica Valley now.</p>
+
+                <p>For centuries the huarango tree was vital to the people of the neighbouring Middle Ica Valley too. They grew vegetables under it and ate products made from its <span class="vocab-word" data-word="seed pods">seed pods</span>. Its leaves and bark were used for <span class="vocab-word" data-word="herbal remedies">herbal remedies</span>, while its branches were used for charcoal for cooking and heating, and its trunk was used to build houses. But now it is disappearing rapidly. The majority of the huarango forests in the valley have already been cleared for fuel and agriculture — initially, these were <span class="vocab-word" data-word="smallholdings">smallholdings</span>, but now they're huge farms producing crops for the international market.</p>
+
+                <p>'Of the forests that were here 1,000 years ago, 99 per cent have already gone,' says botanist Oliver Whaley from Kew Gardens in London, who, together with <span class="vocab-word" data-word="ethnobotanist">ethnobotanist</span> Dr William Milliken, is running a <span class="vocab-word" data-word="pioneering">pioneering</span> project to protect and restore the rapidly disappearing habitat. In order to succeed, Whaley needs to get the local people on board, and that has meant overcoming local <span class="vocab-word" data-word="prejudices">prejudices</span>. 'Increasingly <span class="vocab-word" data-word="aspirational">aspirational</span> communities think that if you plant food trees in your home or street, it shows you are poor, and still need to grow your own food,' he says. In order to stop the Middle Ica Valley going the same way as the Lower Ica Valley, Whaley is encouraging locals to love the huarangos again. 'It's a process of cultural <span class="vocab-word" data-word="resuscitation">resuscitation</span>,' he says. He has already set up a huarango festival to reinstate a sense of pride in their eco-heritage, and has helped local schoolchildren plant thousands of trees.</p>
+
+                <p>'In order to get people interested in habitat restoration, you need to plant a tree that is useful to them,' says Whaley. So, he has been working with local families to attempt to create a <span class="vocab-word" data-word="sustainable">sustainable</span> income from the huarangos by turning their products into foodstuffs. 'Boil up the beans and you get this thick brown syrup like <span class="vocab-word" data-word="molasses">molasses</span>. You can also use it in drinks, soups or stews.' The pods can be ground into flour to make cakes, and the seeds roasted into a sweet, chocolatey 'coffee'. 'It's packed full of vitamins and minerals,' Whaley says.</p>
+
+                <p>And some farmers are already planting huarangos. Alberto Benevides, owner of Ica Valley's only certified organic farm, which Whaley helped set up, has been planting the tree for 13 years. He produces syrup and flour, and sells these products at an organic farmers' market in Lima. His farm is relatively small and doesn't yet provide him with enough to live on, but he hopes this will change. 'The organic market is growing rapidly in Peru,' Benevides says. 'I am investing in the future.'</p>
+
+                <p>But even if Whaley can convince the local people to fall in love with the huarango again, there is still the threat of the larger farms. Some of these cut across the forests and break up the <span class="vocab-word" data-word="corridors">corridors</span> that allow the essential movement of mammals, birds and pollen up and down the narrow forest strip. In the hope of <span class="vocab-word" data-word="counteracting">counteracting</span> this, he's persuading farmers to let him plant forest corridors on their land. He believes the extra woodland will also benefit the farms by reducing their water usage through a lowering of <span class="vocab-word" data-word="evaporation">evaporation</span> and providing a refuge for bio-control insects.</p>
+
+                <p>'If we can record <span class="vocab-word" data-word="biodiversity">biodiversity</span> and see how it all works, then we're in a good position to move on from there. Desert habitats can reduce down to very little,' Whaley explains. 'It's not like a rainforest that needs to have this huge expanse. Life has always been confined to corridors and islands here. If you just have a few trees left, the population can grow up quickly because it's used to exploiting water when it arrives.' He sees his project as a model that has the potential to be <span class="vocab-word" data-word="rolled out">rolled out</span> across other arid areas around the world. 'If we can do it here, in the most fragile system on Earth, then that's a real message of hope for lots of places, including Africa, where there is drought and they just can't afford to wait for rain.'</p>
+            </div>
+        </div>
+
+        <div id="splitter" class="splitter relative flex items-center justify-center group">
+            <div class="w-1 h-8 bg-gray-400 rounded-full opacity-50 group-hover:bg-gray-600 transition-colors"></div>
+        </div>
+
+        <!-- RIGHT: QUESTIONS -->
+        <div id="right-pane" class="pane">
+            <div id="questions-section" class="max-w-3xl mx-auto space-y-8 pb-10">
+
+                <!-- Q1-5: Notes Completion -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-green-100 text-green-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 1–5</span>
+                        <h4 class="font-bold text-gray-800">Notes Completion</h4>
+                    </div>
+                    <p class="mb-5 text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100 text-sm">
+                        Complete the notes below. Choose <strong class="text-green-700">ONE WORD ONLY</strong> from the passage for each answer.
+                    </p>
+                    <div class="notes-block">
+                        <h5>The importance of the huarango tree</h5>
+                        <ul>
+                            <li>its roots can extend as far as 80 metres into the soil</li>
+                            <li>can access <span id="container-q1" class="inline-block mx-1"><strong class="text-green-700 text-sm mr-1">1</strong><input type="text" name="q1" class="text-input text-input-word" placeholder="________" autocomplete="off" spellcheck="false"></span> deep below the surface</li>
+                            <li>was a crucial part of local inhabitants' <span id="container-q2" class="inline-block mx-1"><strong class="text-green-700 text-sm mr-1">2</strong><input type="text" name="q2" class="text-input text-input-word" placeholder="________" autocomplete="off" spellcheck="false"></span> a long time ago</li>
+                            <li>helped people to survive periods of <span id="container-q3" class="inline-block mx-1"><strong class="text-green-700 text-sm mr-1">3</strong><input type="text" name="q3" class="text-input text-input-word" placeholder="________" autocomplete="off" spellcheck="false"></span></li>
+                            <li>prevents <span id="container-q4" class="inline-block mx-1"><strong class="text-green-700 text-sm mr-1">4</strong><input type="text" name="q4" class="text-input text-input-word" placeholder="________" autocomplete="off" spellcheck="false"></span> of the soil</li>
+                            <li>prevents land from becoming a <span id="container-q5" class="inline-block mx-1"><strong class="text-green-700 text-sm mr-1">5</strong><input type="text" name="q5" class="text-input text-input-word" placeholder="________" autocomplete="off" spellcheck="false"></span></li>
+                        </ul>
+                    </div>
+                    <div class="mt-4 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="1-5">Check Answers</button>
+                    </div>
+                </div>
+
+                <!-- Q6-8: Table Completion -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-green-100 text-green-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 6–8</span>
+                        <h4 class="font-bold text-gray-800">Table Completion</h4>
+                    </div>
+                    <p class="mb-5 text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100 text-sm">
+                        Complete the table below. Choose <strong class="text-green-700">NO MORE THAN TWO WORDS</strong> from the passage for each answer.
+                    </p>
+                    <table class="table-block mb-4">
+                        <thead>
+                            <tr>
+                                <th>Part of tree</th>
+                                <th>Traditional use</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td id="container-q6">
+                                    <strong class="text-green-700 text-sm mr-1">6</strong>
+                                    <input type="text" name="q6" class="text-input text-input-two" placeholder="__________" autocomplete="off" spellcheck="false">
+                                </td>
+                                <td>Fuel (charcoal)</td>
+                            </tr>
+                            <tr>
+                                <td id="container-q7">
+                                    <strong class="text-green-700 text-sm mr-1">7</strong>
+                                    <input type="text" name="q7" class="text-input text-input-two" placeholder="__________" autocomplete="off" spellcheck="false">
+                                    <span class="text-gray-400 text-sm mx-1">and</span>
+                                    <input type="text" name="q7b" class="text-input text-input-word" placeholder="________" autocomplete="off" spellcheck="false">
+                                </td>
+                                <td>Medicine (herbal remedies)</td>
+                            </tr>
+                            <tr>
+                                <td id="container-q8">
+                                    <strong class="text-green-700 text-sm mr-1">8</strong>
+                                    <input type="text" name="q8" class="text-input text-input-two" placeholder="__________" autocomplete="off" spellcheck="false">
+                                </td>
+                                <td>Construction (building houses)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="mt-4 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="6-8">Check Answers</button>
+                    </div>
+                </div>
+
+                <!-- Q9-13: True/False/Not Given -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-green-100 text-green-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 9–13</span>
+                        <h4 class="font-bold text-gray-800">True / False / Not Given</h4>
+                    </div>
+                    <div class="mb-5 text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100 text-sm space-y-1">
+                        <p>Do the following statements agree with the information in the passage?</p>
+                        <p><span class="font-bold text-green-700">TRUE</span> — the statement agrees with the information</p>
+                        <p><span class="font-bold text-red-600">FALSE</span> — the statement contradicts the information</p>
+                        <p><span class="font-bold text-amber-600">NOT GIVEN</span> — there is no information on this</p>
+                    </div>
+                    <div class="space-y-5">
+                        <!-- Q9 -->
+                        <div class="q-item" id="container-q9-group">
+                            <p class="font-semibold text-gray-800 mb-2"><span class="font-bold text-green-700 mr-2">9</span> Local families have told Whaley about some traditional uses of huarango products.</p>
+                            <div id="container-q9">
+                                <label class="tfng-label"><input type="radio" name="q9" value="true"><span class="font-semibold text-green-700">TRUE</span></label>
+                                <label class="tfng-label"><input type="radio" name="q9" value="false"><span class="font-semibold text-red-600">FALSE</span></label>
+                                <label class="tfng-label"><input type="radio" name="q9" value="not given"><span class="font-semibold text-amber-600">NOT GIVEN</span></label>
+                            </div>
+                        </div>
+                        <!-- Q10 -->
+                        <div class="q-item" id="container-q10-group">
+                            <p class="font-semibold text-gray-800 mb-2"><span class="font-bold text-green-700 mr-2">10</span> Farmer Alberto Benevides is now making a good profit from growing huarangos.</p>
+                            <div id="container-q10">
+                                <label class="tfng-label"><input type="radio" name="q10" value="true"><span class="font-semibold text-green-700">TRUE</span></label>
+                                <label class="tfng-label"><input type="radio" name="q10" value="false"><span class="font-semibold text-red-600">FALSE</span></label>
+                                <label class="tfng-label"><input type="radio" name="q10" value="not given"><span class="font-semibold text-amber-600">NOT GIVEN</span></label>
+                            </div>
+                        </div>
+                        <!-- Q11 -->
+                        <div class="q-item" id="container-q11-group">
+                            <p class="font-semibold text-gray-800 mb-2"><span class="font-bold text-green-700 mr-2">11</span> Whaley needs the co-operation of farmers to help preserve the area's wildlife.</p>
+                            <div id="container-q11">
+                                <label class="tfng-label"><input type="radio" name="q11" value="true"><span class="font-semibold text-green-700">TRUE</span></label>
+                                <label class="tfng-label"><input type="radio" name="q11" value="false"><span class="font-semibold text-red-600">FALSE</span></label>
+                                <label class="tfng-label"><input type="radio" name="q11" value="not given"><span class="font-semibold text-amber-600">NOT GIVEN</span></label>
+                            </div>
+                        </div>
+                        <!-- Q12 -->
+                        <div class="q-item" id="container-q12-group">
+                            <p class="font-semibold text-gray-800 mb-2"><span class="font-bold text-green-700 mr-2">12</span> For Whaley's project to succeed, it needs to be extended over a very large area.</p>
+                            <div id="container-q12">
+                                <label class="tfng-label"><input type="radio" name="q12" value="true"><span class="font-semibold text-green-700">TRUE</span></label>
+                                <label class="tfng-label"><input type="radio" name="q12" value="false"><span class="font-semibold text-red-600">FALSE</span></label>
+                                <label class="tfng-label"><input type="radio" name="q12" value="not given"><span class="font-semibold text-amber-600">NOT GIVEN</span></label>
+                            </div>
+                        </div>
+                        <!-- Q13 -->
+                        <div class="q-item" id="container-q13-group">
+                            <p class="font-semibold text-gray-800 mb-2"><span class="font-bold text-green-700 mr-2">13</span> Whaley has plans to go to Africa to set up a similar project.</p>
+                            <div id="container-q13">
+                                <label class="tfng-label"><input type="radio" name="q13" value="true"><span class="font-semibold text-green-700">TRUE</span></label>
+                                <label class="tfng-label"><input type="radio" name="q13" value="false"><span class="font-semibold text-red-600">FALSE</span></label>
+                                <label class="tfng-label"><input type="radio" name="q13" value="not given"><span class="font-semibold text-amber-600">NOT GIVEN</span></label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-5 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="9-13">Check Answers</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+</div>
+
+<div id="highlight-tooltip" class="highlight-tooltip">Highlight Text</div>
+
+<!-- Vocab Modal -->
+<div id="vocab-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
+    <div class="bg-white rounded-2xl shadow-2xl p-5 sm:p-8 w-full max-w-md relative transform transition-all scale-95 opacity-0" id="vocab-modal-content">
+        <button id="close-vocab-modal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-full w-8 h-8 flex items-center justify-center">&times;</button>
+        <div class="flex items-center mb-6 border-b pb-4 mt-2">
+            <h3 id="vocab-word" class="text-2xl sm:text-3xl font-extrabold text-gray-900 capitalize tracking-tight"></h3>
+        </div>
+        <div class="flex items-center mb-5">
+            <button id="play-audio-btn" class="flex items-center justify-center h-10 w-10 sm:h-12 sm:w-12 shrink-0 rounded-full bg-green-50 text-green-700 hover:bg-green-600 hover:text-white mr-4 transition-all shadow-sm border border-green-200">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>
+            </button>
+            <p id="vocab-pronunciation-text" class="text-gray-500 font-mono text-base sm:text-lg bg-gray-50 px-3 py-1 rounded-md border border-gray-100"></p>
+        </div>
+        <p id="vocab-meaning" class="text-gray-700 text-base sm:text-lg leading-relaxed"></p>
+    </div>
+</div>
+
+<!-- Alert Modal -->
+<div id="alert-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-[80]">
+    <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm relative transform transition-all scale-95 opacity-0 text-center" id="alert-modal-content">
+        <div id="alert-icon-container" class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 mb-4">
+            <svg class="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        </div>
+        <h3 id="alert-title" class="text-lg font-medium text-gray-900 mb-2">Notice</h3>
+        <p id="alert-message" class="text-sm text-gray-500 mb-6"></p>
+        <button id="close-alert-btn" class="w-full inline-flex justify-center rounded-md px-4 py-2 bg-green-700 text-white font-medium hover:bg-green-800 text-sm transition-colors">Got it</button>
+    </div>
+</div>
+
+<script>
+const vocabulary = {
+    'desert': { meaning: 'A barren area of land where little precipitation occurs and consequently living conditions are hostile for plant and animal life.', phonetic: '/ˈdez.ət/' },
+    'fragile': { meaning: 'Easily broken or damaged; delicate and vulnerable to harm.', phonetic: '/ˈfrædʒ.aɪl/' },
+    'ecosystems': { meaning: 'Biological communities of interacting organisms and their physical environment.', phonetic: '/ˈiː.kəʊˌsɪs.təmz/' },
+    'subsoil': { meaning: 'The layer of soil lying immediately under the surface soil.', phonetic: '/ˈsʌb.sɔɪl/' },
+    'archaeobotanist': { meaning: 'A scientist who studies plant remains from archaeological sites to understand past human-plant relationships.', phonetic: '/ˌɑː.ki.əʊˈbɒt.ə.nɪst/' },
+    'diet': { meaning: 'The kinds of food that a person, animal, or community habitually eats.', phonetic: '/ˈdaɪ.ət/' },
+    'withstand': { meaning: 'Remain undamaged or unaffected by; resist; endure.', phonetic: '/wɪðˈstænd/' },
+    'drought': { meaning: 'A prolonged period of abnormally low rainfall, leading to a shortage of water.', phonetic: '/draʊt/' },
+    'erosion': { meaning: 'The process of eroding or being eroded by wind, water, or other natural agents; gradual wearing away of soil.', phonetic: '/ɪˈrəʊ.ʒən/' },
+    'seed pods': { meaning: 'The elongated seed cases of a plant, especially those of a legume.', phonetic: '/siːd pɒdz/' },
+    'herbal remedies': { meaning: 'Treatments made from plants or plant extracts used to prevent or cure illness.', phonetic: '/ˈhɜː.bəl ˈrem.ɪ.diz/' },
+    'smallholdings': { meaning: 'Small farms, typically smaller than those considered adequate to provide a full livelihood.', phonetic: '/ˈsmɔːlˌhəʊl.dɪŋz/' },
+    'ethnobotanist': { meaning: 'A scientist who studies the relationships between people and plants, especially traditional uses of plants.', phonetic: '/ˌeθ.nəʊˈbɒt.ə.nɪst/' },
+    'pioneering': { meaning: 'Involving new ideas or methods; being among the first to explore or settle an area.', phonetic: '/ˌpaɪ.əˈnɪər.ɪŋ/' },
+    'prejudices': { meaning: 'Preconceived opinions that are not based on reason or actual experience; biases.', phonetic: '/ˈpredʒ.ʊ.dɪ.sɪz/' },
+    'aspirational': { meaning: 'Having or showing a strong desire to achieve social prestige and material success.', phonetic: '/ˌæs.pɪˈreɪ.ʃən.əl/' },
+    'resuscitation': { meaning: 'The action of making something active, vigorous, or vital again; revival or restoration.', phonetic: '/rɪˌsʌs.ɪˈteɪ.ʃən/' },
+    'sustainable': { meaning: 'Able to be maintained at a certain rate or level; conserving an ecological balance.', phonetic: '/səˈsteɪ.nə.bəl/' },
+    'molasses': { meaning: 'A thick, dark brown syrup obtained from raw sugar during refining; treacle.', phonetic: '/məˈlæs.ɪz/' },
+    'corridors': { meaning: 'Long narrow strips of land or sea connecting two larger areas; pathways for wildlife movement.', phonetic: '/ˈkɒr.ɪ.dɔːz/' },
+    'counteracting': { meaning: 'Acting against something in order to reduce its force or neutralise its effect.', phonetic: '/ˌkaʊn.tərˈækt.ɪŋ/' },
+    'evaporation': { meaning: 'The process by which a liquid turns into vapour; the drying up of water from soil or plants.', phonetic: '/ɪˌvæp.əˈreɪ.ʃən/' },
+    'biodiversity': { meaning: 'The variety of plant and animal life in the world or in a particular habitat; regarded as important and desirable.', phonetic: '/ˌbaɪ.əʊ.daɪˈvɜː.sɪ.ti/' },
+    'rolled out': { meaning: 'Launched or extended to a wider area or more people; applied more broadly.', phonetic: '/rəʊld aʊt/' }
+};
+
+// ANSWERS: for Q7, we check both "leaves" and "bark" in either order (handled specially)
+const ANSWERS = {
+    q1: 'water', q2: 'diet', q3: 'drought', q4: 'erosion', q5: 'desert',
+    q6: 'branches', q7: 'leaves', q7b: 'bark',   // q7 = leaves, q7b = bark (either order)
+    q8: 'trunk',
+    q9: 'not given', q10: 'false', q11: 'true', q12: 'false', q13: 'not given'
+};
+
+const explanations = {
+    q1: "Paragraph 1: 'They stretch down 50-80 metres and, as well as sucking up water for the tree…' The huarango roots access water deep below the surface. Answer: water.",
+    q2: "Paragraph 2: 'He believes the huarango was key to the ancient people's diet.' Diet = crucial part of local inhabitants' food a long time ago. Answer: diet.",
+    q3: "Paragraph 2: '…it allowed local people to withstand years of drought when their other crops failed.' Drought = periods of water shortage. Answer: drought.",
+    q4: "Paragraph 2: 'Cutting down native woodland leads to erosion, as there is nothing to keep the soil in place.' Erosion = wearing away of soil. Answer: erosion.",
+    q5: "Paragraph 2: 'So when the huarangos go, the land turns into a desert.' The land becomes a desert without huarangos. Answer: desert.",
+    q6: "Paragraph 3: '…its branches were used for charcoal for cooking and heating…' Branches = fuel (charcoal). Answer: branches.",
+    q7: "Paragraph 3: 'Its leaves and bark were used for herbal remedies…' Both leaves AND bark are required for this answer (either order). Answer: leaves / bark.",
+    q8: "Paragraph 3: '…and its trunk was used to build houses.' Trunk = construction material. Answer: trunk.",
+    q9: "NOT GIVEN: The passage says Whaley is working with local families to create income from huarangos, but there is no mention of local families telling Whaley about traditional uses. This information is neither confirmed nor contradicted.",
+    q10: "FALSE — Paragraph 6: 'His farm is relatively small and doesn't yet provide him with enough to live on, but he hopes this will change.' Benevides is NOT yet making a good profit — the opposite is stated.",
+    q11: "TRUE — Paragraph 7: 'he's persuading farmers to let him plant forest corridors on their land' to allow movement of mammals, birds and pollen. Whaley needs farmers' co-operation to preserve wildlife.",
+    q12: "FALSE — Paragraph 8: 'It's not like a rainforest that needs to have this huge expanse. Life has always been confined to corridors and islands here.' The project does NOT need to be extended over a very large area — a few trees are sufficient.",
+    q13: "NOT GIVEN: Whaley mentions Africa as a place where his project could serve as a model of hope, but there is no mention of him having specific plans to go to Africa personally."
+};
+
+const TOTAL_QUESTIONS = 13;
+
+// Special handling: Q7 has two inputs (q7 + q7b), and accepts either order
+function isQ7Answered() {
+    const v1 = (document.querySelector('input[name="q7"]')?.value || '').trim().toLowerCase();
+    const v2 = (document.querySelector('input[name="q7b"]')?.value || '').trim().toLowerCase();
+    return v1 !== '' && v2 !== '';
+}
+function isQ7Correct() {
+    const v1 = (document.querySelector('input[name="q7"]')?.value || '').trim().toLowerCase();
+    const v2 = (document.querySelector('input[name="q7b"]')?.value || '').trim().toLowerCase();
+    const pair = [v1, v2];
+    return (pair.includes('leaves') && pair.includes('bark'));
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const app = {
+        userAnswers: {}, answersChecked: {}, currentFontSize: 17, timeRemaining: 20*60,
+        leftPane: document.getElementById('left-pane'),
+        rightPane: document.getElementById('right-pane'),
+        highlightTooltip: document.getElementById('highlight-tooltip'),
+        vocabModal: document.getElementById('vocab-modal'),
+        vocabModalContent: document.getElementById('vocab-modal-content'),
+        closeVocabModalBtn: document.getElementById('close-vocab-modal'),
+        vocabWordEl: document.getElementById('vocab-word'),
+        vocabMeaningEl: document.getElementById('vocab-meaning'),
+        vocabPronunciationText: document.getElementById('vocab-pronunciation-text'),
+        playAudioBtn: document.getElementById('play-audio-btn'),
+        progressText: document.getElementById('progress-text'),
+        timerEl: document.getElementById('timer'),
+        alertModal: document.getElementById('alert-modal'),
+        alertModalContent: document.getElementById('alert-modal-content'),
+        closeAlertBtn: document.getElementById('close-alert-btn'),
+        alertTitleEl: document.getElementById('alert-title'),
+        alertMessageEl: document.getElementById('alert-message'),
+        alertIconContainer: document.getElementById('alert-icon-container'),
+
+        init() { this.setupEventListeners(); this.initSplitter(); this.initHighlighter(); this.updateCheckButtonsState(); this.startTimer(); },
+
+        startTimer() {
+            const interval = setInterval(() => {
+                if (this.timeRemaining <= 0) { clearInterval(interval); this.timerEl.textContent = "00:00"; this.showAlert("Time's Up!", "Your 20 minutes have expired.", "warning"); return; }
+                this.timeRemaining--;
+                const m = Math.floor(this.timeRemaining/60).toString().padStart(2,'0');
+                const s = (this.timeRemaining%60).toString().padStart(2,'0');
+                this.timerEl.textContent = `${m}:${s}`;
+                if (this.timeRemaining <= 300) this.timerEl.classList.add('text-red-500');
+            }, 1000);
+        },
+
+        setupEventListeners() {
+            document.getElementById('increase-font-btn').addEventListener('click', () => this.changeFontSize(1));
+            document.getElementById('decrease-font-btn').addEventListener('click', () => this.changeFontSize(-1));
+            document.getElementById('clear-highlights-btn').addEventListener('click', () => this.leftPane.querySelectorAll('mark').forEach(m => m.replaceWith(document.createTextNode(m.textContent))));
+            this.closeVocabModalBtn.addEventListener('click', () => this.closeModal());
+            this.vocabModal.addEventListener('click', (e) => { if (e.target === this.vocabModal) this.closeModal(); });
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') { if (!this.vocabModal.classList.contains('hidden')) this.closeModal(); if (!this.alertModal.classList.contains('hidden')) this.closeAlert(); }
+                if ((e.ctrlKey||e.metaKey) && e.key.toLowerCase() === 'f') { e.preventDefault(); this.showAlert("Disabled", "Find function is disabled during the exam.", "warning"); }
+            });
+            document.addEventListener('visibilitychange', () => { if (document.hidden && this.timeRemaining > 0) this.showAlert("Warning", "Please do not switch tabs during the exam.", "warning"); });
+            window.addEventListener('beforeunload', (e) => { if (this.timeRemaining > 0 && this.timeRemaining < 20*60) { e.preventDefault(); e.returnValue = ''; } });
+            this.closeAlertBtn.addEventListener('click', () => this.closeAlert());
+            this.alertModal.addEventListener('click', (e) => { if (e.target === this.alertModal) this.closeAlert(); });
+            document.body.addEventListener('input', (e) => {
+                if (e.target.tagName === 'INPUT' && e.target.type === 'text') {
+                    this.userAnswers[e.target.name] = e.target.value.trim().toLowerCase();
+                    e.target.classList.remove('correct-answer','incorrect-answer');
+                    this.updateCheckButtonsState(); this.updateProgress();
+                }
+            });
+            document.body.addEventListener('change', (e) => {
+                if (e.target.type === 'radio') { this.userAnswers[e.target.name] = e.target.value; this.updateCheckButtonsState(); this.updateProgress(); }
+            });
+            this.leftPane.addEventListener('click', (e) => {
+                if (e.target.classList.contains('vocab-word')) this.openVocabModal(e.target.dataset.word);
+                if (e.target.tagName === 'MARK') e.target.replaceWith(document.createTextNode(e.target.textContent));
+            });
+            document.querySelectorAll('.check-btn').forEach(btn => btn.addEventListener('click', (e) => this.checkAnswers(e.target.dataset.range, e.target)));
+            this.playAudioBtn.addEventListener('click', () => {
+                const word = this.vocabWordEl.textContent; if (!word) return;
+                if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+                this.playAudioBtn.classList.remove('text-green-700','bg-green-50'); this.playAudioBtn.classList.add('bg-green-600','text-white');
+                if ('speechSynthesis' in window) { const u = new SpeechSynthesisUtterance(word); u.lang = 'en-GB'; u.rate = 0.9; u.onend = () => this.resetAudioBtn(); u.onerror = () => this.resetAudioBtn(); window.speechSynthesis.speak(u); }
+                else setTimeout(() => this.resetAudioBtn(), 500);
+            });
+        },
+
+        updateProgress() {
+            let c = 0;
+            for (let i = 1; i <= 13; i++) {
+                const qId = `q${i}`;
+                if (i === 7) { if (isQ7Answered()) c++; }
+                else if ((this.userAnswers[qId] || '').trim()) c++;
+            }
+            this.progressText.textContent = `${Math.min(c, TOTAL_QUESTIONS)} / ${TOTAL_QUESTIONS} Answered`;
+        },
+        resetAudioBtn() { this.playAudioBtn.classList.add('text-green-700','bg-green-50'); this.playAudioBtn.classList.remove('bg-green-600','text-white'); },
+        changeFontSize(d) { this.currentFontSize = Math.max(14, Math.min(26, this.currentFontSize+d)); document.documentElement.style.setProperty('--app-font-size', `${this.currentFontSize}px`); },
+
+        openVocabModal(w) {
+            const d = vocabulary[w]; if (!d) return;
+            this.vocabWordEl.textContent = w; this.vocabMeaningEl.textContent = d.meaning; this.vocabPronunciationText.textContent = d.phonetic || '';
+            this.vocabModal.classList.remove('hidden');
+            setTimeout(() => { this.vocabModalContent.classList.remove('scale-95','opacity-0'); this.vocabModalContent.classList.add('scale-100','opacity-100'); }, 10);
+        },
+        closeModal() {
+            if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+            this.vocabModalContent.classList.remove('scale-100','opacity-100'); this.vocabModalContent.classList.add('scale-95','opacity-0');
+            this.resetAudioBtn(); setTimeout(() => this.vocabModal.classList.add('hidden'), 200);
+        },
+        showAlert(title, message, type='error') {
+            this.alertTitleEl.textContent = title; this.alertMessageEl.textContent = message;
+            const c = type === 'warning' ? 'yellow' : 'red';
+            this.alertIconContainer.className = `mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-${c}-100 mb-4`;
+            this.alertIconContainer.innerHTML = `<svg class="h-6 w-6 text-${c}-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>`;
+            this.alertModal.classList.remove('hidden');
+            setTimeout(() => { this.alertModalContent.classList.remove('scale-95','opacity-0'); this.alertModalContent.classList.add('scale-100','opacity-100'); }, 10);
+        },
+        closeAlert() {
+            this.alertModalContent.classList.remove('scale-100','opacity-100'); this.alertModalContent.classList.add('scale-95','opacity-0');
+            setTimeout(() => this.alertModal.classList.add('hidden'), 200);
+        },
+
+        isRangeAnswered(range) {
+            const [s, e] = range.split('-').map(Number);
+            for (let i = s; i <= e; i++) {
+                const qId = `q${i}`;
+                if (i === 7) { if (!isQ7Answered()) return false; }
+                else if (!(this.userAnswers[qId] || '').trim()) return false;
+            }
+            return true;
+        },
+
+        updateCheckButtonsState() {
+            document.querySelectorAll('.check-btn').forEach(btn => {
+                const range = btn.dataset.range;
+                if (this.answersChecked[range]) { btn.className = 'check-btn bg-gray-800 hover:bg-gray-900 text-white font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-pointer'; btn.textContent = 'Reset Answers'; return; }
+                const allDone = this.isRangeAnswered(range);
+                btn.className = allDone ? 'check-btn bg-green-700 hover:bg-green-800 text-white font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-pointer transform hover:-translate-y-0.5' : 'check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80';
+                btn.textContent = 'Check Answers';
+            });
+        },
+
+        checkAnswers(range, btn) {
+            if (this.answersChecked[range]) {
+                this.answersChecked[range] = false;
+                const [s, e] = range.split('-').map(Number);
+                for (let i = s; i <= e; i++) {
+                    const qId = `q${i}`;
+                    this.userAnswers[qId] = '';
+                    document.querySelectorAll(`input[name="${qId}"], input[name="${qId}b"]`).forEach(inp => {
+                        inp.value !== undefined ? (inp.type === 'radio' ? (inp.checked = false) : (inp.value = '', inp.placeholder = '________')) : null;
+                        inp.classList.remove('correct-answer','incorrect-answer','ng-answer');
+                        const lbl = inp.closest('label'); if (lbl) lbl.classList.remove('correct-answer','incorrect-answer','ng-answer');
+                    });
+                    this.userAnswers[`${qId}b`] = '';
+                    const q7b = document.querySelector('input[name="q7b"]');
+                    if (q7b) { q7b.value = ''; q7b.classList.remove('correct-answer','incorrect-answer'); }
+                    document.getElementById(`expl-${qId}`)?.remove();
+                }
+                this.updateCheckButtonsState(); this.updateProgress(); return;
+            }
+            if (!this.isRangeAnswered(range)) { this.showAlert("Incomplete Answers", "Please answer all questions in this section before checking.", "warning"); return; }
+            this.answersChecked[range] = true; this.updateCheckButtonsState();
+
+            const [s, e] = range.split('-').map(Number);
+            for (let i = s; i <= e; i++) {
+                const qId = `q${i}`;
+                let isCorrect = false, feedbackHTML = '';
+
+                if (i === 7) {
+                    // Special: two inputs, either order
+                    isCorrect = isQ7Correct();
+                    const inp1 = document.querySelector('input[name="q7"]');
+                    const inp2 = document.querySelector('input[name="q7b"]');
+                    const v1 = (inp1?.value || '').trim().toLowerCase();
+                    const v2 = (inp2?.value || '').trim().toLowerCase();
+                    [inp1, inp2].forEach(inp => { if (inp) { inp.classList.remove('correct-answer','incorrect-answer'); inp.classList.add(isCorrect ? 'correct-answer' : 'incorrect-answer'); } });
+                    if (!isCorrect) {
+                        feedbackHTML = `<span class="correct-badge">Correct Answer: leaves AND bark (either order)</span><br>`;
+                        if (inp1 && !['leaves','bark'].includes(v1)) { inp1.value = ''; inp1.placeholder = 'leaves'; }
+                        if (inp2 && !['leaves','bark'].includes(v2)) { inp2.value = ''; inp2.placeholder = 'bark'; }
+                    }
+                } else if (i >= 9) {
+                    // T/F/NG radio
+                    const correctAns = ANSWERS[qId];
+                    const userAns = (this.userAnswers[qId] || '').toLowerCase();
+                    isCorrect = userAns === correctAns;
+                    document.querySelectorAll(`input[name="${qId}"]`).forEach(r => {
+                        const lbl = r.closest('label'); if (!lbl) return;
+                        lbl.classList.remove('correct-answer','incorrect-answer','ng-answer');
+                        if (r.value === correctAns) {
+                            lbl.classList.add(correctAns === 'not given' ? 'ng-answer' : correctAns === 'true' ? 'correct-answer' : 'incorrect-answer');
+                        } else if (r.checked && r.value !== correctAns) {
+                            lbl.classList.add('incorrect-answer');
+                        }
+                    });
+                    if (!isCorrect) {
+                        const badge = correctAns === 'not given' ? 'ng-badge' : 'correct-badge';
+                        feedbackHTML = `<span class="${badge}">Correct Answer: ${correctAns.toUpperCase()}</span><br>`;
+                    }
+                } else {
+                    // Text inputs (Q1-6, Q8)
+                    const userAns = (this.userAnswers[qId] || '').trim().toLowerCase();
+                    const correctAns = ANSWERS[qId];
+                    const validAnswers = [correctAns, `the ${correctAns}`, `its ${correctAns}`, `huarango ${correctAns}`];
+                    isCorrect = validAnswers.includes(userAns);
+                    const inp = document.querySelector(`input[name="${qId}"][type="text"]`);
+                    if (inp) {
+                        inp.classList.remove('correct-answer','incorrect-answer');
+                        if (isCorrect) { inp.classList.add('correct-answer'); }
+                        else { inp.classList.add('incorrect-answer'); inp.value = ''; inp.placeholder = correctAns; feedbackHTML = `<span class="correct-badge">Correct Answer: ${correctAns}</span><br>`; }
+                    }
+                }
+
+                if (explanations[qId] && !document.getElementById(`expl-${qId}`)) {
+                    const div = document.createElement('div'); div.id = `expl-${qId}`; div.className = 'explanation-box';
+                    div.innerHTML = `${feedbackHTML}<strong>Explanation:</strong> ${explanations[qId]}`;
+                    const grpContainer = document.getElementById(`container-${qId}-group`) || document.getElementById(`container-${qId}`);
+                    if (grpContainer) { const wrap = grpContainer.closest('.q-item') || grpContainer; wrap.insertAdjacentElement('afterend', div); }
+                }
+            }
+        },
+
+        initSplitter() {
+            let isDragging = false; const panes = document.getElementById('content-panes');
+            document.getElementById('splitter').addEventListener('mousedown', (e) => { e.preventDefault(); isDragging = true; document.body.style.cursor = 'col-resize'; });
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging || window.innerWidth <= 768) return;
+                const rect = panes.getBoundingClientRect(); const newLeft = e.clientX - rect.left;
+                if (newLeft > 200 && newLeft < rect.width - 200) panes.style.gridTemplateColumns = `${(newLeft/rect.width)*100}% 5px 1fr`;
+            });
+            document.addEventListener('mouseup', () => { if (isDragging) { isDragging = false; document.body.style.cursor = 'default'; } });
+        },
+
+        initHighlighter() {
+            document.body.addEventListener('mouseup', (e) => {
+                const sel = window.getSelection(); const text = sel.toString().trim();
+                if (text.length > 0) {
+                    const range = sel.getRangeAt(0);
+                    if (!this.leftPane.contains(range.commonAncestorContainer) && !this.rightPane.contains(range.commonAncestorContainer)) { this.highlightTooltip.style.display = 'none'; return; }
+                    this.highlightTooltip.style.left = `${e.pageX-30}px`; this.highlightTooltip.style.top = `${e.pageY-40}px`; this.highlightTooltip.style.display = 'block';
+                    this.highlightTooltip.onclick = () => {
+                        const mark = document.createElement('mark');
+                        try { range.surroundContents(mark); } catch(ex) { this.showAlert("Highlight Error", "Please select text within a single element.", "warning"); }
+                        finally { sel.removeAllRanges(); this.highlightTooltip.style.display = 'none'; }
+                    };
+                } else { this.highlightTooltip.style.display = 'none'; }
+            });
+            document.body.addEventListener('mousedown', () => { if (window.getSelection().toString().length === 0) this.highlightTooltip.style.display = 'none'; });
+        }
+    };
+    app.init();
+});
+</script>
+</body>
+</html>

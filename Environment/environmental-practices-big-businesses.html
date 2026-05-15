@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IELTS Simulator - Environmental Practices of Big Businesses</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --app-font-size: 17px; }
+        body { font-family: 'Inter', sans-serif; overscroll-behavior: none; background-color: #f3f4f6; }
+        .ielts-container { display: grid; grid-template-rows: auto 1fr; height: 100vh; }
+        .content-panes { display: grid; grid-template-columns: 1fr 5px 1fr; overflow: hidden; }
+        .pane { overflow-y: auto; padding: 2rem 3rem; font-size: var(--app-font-size); scroll-behavior: smooth; }
+        #left-pane { background-color: #fdfdfd; }
+        #right-pane { background-color: #f8fafc; }
+        .splitter { background-color: #cbd5e1; cursor: col-resize; z-index: 10; transition: background-color 0.2s; }
+        .splitter:hover, .splitter:active { background-color: #94a3b8; }
+        .reading-passage { font-family: 'Merriweather', serif; line-height: 1.9; color: #334155; text-align: justify; max-width: 800px; margin: 0 auto; }
+        .reading-passage p { margin-bottom: 1.5rem; text-indent: 1.5rem; }
+        .reading-passage h3 { font-family: 'Inter', sans-serif; color: #0f172a; margin-bottom: 0.25rem; font-weight: 700; font-size: 1.4em; text-align: center; text-indent: 0; text-transform: uppercase; letter-spacing: 0.04em; }
+        .q-item { padding: 1rem; border-radius: 0.5rem; transition: all 0.2s; background-color: white; border: 1px solid #e2e8f0; margin-bottom: 0.75rem; }
+        .select-input { border: 2px solid #cbd5e1; border-radius: 6px; padding: 4px 10px; font-weight: 600; color: #1e293b; transition: all 0.2s; background-color: #f8fafc; cursor: pointer; min-width: 4.5rem; }
+        .select-input:focus { outline: none; border-color: #b45309; background-color: #fff; box-shadow: 0 0 0 3px rgba(180,83,9,0.12); }
+        .mc-label { display: flex; align-items: flex-start; padding: 0.65rem 1rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s; background-color: white; margin-bottom: 0.4rem; gap: 0.75rem; }
+        .mc-label:hover { background: #fffbeb; border-color: #fcd34d; }
+        .mc-label input { width: 1.1em; height: 1.1em; accent-color: #b45309; flex-shrink: 0; margin-top: 0.2em; }
+        .tfng-label { display: flex; align-items: center; padding: 0.6rem 1rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s; background-color: white; margin-bottom: 0.4rem; gap: 0.75rem; }
+        .tfng-label:hover { background: #fffbeb; border-color: #fcd34d; }
+        .tfng-label input { width: 1.1em; height: 1.1em; accent-color: #b45309; flex-shrink: 0; }
+        label.correct-answer { border-color: #22c55e !important; background-color: #f0fdf4 !important; }
+        label.incorrect-answer { border-color: #ef4444 !important; background-color: #fef2f2 !important; }
+        label.ng-answer { border-color: #f59e0b !important; background-color: #fffbeb !important; }
+        .select-correct { border-color: #22c55e !important; background-color: #f0fdf4 !important; color: #166534 !important; }
+        .select-incorrect { border-color: #ef4444 !important; background-color: #fef2f2 !important; color: #991b1b !important; }
+        .explanation-box { animation: fadeIn 0.4s ease-out forwards; margin-top: 0.75rem; padding: 1rem; background-color: #fffbeb; border-left: 4px solid #b45309; border-radius: 0.5rem; font-size: 0.95rem; color: #451a03; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .explanation-box .correct-badge { display: inline-block; background: #22c55e; color: white; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85em; margin-bottom: 0.5rem; }
+        .explanation-box .ng-badge { display: inline-block; background: #f59e0b; color: white; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85em; margin-bottom: 0.5rem; }
+        .explanation-box .no-badge { display: inline-block; background: #ef4444; color: white; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85em; margin-bottom: 0.5rem; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+        .vocab-word { color: #b45309; font-weight: 600; cursor: pointer; border-bottom: 2px dotted #fcd34d; transition: all 0.2s ease-in-out; padding: 0 2px; }
+        .vocab-word:hover { background-color: #fef3c7; border-bottom-style: solid; border-radius: 2px; }
+        .highlight-tooltip { position: absolute; background-color: #1e293b; color: white; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 500; z-index: 100; cursor: pointer; display: none; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        mark { background-color: #fef08a; border-radius: 3px; padding: 2px 0; cursor: pointer; }
+        mark:hover { background-color: #fca5a5; color: #7f1d1d; }
+        mark:hover::after { content: ' x'; font-weight: bold; font-size: 0.8em; opacity: 0.7; }
+        .summary-block { background: #fffbeb; border: 1px solid #fcd34d; border-radius: 0.75rem; padding: 1.5rem; margin-bottom: 1rem; line-height: 2; font-size: 0.97em; color: #451a03; }
+        .summary-block h5 { font-family: 'Inter', sans-serif; font-weight: 700; color: #b45309; font-size: 1em; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        .word-bank { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; padding: 0.75rem 1rem; background: white; border: 1px solid #fcd34d; border-radius: 0.5rem; }
+        .word-bank span { background: #fef3c7; border: 1px solid #fcd34d; border-radius: 4px; padding: 2px 8px; font-size: 0.85em; font-weight: 600; color: #92400e; }
+        @media (max-width: 768px) {
+            .content-panes { display: flex; flex-direction: column; overflow-y: auto; }
+            .splitter { display: none; }
+            .pane { padding: 1.25rem 1rem; overflow-y: visible; height: auto; }
+            #left-pane { border-bottom: 2px dashed #cbd5e1; padding-bottom: 2rem; }
+        }
+    </style>
+</head>
+<body>
+<div id="test-container" class="ielts-container">
+    <header class="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 flex justify-between items-center z-20 shadow-sm flex-wrap gap-3">
+        <div class="flex items-center gap-2 sm:space-x-3">
+            <div class="bg-amber-700 text-white p-1.5 sm:p-2 rounded-lg shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064"/>
+                </svg>
+            </div>
+            <h1 class="text-xl font-bold text-gray-800 hidden sm:block">IELTS Simulator <span class="text-amber-700 font-medium">| Environmental Practices of Big Businesses</span></h1>
+            <h1 class="text-base font-bold text-gray-800 sm:hidden">IELTS <span class="text-amber-700">Big Businesses</span></h1>
+        </div>
+        <div class="flex items-center space-x-4">
+            <div class="hidden sm:flex flex-col items-end">
+                <span class="text-xs text-gray-500 font-bold uppercase tracking-wide">Progress</span>
+                <span id="progress-text" class="text-sm font-semibold text-amber-700">0 / 14 Answered</span>
+            </div>
+            <div class="flex items-center bg-gray-100 rounded-lg px-3 py-1.5 border border-gray-200">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span id="timer" class="font-mono font-bold text-gray-700 text-lg">20:00</span>
+            </div>
+        </div>
+        <div class="flex items-center gap-2 sm:space-x-3">
+            <button id="clear-highlights-btn" class="hidden sm:flex items-center justify-center px-3 py-1.5 rounded bg-amber-50 hover:bg-amber-100 text-amber-700 transition-colors focus:outline-none border border-amber-200 text-sm font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                Clear
+            </button>
+            <div class="flex items-center space-x-1 sm:space-x-2 bg-gray-50 p-1 rounded-lg border border-gray-200">
+                <button id="decrease-font-btn" class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded bg-white shadow-sm hover:bg-gray-100 text-gray-700 transition-colors focus:outline-none font-bold text-sm sm:text-base">A-</button>
+                <button id="increase-font-btn" class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded bg-white shadow-sm hover:bg-gray-100 text-gray-700 transition-colors focus:outline-none font-bold text-sm sm:text-base">A+</button>
+            </div>
+        </div>
+    </header>
+
+    <main id="content-panes" class="content-panes">
+        <!-- PASSAGE -->
+        <div id="left-pane" class="pane relative">
+            <div class="reading-passage">
+                <h3>Environmental Practices of Big Businesses</h3>
+                <br>
+                <p>The environmental practices of big businesses are shaped by a <span class="vocab-word" data-word="fundamental">fundamental</span> fact that for many of us offend our sense of justice. Depending on the circumstances, a business may <span class="vocab-word" data-word="maximize">maximize</span> the amount of money it makes, at least in the short term, by damaging the environment and hurting people. That is still the case today for fishermen in an <span class="vocab-word" data-word="unmanaged fishery">unmanaged fishery</span> without <span class="vocab-word" data-word="quotas">quotas</span>, and for international <span class="vocab-word" data-word="logging companies">logging companies</span> with short-term <span class="vocab-word" data-word="leases">leases</span> on tropical rainforest land in places with <span class="vocab-word" data-word="corrupt">corrupt</span> officials and unsophisticated landowners. When government <span class="vocab-word" data-word="regulation">regulation</span> is effective, and when the public is environmentally aware, environmentally clean big businesses may out-compete dirty ones, but the reverse is likely to be true if government regulation is ineffective and if the public doesn't care.</p>
+
+                <p>It is easy for the rest of us to blame a business for helping itself by hurting other people. But blaming alone is unlikely to produce change. It ignores the fact that businesses are not <span class="vocab-word" data-word="charities">charities</span> but profit-making companies, and that publicly owned companies with <span class="vocab-word" data-word="shareholders">shareholders</span> are under obligation to those shareholders to maximize profits, provided that they do so by legal means. US laws make a company's directors legally <span class="vocab-word" data-word="liable">liable</span> for something termed 'breach of <span class="vocab-word" data-word="fiduciary responsibility">fiduciary responsibility</span>' if they knowingly manage a company in a way that reduces profits. The car manufacturer Henry Ford was in fact successfully <span class="vocab-word" data-word="sued">sued</span> by shareholders in 1919 for raising the minimum wage of his workers to $5 per day: the courts declared that, while Ford's <span class="vocab-word" data-word="humanitarian">humanitarian</span> sentiments about his employees were nice, his business existed to make profits for its stockholders.</p>
+
+                <p>Our blaming of businesses also ignores the ultimate responsibility of the public for creating the condition that let a business profit through <span class="vocab-word" data-word="destructive">destructive</span> environmental policies. In the long run, it is the public, either directly or through its politicians, that has the power to make such destructive policies unprofitable and illegal, and to make <span class="vocab-word" data-word="sustainable">sustainable</span> environmental policies profitable.</p>
+
+                <p>The public can do that by suing businesses for harming them, as happened after the <span class="vocab-word" data-word="Exxon Valdez">Exxon Valdez</span> disaster, in which over 40,000m³ of oil were spilled off the coast of Alaska. The public may also make their opinion felt by preferring to buy <span class="vocab-word" data-word="sustainably harvested">sustainably harvested</span> products; by making employees of companies with poor <span class="vocab-word" data-word="track records">track records</span> feel ashamed of their company and complain to their own management; by preferring their governments to award valuable contracts to businesses with a good environmental track record; and by pressing their governments to pass and enforce laws and regulations requiring good environmental practices.</p>
+
+                <p>In turn, big businesses can exert powerful pressure on any <span class="vocab-word" data-word="suppliers">suppliers</span> that might ignore public or government pressure. For instance, after the US public became concerned about the spread of a disease known as BSE, which was <span class="vocab-word" data-word="transmitted">transmitted</span> to humans through infected meat, the US government's Food and Drug Administration introduced rules demanding that the meat industry abandon practices associated with the risk of the disease spreading. But for five years the meat packers refused to follow these, claiming that they would be too expensive to obey. However, when a major fast-food company then made the same demands after customer purchases of its hamburgers <span class="vocab-word" data-word="plummeted">plummeted</span>, the meat industry <span class="vocab-word" data-word="complied">complied</span> within weeks. The public's task is therefore to identify which links in the <span class="vocab-word" data-word="supply chain">supply chain</span> are sensitive to public pressure: for instance, fast-food chains or jewellery stores, but not meat packers or gold miners.</p>
+
+                <p>Some readers may be disappointed or outraged that I place the ultimate responsibility for business practices harming the public on the public itself. I also believe that the public must accept the necessity for higher prices for products to cover the added costs, if any, of sound environmental practices. My views may seem to ignore the belief that businesses should act in accordance with <span class="vocab-word" data-word="moral principles">moral principles</span> even if this leads to a reduction in their profits. But I think we have to recognize that, throughout human history, in all politically complex human societies, government regulation has arisen precisely because it was found that not only did moral principles need to be made explicit, they also needed to be <span class="vocab-word" data-word="enforced">enforced</span>.</p>
+
+                <p>To me, the conclusion that the public has the ultimate responsibility for the behaviour of even the biggest businesses is <span class="vocab-word" data-word="empowering">empowering</span> and hopeful, rather than disappointing. My conclusion is not a <span class="vocab-word" data-word="moralistic">moralistic</span> one about who is right or wrong, admirable or selfish, a good guy or a bad guy. In the past, businesses have changed when the public came to expect and require different behaviour, to reward businesses for behaviour that the public wanted, and to make things difficult for businesses practicing behaviours that the public didn't want. I predict that in the future, just as in the past, changes in public attitudes will be essential for changes in businesses' environmental practices.</p>
+            </div>
+        </div>
+
+        <div id="splitter" class="splitter relative flex items-center justify-center group">
+            <div class="w-1 h-8 bg-gray-400 rounded-full opacity-50 group-hover:bg-gray-600 transition-colors"></div>
+        </div>
+
+        <!-- QUESTIONS -->
+        <div id="right-pane" class="pane">
+            <div id="questions-section" class="max-w-3xl mx-auto space-y-8 pb-10">
+
+                <!-- Q27-31: Summary with Word Bank -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-amber-100 text-amber-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 27–31</span>
+                        <h4 class="font-bold text-gray-800">Summary Completion</h4>
+                    </div>
+                    <p class="mb-5 text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100 text-sm">
+                        Complete the summary using the list of words <strong class="text-amber-700">A–J</strong> below. Write the correct letter in the boxes.
+                    </p>
+                    <div class="summary-block">
+                        <h5>Big Businesses</h5>
+                        <p>
+                            Many big businesses today are prepared to harm people and the environment in order to make money, and they appear to have no
+                            <span id="container-q27" class="inline-block mx-1"><strong class="text-amber-700 text-sm mr-1">27</strong><select name="q27" class="select-input"><option value="">--</option><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option><option>F</option><option>G</option><option>H</option><option>I</option><option>J</option></select></span>.
+                            Lack of
+                            <span id="container-q28" class="inline-block mx-1"><strong class="text-amber-700 text-sm mr-1">28</strong><select name="q28" class="select-input"><option value="">--</option><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option><option>F</option><option>G</option><option>H</option><option>I</option><option>J</option></select></span>
+                            by governments and lack of public
+                            <span id="container-q29" class="inline-block mx-1"><strong class="text-amber-700 text-sm mr-1">29</strong><select name="q29" class="select-input"><option value="">--</option><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option><option>F</option><option>G</option><option>H</option><option>I</option><option>J</option></select></span>
+                            can lead to environmental problems such as
+                            <span id="container-q30" class="inline-block mx-1"><strong class="text-amber-700 text-sm mr-1">30</strong><select name="q30" class="select-input"><option value="">--</option><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option><option>F</option><option>G</option><option>H</option><option>I</option><option>J</option></select></span>
+                            or the destruction of
+                            <span id="container-q31" class="inline-block mx-1"><strong class="text-amber-700 text-sm mr-1">31</strong><select name="q31" class="select-input"><option value="">--</option><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option><option>F</option><option>G</option><option>H</option><option>I</option><option>J</option></select></span>.
+                        </p>
+                    </div>
+                    <div class="word-bank">
+                        <span>A — funding</span><span>B — trees</span><span>C — rare species</span>
+                        <span>D — moral standards</span><span>E — control</span><span>F — involvement</span>
+                        <span>G — flooding</span><span>H — overfishing</span><span>I — worker support</span>
+                        <span>J — (not used)</span>
+                    </div>
+                    <div class="mt-4 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="27-31">Check Answers</button>
+                    </div>
+                </div>
+
+                <!-- Q32-34: Multiple Choice -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-amber-100 text-amber-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 32–34</span>
+                        <h4 class="font-bold text-gray-800">Multiple Choice</h4>
+                    </div>
+                    <p class="mb-5 text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100 text-sm">Choose the correct letter, <strong>A</strong>, <strong>B</strong>, <strong>C</strong> or <strong>D</strong>.</p>
+                    <div class="space-y-6">
+                        <!-- Q32 -->
+                        <div class="q-item" id="container-q32-group">
+                            <p class="font-semibold text-gray-800 mb-3"><span class="font-bold text-amber-700 mr-2">32</span> The main idea of the third paragraph is that environmental damage</p>
+                            <div id="container-q32">
+                                <label class="mc-label"><input type="radio" name="q32" value="a"><span><strong class="mr-2">A</strong> requires political action if it is to be stopped.</span></label>
+                                <label class="mc-label"><input type="radio" name="q32" value="b"><span><strong class="mr-2">B</strong> is the result of ignorance on the part of the public.</span></label>
+                                <label class="mc-label"><input type="radio" name="q32" value="c"><span><strong class="mr-2">C</strong> could be prevented by the action of ordinary people.</span></label>
+                                <label class="mc-label"><input type="radio" name="q32" value="d"><span><strong class="mr-2">D</strong> can only be stopped by educating business leaders.</span></label>
+                            </div>
+                        </div>
+                        <!-- Q33 -->
+                        <div class="q-item" id="container-q33-group">
+                            <p class="font-semibold text-gray-800 mb-3"><span class="font-bold text-amber-700 mr-2">33</span> In the fourth paragraph, the writer describes ways in which the public can</p>
+                            <div id="container-q33">
+                                <label class="mc-label"><input type="radio" name="q33" value="a"><span><strong class="mr-2">A</strong> reduce their own individual impact on the environment.</span></label>
+                                <label class="mc-label"><input type="radio" name="q33" value="b"><span><strong class="mr-2">B</strong> learn more about the impact of business on the environment.</span></label>
+                                <label class="mc-label"><input type="radio" name="q33" value="c"><span><strong class="mr-2">C</strong> raise awareness of the effects of specific environmental disasters.</span></label>
+                                <label class="mc-label"><input type="radio" name="q33" value="d"><span><strong class="mr-2">D</strong> influence the environmental policies of businesses and governments.</span></label>
+                            </div>
+                        </div>
+                        <!-- Q34 -->
+                        <div class="q-item" id="container-q34-group">
+                            <p class="font-semibold text-gray-800 mb-3"><span class="font-bold text-amber-700 mr-2">34</span> What pressure was exerted by big business in the case of the disease BSE?</p>
+                            <div id="container-q34">
+                                <label class="mc-label"><input type="radio" name="q34" value="a"><span><strong class="mr-2">A</strong> Meat packers stopped supplying hamburgers to fast-food chains.</span></label>
+                                <label class="mc-label"><input type="radio" name="q34" value="b"><span><strong class="mr-2">B</strong> A fast-food company forced their meat suppliers to follow the law.</span></label>
+                                <label class="mc-label"><input type="radio" name="q34" value="c"><span><strong class="mr-2">C</strong> Meat packers persuaded the government to reduce their expenses.</span></label>
+                                <label class="mc-label"><input type="radio" name="q34" value="d"><span><strong class="mr-2">D</strong> A fast-food company encouraged the government to introduce legislation.</span></label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-5 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="32-34">Check Answers</button>
+                    </div>
+                </div>
+
+                <!-- Q35-39: Yes/No/Not Given -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-amber-100 text-amber-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 35–39</span>
+                        <h4 class="font-bold text-gray-800">Yes / No / Not Given</h4>
+                    </div>
+                    <div class="mb-5 text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100 text-sm space-y-1">
+                        <p>Do the following statements agree with the <em>claims</em> of the writer?</p>
+                        <p><span class="font-bold text-green-700">YES</span> — the statement agrees with the claims of the writer</p>
+                        <p><span class="font-bold text-red-600">NO</span> — the statement contradicts the claims of the writer</p>
+                        <p><span class="font-bold text-amber-600">NOT GIVEN</span> — it is impossible to say what the writer thinks about this</p>
+                    </div>
+                    <div class="space-y-5">
+                        <!-- Q35 -->
+                        <div class="q-item" id="container-q35-group">
+                            <p class="font-semibold text-gray-800 mb-2"><span class="font-bold text-amber-700 mr-2">35</span> The public should be prepared to fund good environmental practices.</p>
+                            <div id="container-q35">
+                                <label class="tfng-label"><input type="radio" name="q35" value="yes"><span class="font-semibold text-green-700">YES</span></label>
+                                <label class="tfng-label"><input type="radio" name="q35" value="no"><span class="font-semibold text-red-600">NO</span></label>
+                                <label class="tfng-label"><input type="radio" name="q35" value="not given"><span class="font-semibold text-amber-600">NOT GIVEN</span></label>
+                            </div>
+                        </div>
+                        <!-- Q36 -->
+                        <div class="q-item" id="container-q36-group">
+                            <p class="font-semibold text-gray-800 mb-2"><span class="font-bold text-amber-700 mr-2">36</span> There is a contrast between the moral principles of different businesses.</p>
+                            <div id="container-q36">
+                                <label class="tfng-label"><input type="radio" name="q36" value="yes"><span class="font-semibold text-green-700">YES</span></label>
+                                <label class="tfng-label"><input type="radio" name="q36" value="no"><span class="font-semibold text-red-600">NO</span></label>
+                                <label class="tfng-label"><input type="radio" name="q36" value="not given"><span class="font-semibold text-amber-600">NOT GIVEN</span></label>
+                            </div>
+                        </div>
+                        <!-- Q37 -->
+                        <div class="q-item" id="container-q37-group">
+                            <p class="font-semibold text-gray-800 mb-2"><span class="font-bold text-amber-700 mr-2">37</span> It is important to make a clear distinction between acceptable and unacceptable behaviour.</p>
+                            <div id="container-q37">
+                                <label class="tfng-label"><input type="radio" name="q37" value="yes"><span class="font-semibold text-green-700">YES</span></label>
+                                <label class="tfng-label"><input type="radio" name="q37" value="no"><span class="font-semibold text-red-600">NO</span></label>
+                                <label class="tfng-label"><input type="radio" name="q37" value="not given"><span class="font-semibold text-amber-600">NOT GIVEN</span></label>
+                            </div>
+                        </div>
+                        <!-- Q38 -->
+                        <div class="q-item" id="container-q38-group">
+                            <p class="font-semibold text-gray-800 mb-2"><span class="font-bold text-amber-700 mr-2">38</span> The public have successfully influenced businesses in the past.</p>
+                            <div id="container-q38">
+                                <label class="tfng-label"><input type="radio" name="q38" value="yes"><span class="font-semibold text-green-700">YES</span></label>
+                                <label class="tfng-label"><input type="radio" name="q38" value="no"><span class="font-semibold text-red-600">NO</span></label>
+                                <label class="tfng-label"><input type="radio" name="q38" value="not given"><span class="font-semibold text-amber-600">NOT GIVEN</span></label>
+                            </div>
+                        </div>
+                        <!-- Q39 -->
+                        <div class="q-item" id="container-q39-group">
+                            <p class="font-semibold text-gray-800 mb-2"><span class="font-bold text-amber-700 mr-2">39</span> In the future, businesses will show more concern for the environment.</p>
+                            <div id="container-q39">
+                                <label class="tfng-label"><input type="radio" name="q39" value="yes"><span class="font-semibold text-green-700">YES</span></label>
+                                <label class="tfng-label"><input type="radio" name="q39" value="no"><span class="font-semibold text-red-600">NO</span></label>
+                                <label class="tfng-label"><input type="radio" name="q39" value="not given"><span class="font-semibold text-amber-600">NOT GIVEN</span></label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-5 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="35-39">Check Answers</button>
+                    </div>
+                </div>
+
+                <!-- Q40: Multiple Choice -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-amber-100 text-amber-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Question 40</span>
+                        <h4 class="font-bold text-gray-800">Best Subheading</h4>
+                    </div>
+                    <p class="mb-5 text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100 text-sm">Choose the correct letter, <strong>A</strong>, <strong>B</strong>, <strong>C</strong> or <strong>D</strong>.</p>
+                    <div class="q-item" id="container-q40-group">
+                        <p class="font-semibold text-gray-800 mb-3"><span class="font-bold text-amber-700 mr-2">40</span> What would be the best subheading for this passage?</p>
+                        <div id="container-q40">
+                            <label class="mc-label"><input type="radio" name="q40" value="a"><span><strong class="mr-2">A</strong> Will the world survive the threat caused by big businesses?</span></label>
+                            <label class="mc-label"><input type="radio" name="q40" value="b"><span><strong class="mr-2">B</strong> How can big businesses be encouraged to be less driven by profit?</span></label>
+                            <label class="mc-label"><input type="radio" name="q40" value="c"><span><strong class="mr-2">C</strong> What environmental dangers are caused by the greed of businesses?</span></label>
+                            <label class="mc-label"><input type="radio" name="q40" value="d"><span><strong class="mr-2">D</strong> Are big businesses to blame for the damage they cause the environment?</span></label>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="40-40">Check Answers</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+</div>
+
+<div id="highlight-tooltip" class="highlight-tooltip">Highlight Text</div>
+
+<!-- Vocab Modal -->
+<div id="vocab-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
+    <div class="bg-white rounded-2xl shadow-2xl p-5 sm:p-8 w-full max-w-md relative transform transition-all scale-95 opacity-0" id="vocab-modal-content">
+        <button id="close-vocab-modal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-full w-8 h-8 flex items-center justify-center">&times;</button>
+        <div class="flex items-center mb-6 border-b pb-4 mt-2">
+            <h3 id="vocab-word" class="text-2xl sm:text-3xl font-extrabold text-gray-900 capitalize tracking-tight"></h3>
+        </div>
+        <div class="flex items-center mb-5">
+            <button id="play-audio-btn" class="flex items-center justify-center h-10 w-10 sm:h-12 sm:w-12 shrink-0 rounded-full bg-amber-50 text-amber-700 hover:bg-amber-600 hover:text-white mr-4 transition-all shadow-sm border border-amber-200">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>
+            </button>
+            <p id="vocab-pronunciation-text" class="text-gray-500 font-mono text-base sm:text-lg bg-gray-50 px-3 py-1 rounded-md border border-gray-100"></p>
+        </div>
+        <p id="vocab-meaning" class="text-gray-700 text-base sm:text-lg leading-relaxed"></p>
+    </div>
+</div>
+
+<!-- Alert Modal -->
+<div id="alert-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-[80]">
+    <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm relative transform transition-all scale-95 opacity-0 text-center" id="alert-modal-content">
+        <div id="alert-icon-container" class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 mb-4">
+            <svg class="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        </div>
+        <h3 id="alert-title" class="text-lg font-medium text-gray-900 mb-2">Notice</h3>
+        <p id="alert-message" class="text-sm text-gray-500 mb-6"></p>
+        <button id="close-alert-btn" class="w-full inline-flex justify-center rounded-md px-4 py-2 bg-amber-700 text-white font-medium hover:bg-amber-800 text-sm transition-colors">Got it</button>
+    </div>
+</div>
+
+<script>
+const vocabulary = {
+    'fundamental': { meaning: 'Forming a necessary base or core; of central importance; basic and essential.', phonetic: '/ˌfʌn.dəˈmen.təl/' },
+    'maximize': { meaning: 'Make as large or great as possible; increase to the greatest possible amount.', phonetic: '/ˈmæk.sɪ.maɪz/' },
+    'unmanaged fishery': { meaning: 'A fishing area or industry that operates without regulatory oversight or catch limits.', phonetic: '/ʌnˈmæn.ɪdʒd ˈfɪʃ.ər.i/' },
+    'quotas': { meaning: 'Fixed shares or limits assigned to a group; in fishing, a maximum amount of fish that may be caught.', phonetic: '/ˈkwəʊ.təz/' },
+    'logging companies': { meaning: 'Businesses engaged in cutting down forests and processing timber for commercial use.', phonetic: '/ˈlɒɡ.ɪŋ ˈkʌm.pə.niz/' },
+    'leases': { meaning: 'Contracts granting use of land or property for a specified period in exchange for payment.', phonetic: '/liːsɪz/' },
+    'corrupt': { meaning: 'Having or showing a willingness to act dishonestly in return for money or personal gain.', phonetic: '/kəˈrʌpt/' },
+    'regulation': { meaning: 'A rule or directive made and maintained by an authority; the act of controlling something by rules.', phonetic: '/ˌreɡ.jʊˈleɪ.ʃən/' },
+    'charities': { meaning: 'Organisations set up to provide help and raise money for those in need; non-profit bodies.', phonetic: '/ˈtʃær.ɪ.tiz/' },
+    'shareholders': { meaning: 'People who own shares in a company and are entitled to a proportion of its profits.', phonetic: '/ˈʃeəˌhəʊl.dəz/' },
+    'liable': { meaning: 'Legally responsible for something; required by law to account for one\'s actions.', phonetic: '/ˈlaɪ.ə.bəl/' },
+    'fiduciary responsibility': { meaning: 'The legal duty to act in another party\'s best interest; the obligation of a director to act in the interest of shareholders.', phonetic: '/fɪˈdjuː.ʃi.ər.i rɪˌspɒn.sɪˈbɪl.ɪ.ti/' },
+    'sued': { meaning: 'Taken legal action against (a person or organisation) in a court of law.', phonetic: '/sjuːd/' },
+    'humanitarian': { meaning: 'Concerned with or seeking to promote human welfare; showing compassion towards people.', phonetic: '/hjuːˌmæn.ɪˈteər.i.ən/' },
+    'destructive': { meaning: 'Causing great and irreparable harm or damage; tending to destroy.', phonetic: '/dɪˈstrʌk.tɪv/' },
+    'sustainable': { meaning: 'Able to be maintained at a certain level; conserving resources so as to preserve for the future.', phonetic: '/səˈsteɪ.nə.bəl/' },
+    'Exxon Valdez': { meaning: 'An oil tanker that ran aground in Alaska in 1989, causing one of the worst oil spill disasters in US history.', phonetic: '/ˈek.sɒn vælˈdez/' },
+    'sustainably harvested': { meaning: 'Gathered or collected in a way that does not permanently deplete the resource or damage the environment.', phonetic: '/səˈsteɪ.nə.bli ˈhɑː.vɪstɪd/' },
+    'track records': { meaning: 'The past achievements or failures of a person, organisation, or product regarded as an indicator of likely future performance.', phonetic: '/træk ˈrek.ədz/' },
+    'suppliers': { meaning: 'Companies or people that provide goods or services to another business.', phonetic: '/səˈplaɪ.əz/' },
+    'transmitted': { meaning: 'Passed on or spread from one person or place to another; communicated or conveyed.', phonetic: '/trænsˈmɪtɪd/' },
+    'plummeted': { meaning: 'Fell sharply and suddenly; decreased dramatically.', phonetic: '/ˈplʌm.ɪtɪd/' },
+    'complied': { meaning: 'Acted in accordance with a request, rule, or order; obeyed.', phonetic: '/kəmˈplaɪd/' },
+    'supply chain': { meaning: 'The sequence of processes involved in the production and distribution of a commodity from raw material to final consumer.', phonetic: '/səˈplaɪ tʃeɪn/' },
+    'moral principles': { meaning: 'Standards of behaviour or beliefs that govern a person\'s or organisation\'s actions regarding right and wrong.', phonetic: '/ˈmɒr.əl ˈprɪn.sɪ.pəlz/' },
+    'enforced': { meaning: 'Compelled observance of or compliance with a law or rule; put into effect by legal authority.', phonetic: '/ɪnˈfɔːst/' },
+    'empowering': { meaning: 'Giving someone the authority or power to do something; making someone stronger and more confident.', phonetic: '/ɪmˈpaʊ.ər.ɪŋ/' },
+    'moralistic': { meaning: 'Having or showing a tendency to make moral judgements; concerned with moral teaching.', phonetic: '/ˌmɒr.əˈlɪs.tɪk/' }
+};
+
+const ANSWERS = {
+    q27: 'd', q28: 'e', q29: 'f', q30: 'h', q31: 'b',
+    q32: 'c', q33: 'd', q34: 'b',
+    q35: 'yes', q36: 'not given', q37: 'no', q38: 'yes', q39: 'not given',
+    q40: 'd'
+};
+
+const explanations = {
+    q27: "D — moral standards. Paragraph 1: Businesses are 'shaped by a fundamental fact…offend our sense of justice' — they damage the environment with no apparent moral standards. Answer: D.",
+    q28: "E — control. Paragraph 1: 'the reverse is likely to be true if government regulation is ineffective' — lack of government control enables bad practices. Answer: E.",
+    q29: "F — involvement. Paragraph 1: '…if the public doesn't care' — lack of public involvement/interest leads to environmental problems. Answer: F.",
+    q30: "H — overfishing. Paragraph 1: 'fishermen in an unmanaged fishery without quotas' — overfishing is directly referenced. Answer: H.",
+    q31: "B — trees. Paragraph 1: 'international logging companies with short-term leases on tropical rainforest land' — logging = destruction of trees. Answer: B.",
+    q32: "C — could be prevented by the action of ordinary people. Paragraph 3 states: 'it is the public…that has the power to make such destructive policies unprofitable and illegal.' Ordinary people (the public) can prevent damage. A is wrong (not political action specifically); B and D are not stated.",
+    q33: "D — influence the environmental policies of businesses and governments. Paragraph 4 lists actions like suing businesses, buying sustainable products, pressuring governments to pass laws — all influencing policies. Answer: D.",
+    q34: "B — A fast-food company forced their meat suppliers to follow the law. Paragraph 5: 'when a major fast-food company then made the same demands…the meat industry complied within weeks.' The fast-food chain (big business) pressured its suppliers (meat packers) to comply. Answer: B.",
+    q35: "YES — Paragraph 6: 'the public must accept the necessity for higher prices for products to cover the added costs…of sound environmental practices.' Higher prices = the public funding good practices. Agrees with the writer's claim.",
+    q36: "NOT GIVEN — The writer mentions moral principles in general but never compares moral principles between different businesses. This comparison is not discussed.",
+    q37: "NO — Paragraph 7: 'My conclusion is not a moralistic one about who is right or wrong, admirable or selfish, a good guy or a bad guy.' The writer explicitly says he does NOT think it's important to make such distinctions. Contradicts the statement.",
+    q38: "YES — Paragraph 7: 'In the past, businesses have changed when the public came to expect and require different behaviour.' The public have successfully influenced businesses before. Agrees with the claim.",
+    q39: "NOT GIVEN — The writer predicts that 'changes in public attitudes will be essential,' but does not predict that businesses WILL show more concern for the environment. The outcome is conditional, not guaranteed.",
+    q40: "D — 'Are big businesses to blame for the damage they cause the environment?' The passage argues that while businesses harm the environment, the ultimate responsibility lies with the public and governments — directly answering this question. A, B, C are either too narrow or miss the central argument."
+};
+
+const TOTAL_QUESTIONS = 14;
+
+document.addEventListener('DOMContentLoaded', () => {
+    const app = {
+        userAnswers: {}, answersChecked: {}, currentFontSize: 17, timeRemaining: 20*60,
+        leftPane: document.getElementById('left-pane'),
+        rightPane: document.getElementById('right-pane'),
+        highlightTooltip: document.getElementById('highlight-tooltip'),
+        vocabModal: document.getElementById('vocab-modal'),
+        vocabModalContent: document.getElementById('vocab-modal-content'),
+        closeVocabModalBtn: document.getElementById('close-vocab-modal'),
+        vocabWordEl: document.getElementById('vocab-word'),
+        vocabMeaningEl: document.getElementById('vocab-meaning'),
+        vocabPronunciationText: document.getElementById('vocab-pronunciation-text'),
+        playAudioBtn: document.getElementById('play-audio-btn'),
+        progressText: document.getElementById('progress-text'),
+        timerEl: document.getElementById('timer'),
+        alertModal: document.getElementById('alert-modal'),
+        alertModalContent: document.getElementById('alert-modal-content'),
+        closeAlertBtn: document.getElementById('close-alert-btn'),
+        alertTitleEl: document.getElementById('alert-title'),
+        alertMessageEl: document.getElementById('alert-message'),
+        alertIconContainer: document.getElementById('alert-icon-container'),
+
+        init() { this.setupEventListeners(); this.initSplitter(); this.initHighlighter(); this.updateCheckButtonsState(); this.startTimer(); },
+
+        startTimer() {
+            const interval = setInterval(() => {
+                if (this.timeRemaining <= 0) { clearInterval(interval); this.timerEl.textContent = "00:00"; this.showAlert("Time's Up!", "Your 20 minutes have expired.", "warning"); return; }
+                this.timeRemaining--;
+                const m = Math.floor(this.timeRemaining/60).toString().padStart(2,'0');
+                const s = (this.timeRemaining%60).toString().padStart(2,'0');
+                this.timerEl.textContent = `${m}:${s}`;
+                if (this.timeRemaining <= 300) this.timerEl.classList.add('text-red-500');
+            }, 1000);
+        },
+
+        setupEventListeners() {
+            document.getElementById('increase-font-btn').addEventListener('click', () => this.changeFontSize(1));
+            document.getElementById('decrease-font-btn').addEventListener('click', () => this.changeFontSize(-1));
+            document.getElementById('clear-highlights-btn').addEventListener('click', () => this.leftPane.querySelectorAll('mark').forEach(m => m.replaceWith(document.createTextNode(m.textContent))));
+            this.closeVocabModalBtn.addEventListener('click', () => this.closeModal());
+            this.vocabModal.addEventListener('click', (e) => { if (e.target === this.vocabModal) this.closeModal(); });
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') { if (!this.vocabModal.classList.contains('hidden')) this.closeModal(); if (!this.alertModal.classList.contains('hidden')) this.closeAlert(); }
+                if ((e.ctrlKey||e.metaKey) && e.key.toLowerCase() === 'f') { e.preventDefault(); this.showAlert("Disabled", "Find is disabled during the exam.", "warning"); }
+            });
+            document.addEventListener('visibilitychange', () => { if (document.hidden && this.timeRemaining > 0) this.showAlert("Warning", "Please do not switch tabs during the exam.", "warning"); });
+            window.addEventListener('beforeunload', (e) => { if (this.timeRemaining > 0 && this.timeRemaining < 20*60) { e.preventDefault(); e.returnValue = ''; } });
+            this.closeAlertBtn.addEventListener('click', () => this.closeAlert());
+            this.alertModal.addEventListener('click', (e) => { if (e.target === this.alertModal) this.closeAlert(); });
+            document.body.addEventListener('change', (e) => {
+                if (e.target.type === 'radio' || e.target.tagName === 'SELECT') {
+                    this.userAnswers[e.target.name] = e.target.value.toLowerCase();
+                    if (e.target.tagName === 'SELECT') { e.target.classList.remove('select-correct','select-incorrect'); }
+                    this.updateCheckButtonsState(); this.updateProgress();
+                }
+            });
+            this.leftPane.addEventListener('click', (e) => {
+                if (e.target.classList.contains('vocab-word')) this.openVocabModal(e.target.dataset.word);
+                if (e.target.tagName === 'MARK') e.target.replaceWith(document.createTextNode(e.target.textContent));
+            });
+            document.querySelectorAll('.check-btn').forEach(btn => btn.addEventListener('click', (e) => this.checkAnswers(e.target.dataset.range, e.target)));
+            this.playAudioBtn.addEventListener('click', () => {
+                const word = this.vocabWordEl.textContent; if (!word) return;
+                if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+                this.playAudioBtn.classList.remove('text-amber-700','bg-amber-50'); this.playAudioBtn.classList.add('bg-amber-600','text-white');
+                if ('speechSynthesis' in window) { const u = new SpeechSynthesisUtterance(word); u.lang = 'en-GB'; u.rate = 0.9; u.onend = () => this.resetAudioBtn(); u.onerror = () => this.resetAudioBtn(); window.speechSynthesis.speak(u); }
+                else setTimeout(() => this.resetAudioBtn(), 500);
+            });
+        },
+
+        updateProgress() {
+            let c = 0; for (const k in ANSWERS) { if ((this.userAnswers[k] || '').trim()) c++; }
+            this.progressText.textContent = `${Math.min(c, TOTAL_QUESTIONS)} / ${TOTAL_QUESTIONS} Answered`;
+        },
+        resetAudioBtn() { this.playAudioBtn.classList.add('text-amber-700','bg-amber-50'); this.playAudioBtn.classList.remove('bg-amber-600','text-white'); },
+        changeFontSize(d) { this.currentFontSize = Math.max(14, Math.min(26, this.currentFontSize+d)); document.documentElement.style.setProperty('--app-font-size', `${this.currentFontSize}px`); },
+
+        openVocabModal(w) {
+            const d = vocabulary[w]; if (!d) return;
+            this.vocabWordEl.textContent = w; this.vocabMeaningEl.textContent = d.meaning; this.vocabPronunciationText.textContent = d.phonetic || '';
+            this.vocabModal.classList.remove('hidden');
+            setTimeout(() => { this.vocabModalContent.classList.remove('scale-95','opacity-0'); this.vocabModalContent.classList.add('scale-100','opacity-100'); }, 10);
+        },
+        closeModal() {
+            if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+            this.vocabModalContent.classList.remove('scale-100','opacity-100'); this.vocabModalContent.classList.add('scale-95','opacity-0');
+            this.resetAudioBtn(); setTimeout(() => this.vocabModal.classList.add('hidden'), 200);
+        },
+        showAlert(title, message, type='error') {
+            this.alertTitleEl.textContent = title; this.alertMessageEl.textContent = message;
+            const c = type === 'warning' ? 'yellow' : 'red';
+            this.alertIconContainer.className = `mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-${c}-100 mb-4`;
+            this.alertIconContainer.innerHTML = `<svg class="h-6 w-6 text-${c}-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>`;
+            this.alertModal.classList.remove('hidden');
+            setTimeout(() => { this.alertModalContent.classList.remove('scale-95','opacity-0'); this.alertModalContent.classList.add('scale-100','opacity-100'); }, 10);
+        },
+        closeAlert() {
+            this.alertModalContent.classList.remove('scale-100','opacity-100'); this.alertModalContent.classList.add('scale-95','opacity-0');
+            setTimeout(() => this.alertModal.classList.add('hidden'), 200);
+        },
+
+        isRangeAnswered(range) {
+            const [s, e] = range.split('-').map(Number);
+            for (let i = s; i <= e; i++) { if (!(this.userAnswers[`q${i}`] || '').trim()) return false; }
+            return true;
+        },
+
+        updateCheckButtonsState() {
+            document.querySelectorAll('.check-btn').forEach(btn => {
+                const range = btn.dataset.range;
+                if (this.answersChecked[range]) { btn.className = 'check-btn bg-gray-800 hover:bg-gray-900 text-white font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-pointer'; btn.textContent = 'Reset Answers'; return; }
+                const allDone = this.isRangeAnswered(range);
+                btn.className = allDone ? 'check-btn bg-amber-700 hover:bg-amber-800 text-white font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-pointer transform hover:-translate-y-0.5' : 'check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80';
+                btn.textContent = 'Check Answers';
+            });
+        },
+
+        checkAnswers(range, btn) {
+            if (this.answersChecked[range]) {
+                this.answersChecked[range] = false;
+                const [s, e] = range.split('-').map(Number);
+                for (let i = s; i <= e; i++) {
+                    const qId = `q${i}`; this.userAnswers[qId] = '';
+                    const sel = document.querySelector(`select[name="${qId}"]`);
+                    if (sel) { sel.value = ''; sel.classList.remove('select-correct','select-incorrect'); }
+                    document.querySelectorAll(`input[name="${qId}"][type="radio"]`).forEach(r => { r.checked = false; const lbl = r.closest('label'); if (lbl) lbl.classList.remove('correct-answer','incorrect-answer','ng-answer'); });
+                    document.getElementById(`expl-${qId}`)?.remove();
+                }
+                this.updateCheckButtonsState(); this.updateProgress(); return;
+            }
+            if (!this.isRangeAnswered(range)) { this.showAlert("Incomplete Answers", "Please answer all questions in this section before checking.", "warning"); return; }
+            this.answersChecked[range] = true; this.updateCheckButtonsState();
+
+            const [s, e] = range.split('-').map(Number);
+            for (let i = s; i <= e; i++) {
+                const qId = `q${i}`;
+                const userAns = (this.userAnswers[qId] || '').toLowerCase().trim();
+                const correctAns = ANSWERS[qId];
+                const isCorrect = userAns === correctAns;
+                let feedbackHTML = '';
+
+                // Select (dropdowns for Q27-31)
+                const sel = document.querySelector(`select[name="${qId}"]`);
+                if (sel) {
+                    sel.classList.remove('select-correct','select-incorrect');
+                    sel.classList.add(isCorrect ? 'select-correct' : 'select-incorrect');
+                    if (!isCorrect) { feedbackHTML = `<span class="correct-badge">Correct Answer: ${correctAns.toUpperCase()}</span><br>`; sel.value = correctAns.toUpperCase(); }
+                }
+
+                // Radio (MC + YES/NO/NG)
+                const radios = document.querySelectorAll(`input[name="${qId}"][type="radio"]`);
+                if (radios.length > 0) {
+                    radios.forEach(r => {
+                        const lbl = r.closest('label'); if (!lbl) return;
+                        lbl.classList.remove('correct-answer','incorrect-answer','ng-answer');
+                        if (r.value === correctAns) {
+                            lbl.classList.add(correctAns === 'not given' ? 'ng-answer' : (correctAns === 'no' || correctAns === 'false') ? 'incorrect-answer' : 'correct-answer');
+                        } else if (r.checked && r.value !== correctAns) {
+                            lbl.classList.add('incorrect-answer');
+                        }
+                    });
+                    if (!isCorrect) {
+                        const badge = correctAns === 'not given' ? 'ng-badge' : correctAns === 'no' ? 'no-badge' : 'correct-badge';
+                        feedbackHTML = `<span class="${badge}">Correct Answer: ${correctAns.toUpperCase()}</span><br>`;
+                    }
+                }
+
+                if (explanations[qId] && !document.getElementById(`expl-${qId}`)) {
+                    const div = document.createElement('div'); div.id = `expl-${qId}`; div.className = 'explanation-box';
+                    div.innerHTML = `${feedbackHTML}<strong>Explanation:</strong> ${explanations[qId]}`;
+                    const grpContainer = document.getElementById(`container-${qId}-group`) || document.getElementById(`container-${qId}`);
+                    if (grpContainer) { const wrap = grpContainer.closest('.q-item') || grpContainer; wrap.insertAdjacentElement('afterend', div); }
+                }
+            }
+        },
+
+        initSplitter() {
+            let isDragging = false; const panes = document.getElementById('content-panes');
+            document.getElementById('splitter').addEventListener('mousedown', (e) => { e.preventDefault(); isDragging = true; document.body.style.cursor = 'col-resize'; });
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging || window.innerWidth <= 768) return;
+                const rect = panes.getBoundingClientRect(); const newLeft = e.clientX - rect.left;
+                if (newLeft > 200 && newLeft < rect.width - 200) panes.style.gridTemplateColumns = `${(newLeft/rect.width)*100}% 5px 1fr`;
+            });
+            document.addEventListener('mouseup', () => { if (isDragging) { isDragging = false; document.body.style.cursor = 'default'; } });
+        },
+
+        initHighlighter() {
+            document.body.addEventListener('mouseup', (e) => {
+                const sel = window.getSelection(); const text = sel.toString().trim();
+                if (text.length > 0) {
+                    const range = sel.getRangeAt(0);
+                    if (!this.leftPane.contains(range.commonAncestorContainer) && !this.rightPane.contains(range.commonAncestorContainer)) { this.highlightTooltip.style.display = 'none'; return; }
+                    this.highlightTooltip.style.left = `${e.pageX-30}px`; this.highlightTooltip.style.top = `${e.pageY-40}px`; this.highlightTooltip.style.display = 'block';
+                    this.highlightTooltip.onclick = () => {
+                        const mark = document.createElement('mark');
+                        try { range.surroundContents(mark); } catch(ex) { this.showAlert("Highlight Error", "Please select text within a single element.", "warning"); }
+                        finally { sel.removeAllRanges(); this.highlightTooltip.style.display = 'none'; }
+                    };
+                } else { this.highlightTooltip.style.display = 'none'; }
+            });
+            document.body.addEventListener('mousedown', () => { if (window.getSelection().toString().length === 0) this.highlightTooltip.style.display = 'none'; });
+        }
+    };
+    app.init();
+});
+</script>
+</body>
+</html>
