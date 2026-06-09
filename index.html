@@ -178,16 +178,16 @@
         </div>
 
         <!-- Sticky Filter & Search Bar -->
-        <div class="sticky top-20 z-40 bg-[#020617]/90 backdrop-blur-xl border-b border-slate-800/50 py-4 mb-12 -mx-4 px-4 sm:mx-0 sm:px-0 transition-all duration-300 shadow-xl shadow-background/50">
+        <div class="sticky top-20 z-40 bg-[#020617]/90 backdrop-blur-xl border-b border-slate-800/50 py-4 mb-12 -mx-4 px-4 sm:mx-0 sm:px-0 transition-all duration-300 shadow-xl shadow-background/20">
             <div class="flex flex-col md:flex-row items-center justify-between gap-4">
                 
                 <!-- Category Filters -->
                 <div class="flex overflow-x-auto hide-scrollbar w-full md:w-auto gap-2 pb-2 md:pb-0" id="categoryFilters">
-                    <button onclick="setCategory('all')" id="btn-all" class="filter-btn px-5 py-2.5 rounded-full bg-teal-500/20 text-teal-300 border border-teal-500/30 text-sm font-semibold whitespace-nowrap transition-all">All Topics <span class="count text-xs opacity-70 ml-1"></span></button>
-                    <button onclick="setCategory('environment')" id="btn-environment" class="filter-btn px-5 py-2.5 rounded-full bg-slate-800/50 text-slate-400 hover:text-white border border-slate-700 hover:border-slate-500 text-sm font-medium whitespace-nowrap transition-all">Environment <span class="count text-xs opacity-70 ml-1"></span></button>
-                    <button onclick="setCategory('science')" id="btn-science" class="filter-btn px-5 py-2.5 rounded-full bg-slate-800/50 text-slate-400 hover:text-white border border-slate-700 hover:border-slate-500 text-sm font-medium whitespace-nowrap transition-all">Science & Tech <span class="count text-xs opacity-70 ml-1"></span></button>
-                    <button onclick="setCategory('history')" id="btn-history" class="filter-btn px-5 py-2.5 rounded-full bg-slate-800/50 text-slate-400 hover:text-white border border-slate-700 hover:border-slate-500 text-sm font-medium whitespace-nowrap transition-all">History <span class="count text-xs opacity-70 ml-1"></span></button>
-                    <button onclick="setCategory('people')" id="btn-people" class="filter-btn px-5 py-2.5 rounded-full bg-slate-800/50 text-slate-400 hover:text-white border border-slate-700 hover:border-slate-500 text-sm font-medium whitespace-nowrap transition-all">People <span class="count text-xs opacity-70 ml-1"></span></button>
+                    <button onclick="setCategory('all')" id="btn-all" class="filter-btn px-5 py-2.5 rounded-full bg-teal-500/20 text-teal-300 border border-teal-500/30 text-sm font-semibold white-space-nowrap hover:bg-teal-500/30 transition-all">All Topics</button>
+                    <button onclick="setCategory('environment')" id="btn-environment" class="filter-btn px-5 py-2.5 rounded-full bg-slate-800/50 text-slate-400 hover:text-white border border-slate-700 hover:border-emerald-500/30 text-sm font-semibold white-space-nowrap transition-all">Environment</button>
+                    <button onclick="setCategory('science')" id="btn-science" class="filter-btn px-5 py-2.5 rounded-full bg-slate-800/50 text-slate-400 hover:text-white border border-slate-700 hover:border-blue-500/30 text-sm font-semibold white-space-nowrap transition-all">Science</button>
+                    <button onclick="setCategory('history')" id="btn-history" class="filter-btn px-5 py-2.5 rounded-full bg-slate-800/50 text-slate-400 hover:text-white border border-slate-700 hover:border-amber-500/30 text-sm font-semibold white-space-nowrap transition-all">History</button>
+                    <button onclick="setCategory('people')" id="btn-people" class="filter-btn px-5 py-2.5 rounded-full bg-slate-800/50 text-slate-400 hover:text-white border border-slate-700 hover:border-purple-500/30 text-sm font-semibold white-space-nowrap transition-all">People</button>
                 </div>
 
                 <!-- Search Bar -->
@@ -228,7 +228,7 @@
             </div>
             
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 card-container">
-                <a href="Environment/adapting to the effects of climate change.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
+                <a href="Environment/adapting%20to%20the%20effects%20of%20climate%20change.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
                     <div class="absolute top-0 left-0 w-1 h-full topic-env-grad opacity-50 group-hover:opacity-100 transition-opacity"></div>
                     <div class="flex justify-between items-start mb-4">
                         <span class="text-white font-bold text-lg leading-tight pr-4 line-clamp-2">Adapting to Climate Change</span>
@@ -250,7 +250,7 @@
                     </div>
                 </a>
 
-                <a href="Environment/coral reefs.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
+                <a href="Environment/coral%20reefs.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
                     <div class="absolute top-0 left-0 w-1 h-full topic-env-grad opacity-50 group-hover:opacity-100 transition-opacity"></div>
                     <div class="flex justify-between items-start mb-4">
                         <span class="text-white font-bold text-lg leading-tight pr-4 line-clamp-2">Coral Reefs</span>
@@ -316,7 +316,7 @@
                     </div>
                 </a>
 
-                <a href="Environment/It’s Eco-logical.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
+                <a href="Environment/It%E2%80%99s%20Eco-logical.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
                     <div class="absolute top-0 left-0 w-1 h-full topic-env-grad opacity-50 group-hover:opacity-100 transition-opacity"></div>
                     <div class="flex justify-between items-start mb-4">
                         <span class="text-white font-bold text-lg leading-tight pr-4 line-clamp-2">It's Eco-logical</span>
@@ -338,7 +338,7 @@
                     </div>
                 </a>
 
-                <a href="Environment/protect polar bears.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
+                <a href="Environment/protect%20polar%20bears.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
                     <div class="absolute top-0 left-0 w-1 h-full topic-env-grad opacity-50 group-hover:opacity-100 transition-opacity"></div>
                     <div class="flex justify-between items-start mb-4">
                         <span class="text-white font-bold text-lg leading-tight pr-4 line-clamp-2">Protect Polar Bears</span>
@@ -371,7 +371,7 @@
                     </div>
                 </a>
 
-                <a href="Environment/The kakapo.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
+                <a href="Environment/The%20kakapo.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
                     <div class="absolute top-0 left-0 w-1 h-full topic-env-grad opacity-50 group-hover:opacity-100 transition-opacity"></div>
                     <div class="flex justify-between items-start mb-4">
                         <span class="text-white font-bold text-lg leading-tight pr-4 line-clamp-2">The Kakapo</span>
@@ -418,7 +418,7 @@
             
             <!-- Expand/Collapse Button (Injected via JS if needed) -->
             <div class="mt-6 text-center w-full toggle-container hidden">
-                    <button class="toggle-btn inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-slate-800/50 hover:bg-slate-700/50 text-slate-300 border border-slate-700 transition-all font-medium text-sm" onclick="toggleSection(this)">
+                    <button class="toggle-btn inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-slate-800/50 hover:bg-slate-700/50 text-slate-300 border border-slate-700 transition-all font-medium">
                         <span>View All Passages</span>
                         <i data-lucide="chevron-down" class="w-4 h-4 icon-chevron"></i>
                     </button>
@@ -439,7 +439,7 @@
             </div>
             
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 card-container">
-                <a href="Science/Athletes and Stress.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
+                <a href="Science/Athletes%20and%20Stress.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
                     <div class="absolute top-0 left-0 w-1 h-full topic-sci-grad opacity-50 group-hover:opacity-100 transition-opacity"></div>
                     <div class="flex justify-between items-start mb-4">
                         <span class="text-slate-300 font-bold text-lg leading-tight pr-4 line-clamp-2">Athletes and Stress</span>
@@ -450,7 +450,18 @@
                     </div>
                 </a>
 
-                <a href="Science/bats to the rescue.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
+                <a href="Science/Attitudes%20towards%20AI.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-1 h-full topic-sci-grad opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="text-slate-300 font-bold text-lg leading-tight pr-4 line-clamp-2">Attitudes Towards AI</span>
+                        <i data-lucide="arrow-right" class="w-5 h-5 text-slate-500 read-icon transition-all duration-300 mt-1 flex-shrink-0"></i>
+                    </div>
+                    <div class="flex gap-2 items-center text-xs font-medium text-slate-400">
+                        <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Academic Passage
+                    </div>
+                </a>
+
+                <a href="Science/bats%20to%20the%20rescue.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
                     <div class="absolute top-0 left-0 w-1 h-full topic-sci-grad opacity-50 group-hover:opacity-100 transition-opacity"></div>
                     <div class="flex justify-between items-start mb-4">
                         <span class="text-slate-300 font-bold text-lg leading-tight pr-4 line-clamp-2">Bats to the Rescue</span>
@@ -461,10 +472,10 @@
                     </div>
                 </a>
 
-                <a href="Science/building the skyline.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
+                <a href="Science/Bike-sharing%20schemes.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
                     <div class="absolute top-0 left-0 w-1 h-full topic-sci-grad opacity-50 group-hover:opacity-100 transition-opacity"></div>
                     <div class="flex justify-between items-start mb-4">
-                        <span class="text-slate-300 font-bold text-lg leading-tight pr-4 line-clamp-2">Building the skyline</span>
+                        <span class="text-slate-300 font-bold text-lg leading-tight pr-4 line-clamp-2">Bike-sharing Schemes</span>
                         <i data-lucide="arrow-right" class="w-5 h-5 text-slate-500 read-icon transition-all duration-300 mt-1 flex-shrink-0"></i>
                     </div>
                     <div class="flex gap-2 items-center text-xs font-medium text-slate-400">
@@ -472,7 +483,29 @@
                     </div>
                 </a>
 
-                <a href="Science/Deep-sea mining.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
+                <a href="Science/building%20the%20skyline.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-1 h-full topic-sci-grad opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="text-slate-300 font-bold text-lg leading-tight pr-4 line-clamp-2">Building the Skyline</span>
+                        <i data-lucide="arrow-right" class="w-5 h-5 text-slate-500 read-icon transition-all duration-300 mt-1 flex-shrink-0"></i>
+                    </div>
+                    <div class="flex gap-2 items-center text-xs font-medium text-slate-400">
+                        <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Academic Passage
+                    </div>
+                </a>
+
+                <a href="Science/Changes%20in%20reading%20habits.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-1 h-full topic-sci-grad opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="text-slate-300 font-bold text-lg leading-tight pr-4 line-clamp-2">Changes in Reading Habits</span>
+                        <i data-lucide="arrow-right" class="w-5 h-5 text-slate-500 read-icon transition-all duration-300 mt-1 flex-shrink-0"></i>
+                    </div>
+                    <div class="flex gap-2 items-center text-xs font-medium text-slate-400">
+                        <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Academic Passage
+                    </div>
+                </a>
+
+                <a href="Science/Deep-sea%20mining.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
                     <div class="absolute top-0 left-0 w-1 h-full topic-sci-grad opacity-50 group-hover:opacity-100 transition-opacity"></div>
                     <div class="flex justify-between items-start mb-4">
                         <span class="text-slate-300 font-bold text-lg leading-tight pr-4 line-clamp-2">Deep-sea Mining</span>
@@ -494,7 +527,7 @@
                     </div>
                 </a>
 
-                <a href="Science/Should we try to bring back.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
+                <a href="Science/Should%20we%20try%20to%20bring%20back.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
                     <div class="absolute top-0 left-0 w-1 h-full topic-sci-grad opacity-50 group-hover:opacity-100 transition-opacity"></div>
                     <div class="flex justify-between items-start mb-4">
                         <span class="text-slate-300 font-bold text-lg leading-tight pr-4 line-clamp-2">Extinct Species</span>
@@ -516,10 +549,10 @@
                     </div>
                 </a>
 
-                <a href="Science/the gifted child.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
+                <a href="Science/the%20gifted%20child.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
                     <div class="absolute top-0 left-0 w-1 h-full topic-sci-grad opacity-50 group-hover:opacity-100 transition-opacity"></div>
                     <div class="flex justify-between items-start mb-4">
-                        <span class="text-slate-300 font-bold text-lg leading-tight pr-4 line-clamp-2">Gifted child</span>
+                        <span class="text-slate-300 font-bold text-lg leading-tight pr-4 line-clamp-2">Gifted Child</span>
                         <i data-lucide="arrow-right" class="w-5 h-5 text-slate-500 read-icon transition-all duration-300 mt-1 flex-shrink-0"></i>
                     </div>
                     <div class="flex gap-2 items-center text-xs font-medium text-slate-400">
@@ -527,10 +560,10 @@
                     </div>
                 </a>
 
-                <a href="Science/Having a laugh.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
+                <a href="Science/Having%20a%20laugh.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
                     <div class="absolute top-0 left-0 w-1 h-full topic-sci-grad opacity-50 group-hover:opacity-100 transition-opacity"></div>
                     <div class="flex justify-between items-start mb-4">
-                        <span class="text-slate-300 font-bold text-lg leading-tight pr-4 line-clamp-2">Having a laugh</span>
+                        <span class="text-slate-300 font-bold text-lg leading-tight pr-4 line-clamp-2">Having a Laugh</span>
                         <i data-lucide="arrow-right" class="w-5 h-5 text-slate-500 read-icon transition-all duration-300 mt-1 flex-shrink-0"></i>
                     </div>
                     <div class="flex gap-2 items-center text-xs font-medium text-slate-400">
@@ -538,7 +571,7 @@
                     </div>
                 </a>
 
-                <a href="Science/How stress affects our judgement.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
+                <a href="Science/How%20stress%20affects%20our%20judgement.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
                     <div class="absolute top-0 left-0 w-1 h-full topic-sci-grad opacity-50 group-hover:opacity-100 transition-opacity"></div>
                     <div class="flex justify-between items-start mb-4">
                         <span class="text-slate-300 font-bold text-lg leading-tight pr-4 line-clamp-2">How Stress Affects Our Judgement</span>
@@ -549,7 +582,7 @@
                     </div>
                 </a>
 
-                <a href="Science/How to make wise decisions.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
+                <a href="Science/How%20to%20make%20wise%20decisions.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
                     <div class="absolute top-0 left-0 w-1 h-full topic-sci-grad opacity-50 group-hover:opacity-100 transition-opacity"></div>
                     <div class="flex justify-between items-start mb-4">
                         <span class="text-slate-300 font-bold text-lg leading-tight pr-4 line-clamp-2">How to Make Wise Decisions</span>
@@ -571,7 +604,7 @@
                     </div>
                 </a>
 
-                <a href="Science/Living with AI.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
+                <a href="Science/Living%20with%20AI.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
                     <div class="absolute top-0 left-0 w-1 h-full topic-sci-grad opacity-50 group-hover:opacity-100 transition-opacity"></div>
                     <div class="flex justify-between items-start mb-4">
                         <span class="text-slate-300 font-bold text-lg leading-tight pr-4 line-clamp-2">Living with AI</span>
@@ -593,7 +626,150 @@
                     </div>
                 </a>
 
-                <a href="Science/the case of mixed-ability class.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
+                <a href="Science/Motivational%20factors.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-1 h-full topic-sci-grad opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="text-slate-300 font-bold text-lg leading-tight pr-4 line-clamp-2">Motivational Factors</span>
+                        <i data-lucide="arrow-right" class="w-5 h-5 text-slate-500 read-icon transition-all duration-300 mt-1 flex-shrink-0"></i>
+                    </div>
+                    <div class="flex gap-2 items-center text-xs font-medium text-slate-400">
+                        <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Academic Passage
+                    </div>
+                </a>
+
+                <a href="Science/Norway%20Artefacts.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-1 h-full topic-sci-grad opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="text-slate-300 font-bold text-lg leading-tight pr-4 line-clamp-2">Norway Artefacts</span>
+                        <i data-lucide="arrow-right" class="w-5 h-5 text-slate-500 read-icon transition-all duration-300 mt-1 flex-shrink-0"></i>
+                    </div>
+                    <div class="flex gap-2 items-center text-xs font-medium text-slate-400">
+                        <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Academic Passage
+                    </div>
+                </a>
+
+                <a href="Science/Nutmeg.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-1 h-full topic-sci-grad opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="text-slate-300 font-bold text-lg leading-tight pr-4 line-clamp-2">Nutmeg</span>
+                        <i data-lucide="arrow-right" class="w-5 h-5 text-slate-500 read-icon transition-all duration-300 mt-1 flex-shrink-0"></i>
+                    </div>
+                    <div class="flex gap-2 items-center text-xs font-medium text-slate-400">
+                        <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Academic Passage
+                    </div>
+                </a>
+
+                <a href="Science/Plant%20Thermometer.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-1 h-full topic-sci-grad opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="text-slate-300 font-bold text-lg leading-tight pr-4 line-clamp-2">Plant Thermometer</span>
+                        <i data-lucide="arrow-right" class="w-5 h-5 text-slate-500 read-icon transition-all duration-300 mt-1 flex-shrink-0"></i>
+                    </div>
+                    <div class="flex gap-2 items-center text-xs font-medium text-slate-400">
+                        <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Academic Passage
+                    </div>
+                </a>
+
+                <a href="Science/procrastination.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-1 h-full topic-sci-grad opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="text-slate-300 font-bold text-lg leading-tight pr-4 line-clamp-2">Procrastination</span>
+                        <i data-lucide="arrow-right" class="w-5 h-5 text-slate-500 read-icon transition-all duration-300 mt-1 flex-shrink-0"></i>
+                    </div>
+                    <div class="flex gap-2 items-center text-xs font-medium text-slate-400">
+                        <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Academic Passage
+                    </div>
+                </a>
+
+                <a href="Science/Robot%20Umpires.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-1 h-full topic-sci-grad opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="text-slate-300 font-bold text-lg leading-tight pr-4 line-clamp-2">Robot Umpires</span>
+                        <i data-lucide="arrow-right" class="w-5 h-5 text-slate-500 read-icon transition-all duration-300 mt-1 flex-shrink-0"></i>
+                    </div>
+                    <div class="flex gap-2 items-center text-xs font-medium text-slate-400">
+                        <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Academic Passage
+                    </div>
+                </a>
+
+                <a href="Science/Robots%20and%20us.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-1 h-full topic-sci-grad opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="text-slate-300 font-bold text-lg leading-tight pr-4 line-clamp-2">Robots and Us</span>
+                        <i data-lucide="arrow-right" class="w-5 h-5 text-slate-500 read-icon transition-all duration-300 mt-1 flex-shrink-0"></i>
+                    </div>
+                    <div class="flex gap-2 items-center text-xs font-medium text-slate-400">
+                        <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Academic Passage
+                    </div>
+                </a>
+
+                <a href="Science/Skyscraper%20Design.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-1 h-full topic-sci-grad opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="text-slate-300 font-bold text-lg leading-tight pr-4 line-clamp-2">Skyscraper Design</span>
+                        <i data-lucide="arrow-right" class="w-5 h-5 text-slate-500 read-icon transition-all duration-300 mt-1 flex-shrink-0"></i>
+                    </div>
+                    <div class="flex gap-2 items-center text-xs font-medium text-slate-400">
+                        <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Academic Passage
+                    </div>
+                </a>
+
+                <a href="Science/Space%20Junk.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-1 h-full topic-sci-grad opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="text-slate-300 font-bold text-lg leading-tight pr-4 line-clamp-2">Space Junk</span>
+                        <i data-lucide="arrow-right" class="w-5 h-5 text-slate-500 read-icon transition-all duration-300 mt-1 flex-shrink-0"></i>
+                    </div>
+                    <div class="flex gap-2 items-center text-xs font-medium text-slate-400">
+                        <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Academic Passage
+                    </div>
+                </a>
+
+                <a href="Science/Speech%20translation.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-1 h-full topic-sci-grad opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="text-slate-300 font-bold text-lg leading-tight pr-4 line-clamp-2">Speech Translation</span>
+                        <i data-lucide="arrow-right" class="w-5 h-5 text-slate-500 read-icon transition-all duration-300 mt-1 flex-shrink-0"></i>
+                    </div>
+                    <div class="flex gap-2 items-center text-xs font-medium text-slate-400">
+                        <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Academic Passage
+                    </div>
+                </a>
+
+                <a href="Science/The%20Desolenator.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-1 h-full topic-sci-grad opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="text-slate-300 font-bold text-lg leading-tight pr-4 line-clamp-2">The Desolenator</span>
+                        <i data-lucide="arrow-right" class="w-5 h-5 text-slate-500 read-icon transition-all duration-300 mt-1 flex-shrink-0"></i>
+                    </div>
+                    <div class="flex gap-2 items-center text-xs font-medium text-slate-400">
+                        <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Academic Passage
+                    </div>
+                </a>
+
+                <a href="Science/The%20importance%20of%20children%27s%20play.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-1 h-full topic-sci-grad opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="text-slate-300 font-bold text-lg leading-tight pr-4 line-clamp-2">The Importance of Children's Play</span>
+                        <i data-lucide="arrow-right" class="w-5 h-5 text-slate-500 read-icon transition-all duration-300 mt-1 flex-shrink-0"></i>
+                    </div>
+                    <div class="flex gap-2 items-center text-xs font-medium text-slate-400">
+                        <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Academic Passage
+                    </div>
+                </a>
+
+                <a href="Science/The%20unselfish%20gene.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-1 h-full topic-sci-grad opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="text-slate-300 font-bold text-lg leading-tight pr-4 line-clamp-2">The Unselfish Gene</span>
+                        <i data-lucide="arrow-right" class="w-5 h-5 text-slate-500 read-icon transition-all duration-300 mt-1 flex-shrink-0"></i>
+                    </div>
+                    <div class="flex gap-2 items-center text-xs font-medium text-slate-400">
+                        <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Academic Passage
+                    </div>
+                </a>
+
+                <a href="Science/the%20case%20of%20mixed-ability%20class.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
                     <div class="absolute top-0 left-0 w-1 h-full topic-sci-grad opacity-50 group-hover:opacity-100 transition-opacity"></div>
                     <div class="flex justify-between items-start mb-4">
                         <span class="text-slate-300 font-bold text-lg leading-tight pr-4 line-clamp-2">Mixed-ability Class</span>
@@ -615,128 +791,7 @@
                     </div>
                 </a>
 
-                <a href="Science/Nutmeg.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
-                    <div class="absolute top-0 left-0 w-1 h-full topic-sci-grad opacity-50 group-hover:opacity-100 transition-opacity"></div>
-                    <div class="flex justify-between items-start mb-4">
-                        <span class="text-slate-300 font-bold text-lg leading-tight pr-4 line-clamp-2">Nutmeg</span>
-                        <i data-lucide="arrow-right" class="w-5 h-5 text-slate-500 read-icon transition-all duration-300 mt-1 flex-shrink-0"></i>
-                    </div>
-                    <div class="flex gap-2 items-center text-xs font-medium text-slate-400">
-                        <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Academic Passage
-                    </div>
-                </a>
-
-                <a href="Science/procrastination.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
-                    <div class="absolute top-0 left-0 w-1 h-full topic-sci-grad opacity-50 group-hover:opacity-100 transition-opacity"></div>
-                    <div class="flex justify-between items-start mb-4">
-                        <span class="text-slate-300 font-bold text-lg leading-tight pr-4 line-clamp-2">Procrastination</span>
-                        <i data-lucide="arrow-right" class="w-5 h-5 text-slate-500 read-icon transition-all duration-300 mt-1 flex-shrink-0"></i>
-                    </div>
-                    <div class="flex gap-2 items-center text-xs font-medium text-slate-400">
-                        <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Academic Passage
-                    </div>
-                </a>
-
-                <a href="Science/Robot Umpires.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
-                    <div class="absolute top-0 left-0 w-1 h-full topic-sci-grad opacity-50 group-hover:opacity-100 transition-opacity"></div>
-                    <div class="flex justify-between items-start mb-4">
-                        <span class="text-slate-300 font-bold text-lg leading-tight pr-4 line-clamp-2">Robot Umpires</span>
-                        <i data-lucide="arrow-right" class="w-5 h-5 text-slate-500 read-icon transition-all duration-300 mt-1 flex-shrink-0"></i>
-                    </div>
-                    <div class="flex gap-2 items-center text-xs font-medium text-slate-400">
-                        <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Academic Passage
-                    </div>
-                </a>
-
-                <a href="Science/Robots and us.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
-                    <div class="absolute top-0 left-0 w-1 h-full topic-sci-grad opacity-50 group-hover:opacity-100 transition-opacity"></div>
-                    <div class="flex justify-between items-start mb-4">
-                        <span class="text-slate-300 font-bold text-lg leading-tight pr-4 line-clamp-2">Robots and Us</span>
-                        <i data-lucide="arrow-right" class="w-5 h-5 text-slate-500 read-icon transition-all duration-300 mt-1 flex-shrink-0"></i>
-                    </div>
-                    <div class="flex gap-2 items-center text-xs font-medium text-slate-400">
-                        <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Academic Passage
-                    </div>
-                </a>
-
-                <a href="Science/Space Junk.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
-                    <div class="absolute top-0 left-0 w-1 h-full topic-sci-grad opacity-50 group-hover:opacity-100 transition-opacity"></div>
-                    <div class="flex justify-between items-start mb-4">
-                        <span class="text-slate-300 font-bold text-lg leading-tight pr-4 line-clamp-2">Space Junk</span>
-                        <i data-lucide="arrow-right" class="w-5 h-5 text-slate-500 read-icon transition-all duration-300 mt-1 flex-shrink-0"></i>
-                    </div>
-                    <div class="flex gap-2 items-center text-xs font-medium text-slate-400">
-                        <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Academic Passage
-                    </div>
-                </a>
-
-                <a href="Science/Speech translation.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
-                    <div class="absolute top-0 left-0 w-1 h-full topic-sci-grad opacity-50 group-hover:opacity-100 transition-opacity"></div>
-                    <div class="flex justify-between items-start mb-4">
-                        <span class="text-slate-300 font-bold text-lg leading-tight pr-4 line-clamp-2">Speech translation</span>
-                        <i data-lucide="arrow-right" class="w-5 h-5 text-slate-500 read-icon transition-all duration-300 mt-1 flex-shrink-0"></i>
-                    </div>
-                    <div class="flex gap-2 items-center text-xs font-medium text-slate-400">
-                        <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Academic Passage
-                    </div>
-                </a>
-
-                <a href="Science/The Desolenator.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
-                    <div class="absolute top-0 left-0 w-1 h-full topic-sci-grad opacity-50 group-hover:opacity-100 transition-opacity"></div>
-                    <div class="flex justify-between items-start mb-4">
-                        <span class="text-slate-300 font-bold text-lg leading-tight pr-4 line-clamp-2">The Desolenator</span>
-                        <i data-lucide="arrow-right" class="w-5 h-5 text-slate-500 read-icon transition-all duration-300 mt-1 flex-shrink-0"></i>
-                    </div>
-                    <div class="flex gap-2 items-center text-xs font-medium text-slate-400">
-                        <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Academic Passage
-                    </div>
-                </a>
-
-                <a href="Science/the-growth-mindset.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
-                    <div class="absolute top-0 left-0 w-1 h-full topic-sci-grad opacity-50 group-hover:opacity-100 transition-opacity"></div>
-                    <div class="flex justify-between items-start mb-4">
-                        <span class="text-slate-300 font-bold text-lg leading-tight pr-4 line-clamp-2">The Growth Mindset</span>
-                        <i data-lucide="arrow-right" class="w-5 h-5 text-slate-500 read-icon transition-all duration-300 mt-1 flex-shrink-0"></i>
-                    </div>
-                    <div class="flex gap-2 items-center text-xs font-medium text-slate-400">
-                        <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Academic Passage
-                    </div>
-                </a>
-
-                <a href="Science/the-industrial-revolution-in-britain.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
-                    <div class="absolute top-0 left-0 w-1 h-full topic-sci-grad opacity-50 group-hover:opacity-100 transition-opacity"></div>
-                    <div class="flex justify-between items-start mb-4">
-                        <span class="text-slate-300 font-bold text-lg leading-tight pr-4 line-clamp-2">The Industrial Revolution in Britain</span>
-                        <i data-lucide="arrow-right" class="w-5 h-5 text-slate-500 read-icon transition-all duration-300 mt-1 flex-shrink-0"></i>
-                    </div>
-                    <div class="flex gap-2 items-center text-xs font-medium text-slate-400">
-                        <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Academic Passage
-                    </div>
-                </a>
-
-                <a href="Science/the steam car.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
-                    <div class="absolute top-0 left-0 w-1 h-full topic-sci-grad opacity-50 group-hover:opacity-100 transition-opacity"></div>
-                    <div class="flex justify-between items-start mb-4">
-                        <span class="text-slate-300 font-bold text-lg leading-tight pr-4 line-clamp-2">The Steam Car</span>
-                        <i data-lucide="arrow-right" class="w-5 h-5 text-slate-500 read-icon transition-all duration-300 mt-1 flex-shrink-0"></i>
-                    </div>
-                    <div class="flex gap-2 items-center text-xs font-medium text-slate-400">
-                        <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Academic Passage
-                    </div>
-                </a>
-
-                <a href="Science/The unselfish gene.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
-                    <div class="absolute top-0 left-0 w-1 h-full topic-sci-grad opacity-50 group-hover:opacity-100 transition-opacity"></div>
-                    <div class="flex justify-between items-start mb-4">
-                        <span class="text-slate-300 font-bold text-lg leading-tight pr-4 line-clamp-2">The Unselfish Gene</span>
-                        <i data-lucide="arrow-right" class="w-5 h-5 text-slate-500 read-icon transition-all duration-300 mt-1 flex-shrink-0"></i>
-                    </div>
-                    <div class="flex gap-2 items-center text-xs font-medium text-slate-400">
-                        <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Academic Passage
-                    </div>
-                </a>
-
-                <a href="Science/Urban Engineers and Dance.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
+                <a href="Science/Urban%20Engineers%20and%20Dance.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
                     <div class="absolute top-0 left-0 w-1 h-full topic-sci-grad opacity-50 group-hover:opacity-100 transition-opacity"></div>
                     <div class="flex justify-between items-start mb-4">
                         <span class="text-slate-300 font-bold text-lg leading-tight pr-4 line-clamp-2">Urban Engineers and Dance</span>
@@ -768,10 +823,65 @@
                         <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Academic Passage
                     </div>
                 </a>
+
+                <a href="Science/the-growth-mindset.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-1 h-full topic-sci-grad opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="text-slate-300 font-bold text-lg leading-tight pr-4 line-clamp-2">The Growth Mindset</span>
+                        <i data-lucide="arrow-right" class="w-5 h-5 text-slate-500 read-icon transition-all duration-300 mt-1 flex-shrink-0"></i>
+                    </div>
+                    <div class="flex gap-2 items-center text-xs font-medium text-slate-400">
+                        <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Academic Passage
+                    </div>
+                </a>
+
+                <a href="Science/the-industrial-revolution-in-britain.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-1 h-full topic-sci-grad opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="text-slate-300 font-bold text-lg leading-tight pr-4 line-clamp-2">The Industrial Revolution in Britain</span>
+                        <i data-lucide="arrow-right" class="w-5 h-5 text-slate-500 read-icon transition-all duration-300 mt-1 flex-shrink-0"></i>
+                    </div>
+                    <div class="flex gap-2 items-center text-xs font-medium text-slate-400">
+                        <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Academic Passage
+                    </div>
+                </a>
+
+                <a href="Science/the%20steam%20car.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-1 h-full topic-sci-grad opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="text-slate-300 font-bold text-lg leading-tight pr-4 line-clamp-2">The Steam Car</span>
+                        <i data-lucide="arrow-right" class="w-5 h-5 text-slate-500 read-icon transition-all duration-300 mt-1 flex-shrink-0"></i>
+                    </div>
+                    <div class="flex gap-2 items-center text-xs font-medium text-slate-400">
+                        <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Academic Passage
+                    </div>
+                </a>
+
+                <a href="Science/the%20future%20of%20work.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-1 h-full topic-sci-grad opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="text-slate-300 font-bold text-lg leading-tight pr-4 line-clamp-2">The Future of Work</span>
+                        <i data-lucide="arrow-right" class="w-5 h-5 text-slate-500 read-icon transition-all duration-300 mt-1 flex-shrink-0"></i>
+                    </div>
+                    <div class="flex gap-2 items-center text-xs font-medium text-slate-400">
+                        <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Academic Passage
+                    </div>
+                </a>
+
+                <a href="Science/welcome%20disorder.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-1 h-full topic-sci-grad opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="text-slate-300 font-bold text-lg leading-tight pr-4 line-clamp-2">Welcome Disorder</span>
+                        <i data-lucide="arrow-right" class="w-5 h-5 text-slate-500 read-icon transition-all duration-300 mt-1 flex-shrink-0"></i>
+                    </div>
+                    <div class="flex gap-2 items-center text-xs font-medium text-slate-400">
+                        <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Academic Passage
+                    </div>
+                </a>
             </div>
 
             <div class="mt-6 text-center w-full toggle-container hidden">
-                <button class="toggle-btn inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-slate-800/50 hover:bg-slate-700/50 text-slate-300 border border-slate-700 transition-all font-medium text-sm" onclick="toggleSection(this)">
+                <button class="toggle-btn inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-slate-800/50 hover:bg-slate-700/50 text-slate-300 border border-slate-700 transition-all font-medium">
                         <span>View All Passages</span>
                         <i data-lucide="chevron-down" class="w-4 h-4 icon-chevron"></i>
                     </button>
@@ -792,7 +902,7 @@
             </div>
             
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 card-container">
-                <a href="History/Pirates of the Mediterranean.html"class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
+                <a href="History/Pirates%20of%20the%20Mediterranean.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
                     <div class="absolute top-0 left-0 w-1 h-full topic-his-grad opacity-50 group-hover:opacity-100 transition-opacity"></div>
                     <div class="flex justify-between items-start mb-4">
                         <span class="text-slate-300 font-bold text-lg leading-tight pr-4 line-clamp-2">Pirates of the Mediterranean</span>
@@ -803,7 +913,7 @@
                     </div>
                 </a>
 
-                <a href="History/Prehistoric Island Settlers.html"class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
+                <a href="History/Prehistoric%20Island%20Settlers.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
                     <div class="absolute top-0 left-0 w-1 h-full topic-his-grad opacity-50 group-hover:opacity-100 transition-opacity"></div>
                     <div class="flex justify-between items-start mb-4">
                         <span class="text-slate-300 font-bold text-lg leading-tight pr-4 line-clamp-2">Prehistoric Island Settlers</span>
@@ -814,7 +924,18 @@
                     </div>
                 </a>
 
-                <a href="History/The Step Pyramid of Djoser.html"class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
+                <a href="History/Roman%20tunnels.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-1 h-full topic-his-grad opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="text-slate-300 font-bold text-lg leading-tight pr-4 line-clamp-2">Roman Tunnels</span>
+                        <i data-lucide="arrow-right" class="w-5 h-5 text-slate-500 read-icon transition-all duration-300 mt-1 flex-shrink-0"></i>
+                    </div>
+                    <div class="flex gap-2 items-center text-xs font-medium text-slate-400">
+                        <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Academic Passage
+                    </div>
+                </a>
+
+                <a href="History/The%20Step%20Pyramid%20of%20Djoser.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
                     <div class="absolute top-0 left-0 w-1 h-full topic-his-grad opacity-50 group-hover:opacity-100 transition-opacity"></div>
                     <div class="flex justify-between items-start mb-4">
                         <span class="text-slate-300 font-bold text-lg leading-tight pr-4 line-clamp-2">Pyramid of Djoser</span>
@@ -825,7 +946,7 @@
                     </div>
                 </a>
 
-                <a href="History/Stonehenge.html"class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
+                <a href="History/Stonehenge.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
                     <div class="absolute top-0 left-0 w-1 h-full topic-his-grad opacity-50 group-hover:opacity-100 transition-opacity"></div>
                     <div class="flex justify-between items-start mb-4">
                         <span class="text-slate-300 font-bold text-lg leading-tight pr-4 line-clamp-2">Stonehenge</span>
@@ -836,7 +957,7 @@
                     </div>
                 </a>
 
-                <a href="History/Tennis Rackets.html"class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
+                <a href="History/Tennis%20Rackets.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
                     <div class="absolute top-0 left-0 w-1 h-full topic-his-grad opacity-50 group-hover:opacity-100 transition-opacity"></div>
                     <div class="flex justify-between items-start mb-4">
                         <span class="text-slate-300 font-bold text-lg leading-tight pr-4 line-clamp-2">Tennis Rackets</span>
@@ -847,10 +968,10 @@
                     </div>
                 </a>
 
-                <a href="History/To catch a king.html"class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
+                <a href="History/To%20catch%20a%20king.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
                     <div class="absolute top-0 left-0 w-1 h-full topic-his-grad opacity-50 group-hover:opacity-100 transition-opacity"></div>
                     <div class="flex justify-between items-start mb-4">
-                        <span class="text-slate-300 font-bold text-lg leading-tight pr-4 line-clamp-2">To catch a king</span>
+                        <span class="text-slate-300 font-bold text-lg leading-tight pr-4 line-clamp-2">To Catch a King</span>
                         <i data-lucide="arrow-right" class="w-5 h-5 text-slate-500 read-icon transition-all duration-300 mt-1 flex-shrink-0"></i>
                     </div>
                     <div class="flex gap-2 items-center text-xs font-medium text-slate-400">
@@ -858,10 +979,10 @@
                     </div>
                 </a>
 
-                <a href="History/Whatever happened to the.html"class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
+                <a href="History/Whatever%20happened%20to%20the.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
                     <div class="absolute top-0 left-0 w-1 h-full topic-his-grad opacity-50 group-hover:opacity-100 transition-opacity"></div>
                     <div class="flex justify-between items-start mb-4">
-                        <span class="text-slate-300 font-bold text-lg leading-tight pr-4 line-clamp-2">Whatever happened to the Harappan Civilisation?</span>
+                        <span class="text-slate-300 font-bold text-lg leading-tight pr-4 line-clamp-2">Whatever Happened to the Harappan Civilisation?</span>
                         <i data-lucide="arrow-right" class="w-5 h-5 text-slate-500 read-icon transition-all duration-300 mt-1 flex-shrink-0"></i>
                     </div>
                     <div class="flex gap-2 items-center text-xs font-medium text-slate-400">
@@ -871,7 +992,7 @@
             </div>
 
             <div class="mt-6 text-center w-full toggle-container hidden">
-                <button class="toggle-btn inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-slate-800/50 hover:bg-slate-700/50 text-slate-300 border border-slate-700 transition-all font-medium text-sm" onclick="toggleSection(this)">
+                <button class="toggle-btn inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-slate-800/50 hover:bg-slate-700/50 text-slate-300 border border-slate-700 transition-all font-medium">
                         <span>View All Passages</span>
                         <i data-lucide="chevron-down" class="w-4 h-4 icon-chevron"></i>
                     </button>
@@ -892,7 +1013,18 @@
                 </div>
                 
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 card-container">
-                    <a href="People/Alfred Wegener.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
+                    <a href="People/Alexander%20Henderson.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
+                        <div class="absolute top-0 left-0 w-1 h-full topic-hea-grad opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-slate-300 font-bold text-lg leading-tight pr-4 line-clamp-2">Alexander Henderson</span>
+                            <i data-lucide="arrow-right" class="w-5 h-5 text-slate-500 read-icon transition-all duration-300 mt-1 flex-shrink-0"></i>
+                        </div>
+                        <div class="flex gap-2 items-center text-xs font-medium text-slate-400">
+                            <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Academic Passage
+                        </div>
+                    </a>
+
+                    <a href="People/Alfred%20Wegener.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
                         <div class="absolute top-0 left-0 w-1 h-full topic-hea-grad opacity-50 group-hover:opacity-100 transition-opacity"></div>
                         <div class="flex justify-between items-start mb-4">
                             <span class="text-slate-300 font-bold text-lg leading-tight pr-4 line-clamp-2">Alfred Wegener</span>
@@ -902,17 +1034,19 @@
                             <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Academic Passage
                         </div>
                     </a>
-                    <a href="People/Georgia O’Keeffe.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
+
+                    <a href="People/Georgia%20O%E2%80%99Keeffe.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
                         <div class="absolute top-0 left-0 w-1 h-full topic-hea-grad opacity-50 group-hover:opacity-100 transition-opacity"></div>
                         <div class="flex justify-between items-start mb-4">
-                            <span class="text-slate-300 font-bold text-lg leading-tight pr-4 line-clamp-2">Georgia O’Keeffe</span>
+                            <span class="text-slate-300 font-bold text-lg leading-tight pr-4 line-clamp-2">Georgia O'Keeffe</span>
                             <i data-lucide="arrow-right" class="w-5 h-5 text-slate-500 read-icon transition-all duration-300 mt-1 flex-shrink-0"></i>
                         </div>
                         <div class="flex gap-2 items-center text-xs font-medium text-slate-400">
                             <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Academic Passage
                         </div>
                     </a>
-                    <a href="People/Henry Moore.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
+
+                    <a href="People/Henry%20Moore.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
                         <div class="absolute top-0 left-0 w-1 h-full topic-hea-grad opacity-50 group-hover:opacity-100 transition-opacity"></div>
                         <div class="flex justify-between items-start mb-4">
                             <span class="text-slate-300 font-bold text-lg leading-tight pr-4 line-clamp-2">Henry Moore</span>
@@ -922,6 +1056,7 @@
                             <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Academic Passage
                         </div>
                     </a>
+
                     <a href="People/silbo-gomero.html" class="searchable block group glass-panel rounded-xl p-5 card-hover relative overflow-hidden">
                         <div class="absolute top-0 left-0 w-1 h-full topic-hea-grad opacity-50 group-hover:opacity-100 transition-opacity"></div>
                         <div class="flex justify-between items-start mb-4">
@@ -935,7 +1070,7 @@
                 </div>
 
                 <div class="mt-6 text-center w-full toggle-container hidden">
-                    <button class="toggle-btn inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-slate-800/50 hover:bg-slate-700/50 text-slate-300 border border-slate-700 transition-all font-medium text-sm" onclick="toggleSection(this)">
+                    <button class="toggle-btn inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-slate-800/50 hover:bg-slate-700/50 text-slate-300 border border-slate-700 transition-all font-medium">
                         <span>View All Passages</span>
                         <i data-lucide="chevron-down" class="w-4 h-4 icon-chevron"></i>
                     </button>
@@ -949,7 +1084,7 @@
                 </div>
                 <h2 class="text-3xl font-bold text-white mb-3">No passages found</h2>
                 <p class="text-slate-400 text-lg mb-6">Try searching for a different topic or keyword.</p>
-                <button onclick="clearSearch()" class="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-teal-500 text-white font-semibold hover:bg-teal-400 transition-colors shadow-lg shadow-teal-500/25">
+                <button onclick="clearSearch()" class="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-teal-500 text-white font-semibold hover:bg-teal-400 transition-colors shadow-lg shadow-teal-500/20">
                     <i data-lucide="x" class="w-4 h-4"></i>
                     Clear Search
                 </button>
@@ -973,7 +1108,7 @@
     </footer>
 
     <!-- Back to Top Button -->
-    <button id="backToTop" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="fixed bottom-8 right-8 z-50 p-3 rounded-full bg-slate-800 border border-slate-700 text-teal-400 shadow-xl shadow-background/50 transition-all duration-300 btt-hidden hover:bg-slate-700 hover:text-teal-300 focus:outline-none focus:ring-2 focus:ring-teal-500/50">
+    <button id="backToTop" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="fixed bottom-8 right-8 z-50 p-3 rounded-full bg-slate-800 border border-slate-700 text-teal-400 shadow-xl hover:bg-slate-700 transition-all btt-hidden" title="Back to top">
         <i data-lucide="arrow-up" class="w-6 h-6"></i>
     </button>
 
@@ -999,149 +1134,126 @@
 
         // Scroll listener for Back to Top button
         window.addEventListener('scroll', () => {
-            const bttButton = document.getElementById('backToTop');
-            if (window.scrollY > 400) {
-                bttButton.classList.remove('btt-hidden');
-                bttButton.classList.add('btt-visible');
+            const backToTopBtn = document.getElementById('backToTop');
+            if (window.scrollY > 300) {
+                backToTopBtn.classList.remove('btt-hidden');
+                backToTopBtn.classList.add('btt-visible');
             } else {
-                bttButton.classList.remove('btt-visible');
-                bttButton.classList.add('btt-hidden');
+                backToTopBtn.classList.add('btt-hidden');
+                backToTopBtn.classList.remove('btt-visible');
             }
         });
 
-        function calculateCategoryCounts() {
-            let total = 0;
-            const categories = ['environment', 'science', 'history', 'people'];
-            
-            categories.forEach(cat => {
-                const section = document.querySelector(`.module[data-category="${cat}"]`);
-                if (section) {
-                    const count = section.querySelectorAll('.searchable').length;
-                    const btnCount = document.querySelector(`#btn-${cat} .count`);
-                    if (btnCount) btnCount.textContent = `(${count})`;
-                    total += count;
-                }
-            });
-            
-            const allBtnCount = document.querySelector('#btn-all .count');
-            if (allBtnCount) allBtnCount.textContent = `(${total})`;
-        }
-
         function setCategory(category) {
             activeCategory = category;
-            
-            // Update filter buttons styling
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                if(btn.id === 'btn-' + category) {
-                    btn.classList.remove('bg-slate-800/50', 'text-slate-400', 'border-slate-700');
-                    btn.classList.add('bg-teal-500/20', 'text-teal-300', 'border-teal-500/30');
-                } else {
-                    btn.classList.add('bg-slate-800/50', 'text-slate-400', 'border-slate-700');
-                    btn.classList.remove('bg-teal-500/20', 'text-teal-300', 'border-teal-500/30');
-                }
-            });
-
-            // Smooth scroll to top of filters if user is far down
-            const filterBar = document.querySelector('.sticky');
-            if (window.scrollY > filterBar.offsetTop) {
-                window.scrollTo({
-                    top: filterBar.offsetTop - 20,
-                    behavior: 'smooth'
-                });
-            }
-
-            renderView();
-        }
-
-        function clearSearch() {
-            document.getElementById('searchBox').value = '';
             searchQuery = '';
+            document.getElementById('searchBox').value = '';
+            
+            // Update active button
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('bg-teal-500/20', 'text-teal-300', 'border-teal-500/30');
+                btn.classList.add('bg-slate-800/50', 'text-slate-400', 'border-slate-700');
+            });
+            
+            const activeBtn = document.getElementById(`btn-${category}`);
+            if (activeBtn) {
+                activeBtn.classList.remove('bg-slate-800/50', 'text-slate-400', 'border-slate-700');
+                activeBtn.classList.add('bg-teal-500/20', 'text-teal-300', 'border-teal-500/30');
+            }
+            
             renderView();
         }
 
         function handleSearch() {
             searchQuery = document.getElementById('searchBox').value.toLowerCase();
+            activeCategory = 'all';
+            
+            // Update button states
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('bg-teal-500/20', 'text-teal-300', 'border-teal-500/30');
+                btn.classList.add('bg-slate-800/50', 'text-slate-400', 'border-slate-700');
+            });
+            
+            const allBtn = document.getElementById('btn-all');
+            if (allBtn && searchQuery === '') {
+                allBtn.classList.remove('bg-slate-800/50', 'text-slate-400', 'border-slate-700');
+                allBtn.classList.add('bg-teal-500/20', 'text-teal-300', 'border-teal-500/30');
+            }
+            
             renderView();
         }
 
-        function toggleSection(button) {
-            const module = button.closest('.module');
-            const isExpanded = module.dataset.expanded === 'true';
+        function clearSearch() {
+            searchQuery = '';
+            activeCategory = 'all';
+            document.getElementById('searchBox').value = '';
             
-            module.dataset.expanded = !isExpanded;
+            // Reset buttons
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('bg-teal-500/20', 'text-teal-300', 'border-teal-500/30');
+                btn.classList.add('bg-slate-800/50', 'text-slate-400', 'border-slate-700');
+            });
+            
+            const allBtn = document.getElementById('btn-all');
+            if (allBtn) {
+                allBtn.classList.remove('bg-slate-800/50', 'text-slate-400', 'border-slate-700');
+                allBtn.classList.add('bg-teal-500/20', 'text-teal-300', 'border-teal-500/30');
+            }
+            
             renderView();
+        }
+
+        function calculateCategoryCounts() {
+            // Count passages per category
+            const counts = {};
+            document.querySelectorAll('.module').forEach(module => {
+                const category = module.dataset.category;
+                const cardCount = module.querySelectorAll('.card-hover').length;
+                counts[category] = cardCount;
+            });
         }
 
         function renderView() {
-            let totalVisibleAcrossAll = 0;
             const modules = document.querySelectorAll('.module');
-
+            let hasVisibleContent = false;
+            
             modules.forEach(module => {
                 const category = module.dataset.category;
-                const isExpanded = module.dataset.expanded === 'true';
+                const shouldShow = activeCategory === 'all' || activeCategory === category;
                 
-                // Hide section entirely if it doesn't match active filter
-                if (activeCategory !== 'all' && category !== activeCategory) {
-                    module.style.display = 'none';
-                    return;
-                }
-
-                // Filtering cards within the section
-                const cards = Array.from(module.querySelectorAll('.searchable'));
-                const moduleHeadingText = module.querySelector('h2').parentElement.textContent.toLowerCase();
-                
-                // 1. Identify which cards match the search query
-                const matchingCards = cards.filter(card => {
-                    const cardText = card.textContent.toLowerCase();
-                    return cardText.includes(searchQuery) || moduleHeadingText.includes(searchQuery);
-                });
-
-                // 2. Decide how many to show based on expansion & search status
-                let cardsToShow = matchingCards;
-                // If not searching and not expanded, limit to CARDS_PER_PAGE
-                if (searchQuery === '' && !isExpanded) {
-                    cardsToShow = matchingCards.slice(0, CARDS_PER_PAGE);
-                }
-
-                // 3. Apply display styles
-                cards.forEach(card => card.style.display = 'none'); // hide all
-                cardsToShow.forEach(card => card.style.display = 'block'); // show allowed
-
-                // 4. Update 'Show More' button visibility
-                const toggleContainer = module.querySelector('.toggle-container');
-                const toggleBtnSpan = toggleContainer.querySelector('span');
-                const toggleBtnIcon = toggleContainer.querySelector('.icon-chevron');
-
-                if (searchQuery !== '' || matchingCards.length <= CARDS_PER_PAGE) {
-                    // Hide button if searching or if there aren't enough items to warrant a button
-                    toggleContainer.classList.add('hidden');
-                } else {
-                    toggleContainer.classList.remove('hidden');
-                    if (isExpanded) {
-                        toggleBtnSpan.textContent = 'Show Less';
-                        toggleBtnIcon.setAttribute('data-lucide', 'chevron-up');
-                    } else {
-                        toggleBtnSpan.textContent = `View All ${matchingCards.length} Passages`;
-                        toggleBtnIcon.setAttribute('data-lucide', 'chevron-down');
-                    }
-                    lucide.createIcons({ root: toggleContainer });
-                }
-
-                // 5. Final module visibility based on matched cards
-                if (matchingCards.length > 0) {
+                if (shouldShow) {
                     module.style.display = 'block';
-                    totalVisibleAcrossAll += matchingCards.length;
+                    
+                    const cards = module.querySelectorAll('.card-hover');
+                    let visibleCardCount = 0;
+                    
+                    cards.forEach(card => {
+                        const text = card.textContent.toLowerCase();
+                        const matches = searchQuery === '' || text.includes(searchQuery);
+                        
+                        if (matches) {
+                            card.style.display = 'block';
+                            visibleCardCount++;
+                            hasVisibleContent = true;
+                        } else {
+                            card.style.display = 'none';
+                        }
+                    });
+                    
+                    if (visibleCardCount === 0) {
+                        module.style.display = 'none';
+                    }
                 } else {
                     module.style.display = 'none';
                 }
             });
-
-            // Empty State Handling
-            const noResultsState = document.getElementById('noResults');
-            if (totalVisibleAcrossAll === 0) {
-                noResultsState.classList.remove('hidden');
+            
+            // Show/hide no results message
+            const noResults = document.getElementById('noResults');
+            if (!hasVisibleContent && searchQuery !== '') {
+                noResults.classList.remove('hidden');
             } else {
-                noResultsState.classList.add('hidden');
+                noResults.classList.add('hidden');
             }
         }
     </script>
