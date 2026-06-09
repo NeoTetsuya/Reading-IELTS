@@ -328,7 +328,7 @@
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <span id="timer" class="font-mono font-bold text-gray-700 text-lg">20:00</span>
+                <span id="timer" class="font-mono font-bold text-gray-700 text-lg">60:00</span>
             </div>
         </div>
 
@@ -667,7 +667,7 @@
             answersChecked: {},
             currentFontSize: 17,
             totalQuestions: Object.keys(answers).length,
-            timeRemaining: 20 * 60, // 20 minutes
+            timeRemaining: 60 * 60, // 60 minutes
 
             // Elements
             leftPane: document.getElementById('left-pane'),
@@ -770,7 +770,7 @@
                 // Warn user if they try to close or refresh the tab via browser buttons
                 window.addEventListener('beforeunload', (e) => {
                     // Only warn if the test is currently active (timer hasn't run out, and hasn't just started)
-                    if (this.timeRemaining > 0 && this.timeRemaining < 20 * 60) {
+                    if (this.timeRemaining > 0 && this.timeRemaining < 60 * 60) {
                         e.preventDefault();
                         e.returnValue = ''; // Standard requirement to trigger the browser's "Leave Site?" prompt
                     }

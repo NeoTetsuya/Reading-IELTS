@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IELTS Simulator - Motivational Factors and the Hospitality Industry</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --app-font-size: 17px; }
+        body { font-family: 'Inter', sans-serif; overscroll-behavior: none; background-color: #faf5ff; }
+        .ielts-container { display: grid; grid-template-rows: auto 1fr; height: 100vh; }
+        .content-panes { display: grid; grid-template-columns: 1fr 5px 1fr; overflow: hidden; }
+        .pane { overflow-y: auto; padding: 2rem 3rem; font-size: var(--app-font-size); scroll-behavior: smooth; }
+        #left-pane { background-color: #fdfdfd; }
+        #right-pane { background-color: #faf5ff; }
+        .splitter { background-color: #e9d5ff; cursor: col-resize; z-index: 10; transition: background-color 0.2s; }
+        .splitter:hover, .splitter:active { background-color: #a855f7; }
+        .reading-passage { font-family: 'Merriweather', serif; line-height: 1.9; color: #1e1b4b; text-align: justify; max-width: 800px; margin: 0 auto; }
+        .reading-passage p { margin-bottom: 1.5rem; text-indent: 1.5rem; }
+        .reading-passage h3 { font-family: 'Inter', sans-serif; color: #3b0764; margin-bottom: 0.25rem; font-weight: 700; font-size: 1.5em; text-align: center; text-indent: 0; text-transform: uppercase; letter-spacing: 0.05em; }
+        .reading-passage .subtitle { font-family: 'Inter', sans-serif; color: #7e22ce; font-size: 0.95em; text-align: center; text-indent: 0; margin-bottom: 1.5rem; font-style: italic; }
+        .reading-passage .para-label { font-family: 'Inter', sans-serif; font-weight: 800; color: #581c87; font-size: 0.85em; display: inline-block; margin-right: 0.5rem; background: #f3e8ff; padding: 1px 6px; border-radius: 4px; vertical-align: middle; }
+        
+        .q-item { padding: 1.25rem; border-radius: 0.75rem; transition: all 0.2s; background-color: white; border: 1px solid #e9d5ff; margin-bottom: 1rem; }
+        .text-input { border: 2px solid #e9d5ff; border-radius: 6px; padding: 4px 8px; font-weight: 600; color: #1e1b4b; transition: all 0.2s; text-align: center; background-color: #faf5ff; }
+        .text-input:focus { outline: none; border-color: #a855f7; background-color: #fff; box-shadow: 0 0 0 3px rgba(168,85,247,0.12); }
+        .text-input-word { width: 10rem; text-transform: lowercase; }
+        
+        .select-input { border: 2px solid #e9d5ff; border-radius: 6px; padding: 4px 8px; font-weight: 600; color: #581c87; transition: all 0.2s; background-color: #fff; cursor: pointer; max-width: 100%; }
+        .select-input:focus { outline: none; border-color: #a855f7; background-color: #fff; box-shadow: 0 0 0 3px rgba(168,85,247,0.12); }
+        
+        .custom-radio-group { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem; }
+        .custom-radio-label { display: flex; align-items: center; justify-content: center; padding: 0.5rem 1rem; border: 1.5px solid #e9d5ff; border-radius: 0.5rem; cursor: pointer; background-color: white; flex: 1; min-width: 90px; font-weight: 600; color: #581c87; transition: all 0.2s; }
+        .custom-radio-label input { display: none; }
+        .custom-radio-label:hover { background-color: #fdf4ff; border-color: #d8b4fe; }
+        .custom-radio-label:has(input:checked) {
+            background-color: #f3e8ff;
+            border-color: #a855f7;
+            color: #581c87;
+            box-shadow: inset 0 0 0 1px #a855f7;
+        }
+
+        .correct-answer { border-color: #22c55e !important; background-color: #f0fdf4 !important; color: #166534 !important; }
+        .correct-answer span { color: #166534 !important; }
+        .incorrect-answer { border-color: #ef4444 !important; background-color: #fef2f2 !important; color: #991b1b !important; }
+        .incorrect-answer span { color: #991b1b !important; }
+        
+        .explanation-box { animation: fadeIn 0.4s ease-out forwards; margin-top: 0.75rem; padding: 1rem; background-color: #fdf4ff; border-left: 4px solid #a855f7; border-radius: 0.5rem; font-size: 0.95rem; color: #581c87; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .explanation-box .correct-badge { display: inline-block; background: #22c55e; color: white; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85em; margin-bottom: 0.5rem; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .vocab-word { color: #7e22ce; font-weight: 600; cursor: pointer; border-bottom: 2px dotted #c084fc; transition: all 0.2s ease-in-out; padding: 0 2px; }
+        .vocab-word:hover { background-color: #f3e8ff; border-bottom-style: solid; border-radius: 2px; }
+        .highlight-tooltip { position: absolute; background-color: #3b0764; color: white; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 500; z-index: 100; cursor: pointer; display: none; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        mark { background-color: #fef08a; border-radius: 3px; padding: 2px 0; cursor: pointer; }
+        mark:hover { background-color: #fca5a5; color: #7f1d1d; }
+        mark:hover::after { content: ' x'; font-weight: bold; font-size: 0.8em; opacity: 0.7; }
+        
+        .summary-block { background: #f3e8ff; border: 1px solid #e9d5ff; border-radius: 0.75rem; padding: 1.5rem; margin-bottom: 1rem; line-height: 2; color: #581c87; }
+        .summary-block h5 { font-family: 'Inter', sans-serif; font-weight: 700; color: #7e22ce; font-size: 1em; margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        .summary-block h6 { font-family: 'Inter', sans-serif; font-weight: 700; color: #581c87; font-size: 0.92em; margin-top: 0.75rem; margin-bottom: 0.25rem; }
+        .summary-block ul { list-style: disc; padding-left: 1.5rem; }
+        .summary-block li { margin-bottom: 0.25rem; }
+        
+        .researchers-table { width: 100%; border-collapse: collapse; margin: 0.75rem 0; }
+        .researchers-table td { padding: 0.4rem 0.75rem; border: 1px solid #e9d5ff; font-size: 0.9em; }
+        .researchers-table td:first-child { font-weight: 700; color: #581c87; background: #f3e8ff; width: 2rem; text-align: center; }
+
+        @media (max-width: 768px) {
+            .content-panes { display: flex; flex-direction: column; overflow-y: auto; }
+            .splitter { display: none; }
+            .pane { padding: 1.25rem 1rem; overflow-y: visible; height: auto; }
+            #left-pane { border-bottom: 2px dashed #e9d5ff; padding-bottom: 2rem; }
+            .text-input, .select-input { max-width: 100%; font-size: 0.9em; }
+        }
+    </style>
+</head>
+<body>
+<div id="test-container" class="ielts-container">
+    <header class="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 flex justify-between items-center z-20 shadow-sm flex-wrap gap-3">
+        <div class="flex items-center gap-2 sm:space-x-3">
+            <div class="bg-purple-700 text-white p-1.5 sm:p-2 rounded-lg shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                </svg>
+            </div>
+            <h1 class="text-xl font-bold text-gray-800 hidden sm:block">IELTS Simulator <span class="text-purple-700 font-medium">| Hospitality Motivation</span></h1>
+            <h1 class="text-base font-bold text-gray-800 sm:hidden">IELTS <span class="text-purple-700">Hospitality HR</span></h1>
+        </div>
+        <div class="flex items-center space-x-4">
+            <div class="hidden sm:flex flex-col items-end">
+                <span class="text-xs text-gray-500 font-bold uppercase tracking-wide">Progress</span>
+                <span id="progress-text" class="text-sm font-semibold text-purple-700">0 / 14 Answered</span>
+            </div>
+            <div class="flex items-center bg-gray-100 rounded-lg px-3 py-1.5 border border-gray-200">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span id="timer" class="font-mono font-bold text-gray-700 text-lg">60:00</span>
+            </div>
+        </div>
+        <div class="flex items-center gap-2 sm:space-x-3">
+            <button id="clear-highlights-btn" class="hidden sm:flex items-center justify-center px-3 py-1.5 rounded bg-purple-50 hover:bg-purple-100 text-purple-700 transition-colors focus:outline-none border border-purple-200 text-sm font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                Clear Highlights
+            </button>
+            <div class="flex items-center space-x-1 sm:space-x-2 bg-gray-50 p-1 rounded-lg border border-gray-200">
+                <button id="decrease-font-btn" class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded bg-white shadow-sm hover:bg-gray-100 text-gray-700 transition-colors focus:outline-none font-bold text-sm sm:text-base">A-</button>
+                <button id="increase-font-btn" class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded bg-white shadow-sm hover:bg-gray-100 text-gray-700 transition-colors focus:outline-none font-bold text-sm sm:text-base">A+</button>
+            </div>
+        </div>
+    </header>
+
+    <main id="content-panes" class="content-panes">
+        <!-- Left Pane: Reading Passage -->
+        <div id="left-pane" class="pane relative">
+            <div class="reading-passage text-justify">
+                <h3>Motivational factors and the hospitality industry</h3>
+                <p class="subtitle">An exploration of employee retention, morale, and performance standards</p>
+
+                <p><span class="para-label">A</span>A critical ingredient in the success of hotels is developing and maintaining superior performance from their employees. How is that accomplished? What Human Resource Management (HRM) practices should organizations invest in to acquire and retain great employees?</p>
+                
+                <p><span class="para-label">B</span>Some hotels aim to provide superior working conditions for their employees. The idea originated from workplaces – usually in the non-service sector – that emphasized fun and enjoyment as part of work-life balance. By contrast, the service sector, and more specifically hotels, has traditionally not extended these practices to address basic employee needs, such as good working conditions.</p>
+                
+                <p><span class="para-label">C</span>Pfeffer (1994) emphasizes that in order to succeed in a global business environment, organizations must make investment in Human Resource Management (HRM) to allow them to acquire employees who possess better skills and capabilities than their competitors. This investment will be to their competitive advantage. Despite this recognition of the importance of employee development, the hospitality industry has historically been dominated by <span class="vocab-word" data-word="underdeveloped">underdeveloped</span> HR practices (Lucas, 2002).</p>
+                
+                <p><span class="para-label">D</span>Lucas also points out that ‘the substance of HRM practices does not appear to be designed to <span class="vocab-word" data-word="foster">foster</span> constructive relations with employees or to represent a managerial approach that enables developing and drawing out the full potential of people, even though employees may be broadly satisfied with many aspects of their work’ (Lucas, 2002). In addition, or maybe as a result, high employee <span class="vocab-word" data-word="turnover">turnover</span> has been a recurring problem throughout the hospitality industry. Among the many cited reasons are low <span class="vocab-word" data-word="compensation">compensation</span>, inadequate benefits, poor working conditions and compromised employee <span class="vocab-word" data-word="morale">morale</span> and attitudes (Maroudas et al., 2008).</p>
+                
+                <p><span class="para-label">E</span>Ng and Sorensen (2008) demonstrated that when managers provide recognition to employees, motivate employees to work together, and remove obstacles preventing effective performance, employees feel more obligated to stay with the company. This was <span class="vocab-word" data-word="succinctly">succinctly</span> summarized by Michel et al. (2013): ‘[P]roviding support to employees gives them the confidence to perform their jobs better and the motivation to stay with the organization.’ Hospitality organizations can therefore enhance employee motivation and <span class="vocab-word" data-word="retention">retention</span> through the development and improvement of their working conditions. These conditions are inherently linked to the working environment.</p>
+                
+                <p><span class="para-label">F</span>While it seems likely that employees’ reactions to their job characteristics could be affected by a <span class="vocab-word" data-word="predisposition">predisposition</span> to view their work environment negatively, no evidence exists to support this hypothesis (Spector et al., 2000). However, given the opportunity, many people will find something to complain about in relation to their workplace (Poulston, 2009). There is a strong link between the perceptions of employees and particular factors of their work environment that are separate from the work itself, including company policies, salary and vacations.</p>
+                
+                <p><span class="para-label">G</span>Such conditions are particularly troubling for the luxury hotel market, where high-quality service, requiring a <span class="vocab-word" data-word="sophisticated">sophisticated</span> approach to HRM, is recognized as a critical source of competitive advantage (Maroudas et al., 2008). In a real sense, the services of hotel employees represent their industry (Schneider and Bowen, 1993). This representation has commonly been limited to guest experiences. This suggests that there has been a <span class="vocab-word" data-word="dichotomy">dichotomy</span> between the guest environment provided in luxury hotels and the working conditions of their employees.</p>
+                
+                <p><span class="para-label">H</span>It is therefore essential for hotel management to develop HRM practices that enable them to inspire and retain <span class="vocab-word" data-word="competent">competent</span> employees. This requires an understanding of what motivates employees at different levels of management and different stages of their careers (Enz and Siguaw, 2000). This implies that it is beneficial for hotel managers to understand what practices are most favorable to increase employee satisfaction and retention.</p>
+                
+                <p><span class="para-label">I</span>Herzberg (1966) proposes that people have two major types of needs, the first being <span class="vocab-word" data-word="extrinsic">extrinsic</span> motivation factors relating to the context in which work is performed, rather than the work itself. These include working conditions and job security. When these factors are unfavorable, job dissatisfaction may result. Significantly, though, just fulfilling these needs does not result in satisfaction, but only in the reduction of dissatisfaction (Maroudas et al., 2008).</p>
+                
+                <p><span class="para-label">J</span>Employees also have <span class="vocab-word" data-word="intrinsic">intrinsic</span> motivation needs or motivators, which include such factors as achievement and recognition. Unlike extrinsic factors, motivator factors may ideally result in job satisfaction (Maroudas et al., 2008). Herzberg’s (1966) theory discusses the need for a ‘balance’ of these two types of needs.</p>
+                
+                <p><span class="para-label">K</span>The impact of fun as a motivating factor at work has also been explored. For example, Tews, Michel and Stafford (2013) conducted a study focusing on staff from a chain of themed restaurants in the United States. It was found that fun activities had a favorable impact on performance and manager support for fun had a favorable impact in reducing turnover. Their findings support the view that fun may indeed have a beneficial effect, but the framing of that fun must be carefully aligned with both organizational goals and employee characteristics. ‘Managers must learn how to achieve the delicate balance of allowing employees the freedom to enjoy themselves at work while simultaneously maintaining high levels of performance’ (Tews et al., 2013).</p>
+                
+                <p><span class="para-label">L</span>Deery (2008) has recommended several actions that can be adopted at the organizational level to retain good staff as well as assist in balancing work and family life. Those particularly appropriate to the hospitality industry include allowing adequate breaks during the working day, staff functions that involve families, and providing health and well-being opportunities.</p>
+            </div>
+        </div>
+
+        <!-- Draggable Splitter -->
+        <div id="splitter" class="splitter relative flex items-center justify-center group">
+            <div class="w-1 h-8 bg-purple-300 rounded-full opacity-50 group-hover:bg-purple-600 transition-colors"></div>
+        </div>
+
+        <!-- Right Pane: Questions -->
+        <div id="right-pane" class="pane">
+            <div id="questions-section" class="max-w-3xl mx-auto space-y-8 pb-10">
+
+                <!-- Q27-31: Matching Researchers -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-purple-100">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-purple-100 text-purple-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 27–31</span>
+                        <h4 class="font-bold text-gray-800">Matching Researchers</h4>
+                    </div>
+                    <p class="mb-5 text-gray-700 bg-purple-50/50 p-4 rounded-lg border border-purple-100 text-sm leading-relaxed">
+                        Match each statement with the correct researcher, <strong>A–F</strong>.<br>
+                        <em>Write the correct letter, <strong>A–F</strong>, in the fields below. NB You may use any letter more than once.</em>
+                    </p>
+                    
+                    <table class="researchers-table mb-5">
+                        <tr><td>A</td><td>Pfeffer</td></tr>
+                        <tr><td>B</td><td>Lucas</td></tr>
+                        <tr><td>C</td><td>Maroudas et al.</td></tr>
+                        <tr><td>D</td><td>Ng and Sorensen</td></tr>
+                        <tr><td>E</td><td>Enz and Siguaw</td></tr>
+                        <tr><td>F</td><td>Deery</td></tr>
+                    </table>
+                    
+                    <div class="space-y-4">
+                        <div class="q-item" id="container-q27">
+                            <p class="text-gray-800 font-medium flex flex-wrap items-center gap-2">
+                                <span class="font-bold text-purple-700">27</span> Hotel managers need to know what would encourage good staff to remain:
+                                <select name="q27" class="select-input">
+                                    <option value="">-- Choose Researcher --</option>
+                                    <option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option><option value="e">E</option><option value="f">F</option>
+                                </select>
+                            </p>
+                        </div>
+                        <div class="q-item" id="container-q28">
+                            <p class="text-gray-800 font-medium flex flex-wrap items-center gap-2">
+                                <span class="font-bold text-purple-700">28</span> The actions of managers may make staff feel they shouldn’t move to a different employer:
+                                <select name="q28" class="select-input">
+                                    <option value="">-- Choose Researcher --</option>
+                                    <option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option><option value="e">E</option><option value="f">F</option>
+                                </select>
+                            </p>
+                        </div>
+                        <div class="q-item" id="container-q29">
+                            <p class="text-gray-800 font-medium flex flex-wrap items-center gap-2">
+                                <span class="font-bold text-purple-700">29</span> Little is done in the hospitality industry to help workers improve their skills:
+                                <select name="q29" class="select-input">
+                                    <option value="">-- Choose Researcher --</option>
+                                    <option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option><option value="e">E</option><option value="f">F</option>
+                                </select>
+                            </p>
+                        </div>
+                        <div class="q-item" id="container-q30">
+                            <p class="text-gray-800 font-medium flex flex-wrap items-center gap-2">
+                                <span class="font-bold text-purple-700">30</span> Staff are less likely to change jobs if cooperation is encouraged:
+                                <select name="q30" class="select-input">
+                                    <option value="">-- Choose Researcher --</option>
+                                    <option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option><option value="e">E</option><option value="f">F</option>
+                                </select>
+                            </p>
+                        </div>
+                        <div class="q-item" id="container-q31">
+                            <p class="text-gray-800 font-medium flex flex-wrap items-center gap-2">
+                                <span class="font-bold text-purple-700">31</span> Dissatisfaction with pay is not the only reason why hospitality workers change jobs:
+                                <select name="q31" class="select-input">
+                                    <option value="">-- Choose Researcher --</option>
+                                    <option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option><option value="e">E</option><option value="f">F</option>
+                                </select>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="27-31">Check Answers</button>
+                    </div>
+                </div>
+
+                <!-- Q32-35: YES / NO / NOT GIVEN -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-purple-100">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-purple-100 text-purple-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 32–35</span>
+                        <h4 class="font-bold text-gray-800">YES / NO / NOT GIVEN</h4>
+                    </div>
+                    <p class="mb-5 text-gray-700 bg-purple-50/50 p-4 rounded-lg border border-purple-100 text-sm leading-relaxed">
+                        Do the following statements agree with the claims of the writer in the Reading Passage?<br>
+                        <strong>YES</strong> — if the statement agrees with the claims of the writer<br>
+                        <strong>NO</strong> — if the statement contradicts the claims of the writer<br>
+                        <strong>NOT GIVEN</strong> — if it is impossible to say what the writer thinks about this
+                    </p>
+
+                    <div class="space-y-4">
+                        <!-- Q32 -->
+                        <div class="q-item" id="container-q32">
+                            <p class="mb-3 text-gray-800 font-medium"><span class="font-bold text-purple-700 mr-2">32</span> One reason for high staff turnover in the hospitality industry is poor morale.</p>
+                            <div class="custom-radio-group">
+                                <label class="custom-radio-label"><input type="radio" name="q32" value="yes"><span>YES</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q32" value="no"><span>NO</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q32" value="not given"><span>NOT GIVEN</span></label>
+                            </div>
+                        </div>
+
+                        <!-- Q33 -->
+                        <div class="q-item" id="container-q33">
+                            <p class="mb-3 text-gray-800 font-medium"><span class="font-bold text-purple-700 mr-2">33</span> Research has shown that staff have a tendency to dislike their workplace.</p>
+                            <div class="custom-radio-group">
+                                <label class="custom-radio-label"><input type="radio" name="q33" value="yes"><span>YES</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q33" value="no"><span>NO</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q33" value="not given"><span>NOT GIVEN</span></label>
+                            </div>
+                        </div>
+
+                        <!-- Q34 -->
+                        <div class="q-item" id="container-q34">
+                            <p class="mb-3 text-gray-800 font-medium"><span class="font-bold text-purple-700 mr-2">34</span> An improvement in working conditions and job security makes staff satisfied with their jobs.</p>
+                            <div class="custom-radio-group">
+                                <label class="custom-radio-label"><input type="radio" name="q34" value="yes"><span>YES</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q34" value="no"><span>NO</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q34" value="not given"><span>NOT GIVEN</span></label>
+                            </div>
+                        </div>
+
+                        <!-- Q35 -->
+                        <div class="q-item" id="container-q35">
+                            <p class="mb-3 text-gray-800 font-medium"><span class="font-bold text-purple-700 mr-2">35</span> Staff should be allowed to choose when they take breaks during the working day.</p>
+                            <div class="custom-radio-group">
+                                <label class="custom-radio-label"><input type="radio" name="q35" value="yes"><span>YES</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q35" value="no"><span>NO</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q35" value="not given"><span>NOT GIVEN</span></label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="32-35">Check Answers</button>
+                    </div>
+                </div>
+
+                <!-- Q36-40: Summary Completion -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-purple-100">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-purple-100 text-purple-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 36–40</span>
+                        <h4 class="font-bold text-gray-800">Summary Completion</h4>
+                    </div>
+                    <p class="mb-5 text-gray-700 bg-purple-50/50 p-4 rounded-lg border border-purple-100 text-sm leading-relaxed">
+                        Complete the summary below.<br>
+                        Choose <strong>ONE WORD ONLY</strong> from the passage for each answer.<br>
+                        <em>Write your answers in the corresponding fields below.</em>
+                    </p>
+                    
+                    <div class="summary-block">
+                        <h5>Fun at work</h5>
+                        <p class="mb-4">
+                            Tews, Michel and Stafford carried out research on staff in an American chain of 
+                            <span id="container-q36" class="inline-block mx-1">
+                                <strong class="text-purple-700 text-sm mr-1">36</strong>
+                                <input type="text" name="q36" class="text-input text-input-word" placeholder="________" autocomplete="off" spellcheck="false">
+                            </span>. 
+                            They discovered that activities designed for staff to have fun improved their 
+                            <span id="container-q37" class="inline-block mx-1">
+                                <strong class="text-purple-700 text-sm mr-1">37</strong>
+                                <input type="text" name="q37" class="text-input text-input-word" placeholder="________" autocomplete="off" spellcheck="false">
+                            </span>, 
+                            and that management involvement led to lower staff 
+                            <span id="container-q38" class="inline-block mx-1">
+                                <strong class="text-purple-700 text-sm mr-1">38</strong>
+                                <input type="text" name="q38" class="text-input text-input-word" placeholder="________" autocomplete="off" spellcheck="false">
+                            </span>. 
+                            They also found that the activities needed to fit with both the company’s 
+                            <span id="container-q39" class="inline-block mx-1">
+                                <strong class="text-purple-700 text-sm mr-1">39</strong>
+                                <input type="text" name="q39" class="text-input text-input-word" placeholder="________" autocomplete="off" spellcheck="false">
+                            </span> 
+                            and the 
+                            <span id="container-q40" class="inline-block mx-1">
+                                <strong class="text-purple-700 text-sm mr-1">40</strong>
+                                <input type="text" name="q40" class="text-input text-input-word" placeholder="________" autocomplete="off" spellcheck="false">
+                            </span> 
+                            of the staff. A balance was required between a degree of freedom and maintaining work standards.
+                        </p>
+                    </div>
+
+                    <div class="mt-4 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="36-40">Check Answers</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Highlight Selection Tooltip -->
+<div id="highlight-tooltip" class="highlight-tooltip">Highlight Text</div>
+
+<!-- Immersive Vocabulary Details Card -->
+<div id="vocab-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
+    <div class="bg-white rounded-2xl shadow-2xl p-5 sm:p-8 w-full max-w-md relative transform transition-all scale-95 opacity-0" id="vocab-modal-content">
+        <button id="close-vocab-modal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-full w-8 h-8 flex items-center justify-center">&times;</button>
+        <div class="flex items-center mb-6 border-b pb-4 mt-2">
+            <h3 id="vocab-word" class="text-2xl sm:text-3xl font-extrabold text-purple-950 capitalize tracking-tight"></h3>
+        </div>
+        <div class="flex items-center mb-5">
+            <button id="play-audio-btn" class="flex items-center justify-center h-10 w-10 sm:h-12 sm:w-12 shrink-0 rounded-full bg-purple-50 text-purple-700 hover:bg-purple-600 hover:text-white mr-4 transition-all shadow-sm border border-purple-200">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>
+            </button>
+            <p id="vocab-pronunciation-text" class="text-gray-500 font-mono text-base sm:text-lg bg-gray-50 px-3 py-1 rounded-md border border-gray-100"></p>
+        </div>
+        <p id="vocab-meaning" class="text-gray-700 text-base sm:text-lg leading-relaxed"></p>
+    </div>
+</div>
+
+<!-- Warning / Notice Modal Overlay -->
+<div id="alert-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-[80]">
+    <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm relative transform transition-all scale-95 opacity-0 text-center" id="alert-modal-content">
+        <div id="alert-icon-container" class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 mb-4">
+            <svg class="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        </div>
+        <h3 id="alert-title" class="text-lg font-medium text-gray-900 mb-2">Notice</h3>
+        <p id="alert-message" class="text-sm text-gray-500 mb-6"></p>
+        <button id="close-alert-btn" class="w-full inline-flex justify-center rounded-md px-4 py-2 bg-purple-700 text-white font-medium hover:bg-purple-800 text-sm transition-colors">Got it</button>
+    </div>
+</div>
+
+<script>
+const vocabulary = {
+    'underdeveloped': { meaning: 'Not fully grown, advanced, or structured; historically low standard.', phonetic: '/ˌʌn.də.dɪˈvel.əpt/' },
+    'foster': { meaning: 'To encourage or promote the development or growth of something desirable.', phonetic: '/ˈfɒs.tər/' },
+    'turnover': { meaning: 'The rate at which employees leave a workforce and are replaced.', phonetic: '/ˈtɜːnˌəʊ.və/' },
+    'compensation': { meaning: 'The money and benefits received by an employee in exchange for their labor.', phonetic: '/ˌcɒm.pənˈseɪ.ʃən/' },
+    'morale': { meaning: 'The level of individual confidence, spirit, and enthusiasm of employees.', phonetic: '/məˈrɑːl/' },
+    'succinctly': { meaning: 'In a brief and clearly expressed manner; concisely.', phonetic: '/səkˈsɪŋkt.li/' },
+    'retention': { meaning: 'The continued possession, use, or control of something; keeping staff.', phonetic: '/rɪˈten.ʃən/' },
+    'predisposition': { meaning: 'A liability or tendency to hold a view or suffer from a condition beforehand.', phonetic: '/ˌpriː.dɪs.pəˈzɪʃ.ən/' },
+    'sophisticated': { meaning: 'Developed to a high degree of complexity; highly advanced.', phonetic: '/səˈfɪs.tɪ.keɪ.tɪd/' },
+    'dichotomy': { meaning: 'A division or contrast between two things that are represented as being opposed or entirely different.', phonetic: '/daɪˈkɒt.ə.mi/' },
+    'competent': { meaning: 'Having the necessary ability, knowledge, or skill to do something successfully.', phonetic: '/ˈcɒm.pɪ.tənt/' },
+    'extrinsic': { meaning: 'Originating from outside; environmental work factors like salary and policies.', phonetic: '/ekˈstrɪn.zɪk/' },
+    'intrinsic': { meaning: 'Belonging naturally; internal motivators like achievement and self-actualization.', phonetic: '/ɪnˈtrɪn.zɪk/' }
+};
+
+const ANSWERS = {
+    q27: "e", 
+    q28: "d", 
+    q29: "b", 
+    q30: "d", 
+    q31: "c", 
+    q32: "yes", 
+    q33: "no", 
+    q34: "no", 
+    q35: "not given",
+    q36: "restaurants", 
+    q37: "performance", 
+    q38: "turnover", 
+    q39: "goals", 
+    q40: "characteristics"
+};
+
+const RESEARCHERS_MAP = {
+    a: "Pfeffer",
+    b: "Lucas",
+    c: "Maroudas et al.",
+    d: "Ng and Sorensen",
+    e: "Enz and Siguaw",
+    f: "Deery"
+};
+
+const explanations = {
+    q27: "Enz and Siguaw (2000) point out that retention 'requires an understanding of what motivates employees at different levels of management and different stages of their careers'—meaning managers must understand what encourages quality staff to remain. Answer: E.",
+    q28: "Ng and Sorensen (2008) demonstrated that specific managerial practices (providing recognition, motivating teamwork, removing obstacles) make employees 'feel more obligated to stay with the company'. Answer: D.",
+    q29: "Lucas (2002) states that 'the substance of HRM practices does not appear to be designed to... represent a managerial approach that enables developing and drawing out the full potential of people'—meaning very little is done to develop/improve skills. Answer: B.",
+    q30: "Ng and Sorensen (2008) showed that when managers 'motivate employees to work together' (cooperation), they are more likely to stay, reducing the likelihood of changing jobs. Answer: D.",
+    q31: "Maroudas et al. (2008) cite high employee turnover reasons as including low compensation (salary), alongside inadequate benefits, poor working conditions, and compromised employee morale. This means pay dissatisfaction is not the sole reason. Answer: C.",
+    q32: "YES. Paragraph D states: 'high employee turnover has been a recurring problem... Among the many cited reasons are low compensation... and compromised employee morale and attitudes (Maroudas et al., 2008).' This perfectly matches the statement.",
+    q33: "NO. Paragraph D states that 'employees may be broadly satisfied with many aspects of their work' (Lucas, 2002). Furthermore, Spector et al. (2000) found 'no evidence exists to support' the hypothesis that reactions are affected by a negative predisposition. Therefore, they do not inherently tend to dislike their workplaces. Answer: NO.",
+    q34: "NO. Paragraph I outlines Herzberg's theory that fulfilling extrinsic factors (working conditions/job security) 'does not result in satisfaction, but only in the reduction of dissatisfaction.' Satisfiers are instead intrinsic motivator factors. Answer: NO.",
+    q35: "NOT GIVEN. Paragraph L mentions 'allowing adequate breaks during the working day' (Deery, 2008), but the passage makes no comment on whether employees should be allowed to choose *when* to take those breaks.",
+    q36: "Paragraph K mentions: 'Tews, Michel and Stafford (2013) conducted a study focusing on staff from a chain of themed restaurants in the United States.' Answer: restaurants.",
+    q37: "Paragraph K notes: 'It was found that fun activities had a favorable impact on performance'. Answer: performance.",
+    q38: "Paragraph K notes: 'manager support for fun had a favorable impact in reducing turnover.' Answer: turnover.",
+    q39: "Paragraph K states: 'the framing of that fun must be carefully aligned with both organizational goals...'. Answer: goals.",
+    q40: "Paragraph K states: '...and employee characteristics.' Answer: characteristics."
+};
+
+const TOTAL_QUESTIONS = 14;
+
+document.addEventListener('DOMContentLoaded', () => {
+    const app = {
+        userAnswers: {}, answersChecked: {}, currentFontSize: 17, timeRemaining: 60 * 60,
+        leftPane: document.getElementById('left-pane'),
+        rightPane: document.getElementById('right-pane'),
+        splitter: document.getElementById('splitter'),
+        highlightTooltip: document.getElementById('highlight-tooltip'),
+        vocabModal: document.getElementById('vocab-modal'),
+        vocabModalContent: document.getElementById('vocab-modal-content'),
+        closeVocabModalBtn: document.getElementById('close-vocab-modal'),
+        vocabWordEl: document.getElementById('vocab-word'),
+        vocabMeaningEl: document.getElementById('vocab-meaning'),
+        vocabPronunciationText: document.getElementById('vocab-pronunciation-text'),
+        playAudioBtn: document.getElementById('play-audio-btn'),
+        clearHighlightsBtn: document.getElementById('clear-highlights-btn'),
+        progressText: document.getElementById('progress-text'),
+        timerEl: document.getElementById('timer'),
+        alertModal: document.getElementById('alert-modal'),
+        alertModalContent: document.getElementById('alert-modal-content'),
+        closeAlertBtn: document.getElementById('close-alert-btn'),
+        alertTitleEl: document.getElementById('alert-title'),
+        alertMessageEl: document.getElementById('alert-message'),
+        alertIconContainer: document.getElementById('alert-icon-container'),
+
+        init() { 
+            this.setupEventListeners(); 
+            this.initSplitter(); 
+            this.initHighlighter(); 
+            this.updateCheckButtonsState(); 
+            this.startTimer(); 
+        },
+
+        startTimer() {
+            const interval = setInterval(() => {
+                if (this.timeRemaining <= 0) { 
+                    clearInterval(interval); 
+                    this.timerEl.textContent = "00:00"; 
+                    this.showAlert("Time's Up!", "Your 60 minutes have expired.", "warning"); 
+                    return; 
+                }
+                this.timeRemaining--;
+                const m = Math.floor(this.timeRemaining/60).toString().padStart(2,'0');
+                const s = (this.timeRemaining%60).toString().padStart(2,'0');
+                this.timerEl.textContent = `${m}:${s}`;
+                if (this.timeRemaining <= 300) this.timerEl.classList.add('text-red-500');
+            }, 1000);
+        },
+
+        setupEventListeners() {
+            document.getElementById('increase-font-btn').addEventListener('click', () => this.changeFontSize(1));
+            document.getElementById('decrease-font-btn').addEventListener('click', () => this.changeFontSize(-1));
+            this.clearHighlightsBtn.addEventListener('click', () => this.leftPane.querySelectorAll('mark').forEach(m => m.replaceWith(document.createTextNode(m.textContent))));
+            this.closeVocabModalBtn.addEventListener('click', () => this.closeModal());
+            this.vocabModal.addEventListener('click', (e) => { if (e.target === this.vocabModal) this.closeModal(); });
+            
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') { 
+                    if (!this.vocabModal.classList.contains('hidden')) this.closeModal(); 
+                    if (!this.alertModal.classList.contains('hidden')) this.closeAlert(); 
+                }
+                if ((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='f') { 
+                    e.preventDefault(); 
+                    this.showAlert("Action Disabled","The 'Find' function is disabled to simulate real test conditions.","warning"); 
+                }
+            });
+            
+            document.addEventListener('visibilitychange', () => { 
+                if (document.hidden && this.timeRemaining > 0) {
+                    this.showAlert("Warning","Please do not switch tabs during the exam.","warning"); 
+                }
+            });
+            
+            window.addEventListener('beforeunload', (e) => { 
+                if (this.timeRemaining > 0 && this.timeRemaining < 60*60) { 
+                    e.preventDefault(); 
+                    e.returnValue=''; 
+                } 
+            });
+            
+            this.closeAlertBtn.addEventListener('click', () => this.closeAlert());
+            this.alertModal.addEventListener('click', (e) => { if (e.target === this.alertModal) this.closeAlert(); });
+            
+            document.body.addEventListener('input', (e) => {
+                if (e.target.tagName==='INPUT' && e.target.type==='text') {
+                    this.userAnswers[e.target.name] = e.target.value.trim().toLowerCase();
+                    e.target.classList.remove('correct-answer','incorrect-answer');
+                    this.updateCheckButtonsState(); 
+                    this.updateProgress();
+                }
+            });
+            
+            document.body.addEventListener('change', (e) => {
+                if (e.target.tagName==='SELECT') {
+                    this.userAnswers[e.target.name] = e.target.value;
+                    e.target.classList.remove('correct-answer','incorrect-answer');
+                    this.updateCheckButtonsState(); 
+                    this.updateProgress();
+                } else if (e.target.type === 'radio') {
+                    this.userAnswers[e.target.name] = e.target.value;
+                    const groupRadios = document.querySelectorAll(`input[name="${e.target.name}"]`);
+                    groupRadios.forEach(radio => {
+                        const label = radio.closest('label');
+                        if (label) label.classList.remove('correct-answer', 'incorrect-answer');
+                    });
+                    this.updateCheckButtonsState(); 
+                    this.updateProgress();
+                }
+            });
+            
+            this.leftPane.addEventListener('click', (e) => {
+                if (e.target.classList.contains('vocab-word')) this.openVocabModal(e.target.dataset.word);
+                if (e.target.tagName==='MARK') e.target.replaceWith(document.createTextNode(e.target.textContent));
+            });
+            
+            document.querySelectorAll('.check-btn').forEach(btn => btn.addEventListener('click', (e) => this.checkAnswers(e.target.dataset.range, e.target)));
+            
+            this.playAudioBtn.addEventListener('click', () => {
+                const word = this.vocabWordEl.textContent; if (!word) return;
+                if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+                this.playAudioBtn.classList.remove('text-purple-700','bg-purple-50'); 
+                this.playAudioBtn.classList.add('bg-purple-600','text-white');
+                if ('speechSynthesis' in window) { 
+                    const u = new SpeechSynthesisUtterance(word); 
+                    u.lang = 'en-GB'; 
+                    u.rate = 0.9; 
+                    u.onend = () => this.resetAudioBtn(); 
+                    u.onerror = () => this.resetAudioBtn(); 
+                    window.speechSynthesis.speak(u); 
+                } else {
+                    setTimeout(() => this.resetAudioBtn(), 500);
+                }
+            });
+        },
+
+        updateProgress() { 
+            let count = 0;
+            for (let k in ANSWERS) { 
+                if ((this.userAnswers[k]||"").trim()) count++; 
+            }
+            this.progressText.textContent = `${Math.min(count, TOTAL_QUESTIONS)} / ${TOTAL_QUESTIONS} Answered`; 
+        },
+        
+        resetAudioBtn() { 
+            this.playAudioBtn.classList.add('text-purple-700','bg-purple-50'); 
+            this.playAudioBtn.classList.remove('bg-purple-600','text-white'); 
+        },
+        
+        changeFontSize(d) { 
+            this.currentFontSize = Math.max(14, Math.min(26, this.currentFontSize+d)); 
+            document.documentElement.style.setProperty('--app-font-size', `${this.currentFontSize}px`); 
+        },
+
+        openVocabModal(w) {
+            const d = vocabulary[w]; if(!d) return;
+            this.vocabWordEl.textContent = w; 
+            this.vocabMeaningEl.textContent = d.meaning; 
+            this.vocabPronunciationText.textContent = d.phonetic || '';
+            this.vocabModal.classList.remove('hidden');
+            setTimeout(() => {
+                this.vocabModalContent.classList.remove('scale-95','opacity-0'); 
+                this.vocabModalContent.classList.add('scale-100','opacity-100');
+            }, 10);
+        },
+        
+        closeModal() {
+            if('speechSynthesis' in window) window.speechSynthesis.cancel();
+            this.vocabModalContent.classList.remove('scale-100','opacity-100'); 
+            this.vocabModalContent.classList.add('scale-95','opacity-0');
+            this.resetAudioBtn(); 
+            setTimeout(() => this.vocabModal.classList.add('hidden'), 200);
+        },
+        
+        showAlert(title, message, type='error') {
+            this.alertTitleEl.textContent = title; 
+            this.alertMessageEl.textContent = message;
+            const c = type === 'warning' ? 'yellow' : 'red';
+            this.alertIconContainer.className = `mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-${c}-100 mb-4`;
+            this.alertIconContainer.innerHTML = `<svg class="h-6 w-6 text-${c}-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>`;
+            this.alertModal.classList.remove('hidden');
+            setTimeout(() => {
+                this.alertModalContent.classList.remove('scale-95','opacity-0'); 
+                this.alertModalContent.classList.add('scale-100','opacity-100');
+            }, 10);
+        },
+        
+        closeAlert() {
+            this.alertModalContent.classList.remove('scale-100','opacity-100'); 
+            this.alertModalContent.classList.add('scale-95','opacity-0');
+            setTimeout(() => this.alertModal.classList.add('hidden'), 200);
+        },
+
+        isRangeAnswered(range) {
+            const [s,e] = range.split('-').map(Number);
+            for (let i = s; i <= e; i++) {
+                if (!(this.userAnswers[`q${i}`]||"").trim()) return false;
+            }
+            return true;
+        },
+
+        updateCheckButtonsState() {
+            document.querySelectorAll('.check-btn').forEach(btn => {
+                const range = btn.dataset.range;
+                if (this.answersChecked[range]) {
+                    btn.className = 'check-btn bg-purple-950 text-white font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-pointer';
+                    btn.textContent = 'Reset Answers';
+                    return;
+                }
+                const allDone = this.isRangeAnswered(range);
+                btn.className = allDone ? 'check-btn bg-purple-700 hover:bg-purple-800 text-white font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-pointer transform hover:-translate-y-0.5' : 'check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80';
+                btn.textContent = 'Check Answers';
+            });
+        },
+
+        checkAnswers(range, btn) {
+            if (this.answersChecked[range]) {
+                this.answersChecked[range] = false;
+                const [s,e] = range.split('-').map(Number);
+                for (let i = s; i <= e; i++) {
+                    const qId = `q${i}`; 
+                    this.userAnswers[qId] = '';
+                    const selectEl = document.querySelector(`select[name="${qId}"]`);
+                    if (selectEl) {
+                        selectEl.value = '';
+                        selectEl.classList.remove('correct-answer','incorrect-answer');
+                    }
+                    const inputEl = document.querySelector(`input[name="${qId}"][type="text"]`);
+                    if (inputEl) {
+                        inputEl.value = '';
+                        inputEl.placeholder = '________';
+                        inputEl.classList.remove('correct-answer','incorrect-answer');
+                    }
+                    const groupRadios = document.querySelectorAll(`input[name="${qId}"][type="radio"]`);
+                    if (groupRadios.length > 0) {
+                        groupRadios.forEach(radio => {
+                            radio.checked = false;
+                            const label = radio.closest('label');
+                            if (label) label.classList.remove('correct-answer', 'incorrect-answer');
+                        });
+                    }
+                    document.getElementById(`expl-${qId}`)?.remove();
+                }
+                this.updateCheckButtonsState(); 
+                this.updateProgress(); 
+                return;
+            }
+            if (!this.isRangeAnswered(range)) {
+                this.showAlert("Incomplete Answers","Please answer all questions in this section before checking.","warning");
+                return;
+            }
+            this.answersChecked[range] = true; 
+            this.updateCheckButtonsState();
+
+            const [s,e] = range.split('-').map(Number);
+
+            for (let i = s; i <= e; i++) {
+                const qId = `q${i}`;
+                const userAns = (this.userAnswers[qId]||"").toLowerCase().trim();
+                const correctList = ANSWERS[qId].toLowerCase().split('|');
+                const isCorrect = correctList.includes(userAns);
+                let feedbackHTML = '';
+                
+                const selectEl = document.querySelector(`select[name="${qId}"]`);
+                if (selectEl) {
+                    selectEl.classList.remove('correct-answer','incorrect-answer');
+                    selectEl.classList.add(isCorrect ? 'correct-answer' : 'incorrect-answer');
+                    if (!isCorrect) {
+                        const correctVal = correctList[0].toUpperCase();
+                        const researcherName = RESEARCHERS_MAP[correctList[0]] || "";
+                        feedbackHTML = `<span class="correct-badge">Correct Answer: ${correctVal} (${researcherName})</span><br>`;
+                    }
+                }
+                
+                const inputEl = document.querySelector(`input[name="${qId}"][type="text"]`);
+                if (inputEl) {
+                    inputEl.classList.remove('correct-answer','incorrect-answer');
+                    inputEl.classList.add(isCorrect ? 'correct-answer' : 'incorrect-answer');
+                    if (!isCorrect) {
+                        inputEl.value = '';
+                        inputEl.placeholder = correctList[0];
+                        feedbackHTML = `<span class="correct-badge">Correct Answer: ${correctList[0]}</span><br>`;
+                    }
+                }
+
+                const radios = document.querySelectorAll(`input[name="${qId}"][type="radio"]`);
+                if (radios.length > 0) {
+                    radios.forEach(radio => {
+                        const label = radio.closest('label');
+                        if (label) label.classList.remove('correct-answer', 'incorrect-answer');
+                        if (correctList.includes(radio.value.toLowerCase())) {
+                            if (label) label.classList.add('correct-answer');
+                        } else if (radio.value.toLowerCase() === userAns) {
+                            if (label) label.classList.add('incorrect-answer');
+                        }
+                    });
+                    if (!isCorrect) {
+                        feedbackHTML = `<span class="correct-badge">Correct Answer: ${correctList[0].toUpperCase()}</span><br>`;
+                    }
+                }
+
+                if (explanations[qId] && !document.getElementById(`expl-${qId}`)) {
+                    const div = document.createElement('div'); 
+                    div.id = `expl-${qId}`; 
+                    div.className = 'explanation-box';
+                    div.innerHTML = `${feedbackHTML}<strong>Explanation:</strong> ${explanations[qId]}`;
+                    const container = document.getElementById(`container-${qId}`);
+                    if (container) {
+                        const wrap = container.closest('.q-item') || container.closest('p') || container; 
+                        wrap.insertAdjacentElement('afterend', div);
+                    }
+                }
+            }
+        },
+
+        initSplitter() {
+            let isDragging = false; 
+            const panes = document.getElementById('content-panes');
+            this.splitter.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                isDragging = true;
+                document.body.style.cursor = 'col-resize';
+            });
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging || window.innerWidth <= 768) return;
+                const rect = panes.getBoundingClientRect(); 
+                const newLeft = e.clientX - rect.left;
+                if (newLeft > 200 && newLeft < rect.width - 200) {
+                    panes.style.gridTemplateColumns = `${(newLeft/rect.width)*100}% 5px 1fr`;
+                }
+            });
+            document.addEventListener('mouseup', () => {
+                if (isDragging) {
+                    isDragging = false;
+                    document.body.style.cursor = 'default';
+                }
+            });
+        },
+
+        initHighlighter() {
+            document.body.addEventListener('mouseup', (e) => {
+                const sel = window.getSelection(); 
+                const text = sel.toString().trim();
+                if (text.length > 0) {
+                    const range = sel.getRangeAt(0);
+                    if (!this.leftPane.contains(range.commonAncestorContainer) && !this.rightPane.contains(range.commonAncestorContainer)) {
+                        this.highlightTooltip.style.display = 'none';
+                        return;
+                    }
+                    this.highlightTooltip.style.left = `${e.pageX-30}px`; 
+                    this.highlightTooltip.style.top = `${e.pageY-40}px`; 
+                    this.highlightTooltip.style.display = 'block';
+                    this.highlightTooltip.onclick = () => {
+                        const mark = document.createElement('mark');
+                        try { 
+                            range.surroundContents(mark); 
+                        } catch (ex) {
+                            this.showAlert("Highlight Error", "Please select text within a single element.", "warning");
+                        } finally {
+                            sel.removeAllRanges();
+                            this.highlightTooltip.style.display = 'none';
+                        }
+                    };
+                } else {
+                    this.highlightTooltip.style.display = 'none';
+                }
+            });
+            document.body.addEventListener('mousedown', () => {
+                if (window.getSelection().toString().length === 0) this.highlightTooltip.style.display = 'none';
+            });
+        }
+    };
+    app.init();
+});
+</script>
+</body>
+</html>

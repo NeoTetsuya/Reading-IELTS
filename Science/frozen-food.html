@@ -67,7 +67,7 @@
     </div>
     <div class="flex items-center space-x-4">
         <div class="hidden sm:flex flex-col items-end"><span class="text-xs text-gray-500 font-bold uppercase">Progress</span><span id="progress-text" class="text-sm font-semibold text-sky-600">0 / 13 Answered</span></div>
-        <div class="flex items-center bg-gray-100 rounded-lg px-3 py-1.5 border border-gray-200"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span id="timer" class="font-mono font-bold text-gray-700 text-lg">20:00</span></div>
+        <div class="flex items-center bg-gray-100 rounded-lg px-3 py-1.5 border border-gray-200"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span id="timer" class="font-mono font-bold text-gray-700 text-lg">60:00</span></div>
     </div>
     <div class="flex items-center gap-2">
         <button id="clear-highlights-btn" class="hidden sm:flex items-center px-3 py-1.5 rounded bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 text-sm font-medium"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>Clear</button>
@@ -235,7 +235,7 @@
             answersChecked: {},
             currentFontSize: 17,
             totalQuestions: Object.keys(answers).length,
-            timeRemaining: 20 * 60,
+            timeRemaining: 60 * 60,
 
             // Elements
             leftPane: document.getElementById('left-pane'),
@@ -274,7 +274,7 @@
                         clearInterval(interval);
                         this.timerEl.textContent = "00:00";
                         this.timerEl.classList.add('text-red-600');
-                        this.showAlert("Time's Up!", "Your 20 minutes for this reading passage have expired.", "warning");
+                        this.showAlert("Time's Up!", "Your 60 minutes for this reading passage have expired.", "warning");
                         return;
                     }
                     this.timeRemaining--;
@@ -327,7 +327,7 @@
                 });
 
                 window.addEventListener('beforeunload', (e) => {
-                    if (this.timeRemaining > 0 && this.timeRemaining < 20 * 60) {
+                    if (this.timeRemaining > 0 && this.timeRemaining < 60 * 60) {
                         e.preventDefault();
                         e.returnValue = ''; 
                     }

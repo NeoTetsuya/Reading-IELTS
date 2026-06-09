@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IELTS Simulator - Why Companies Should Welcome Disorder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --app-font-size: 17px; }
+        body { font-family: 'Inter', sans-serif; overscroll-behavior: none; background-color: #faf5ff; }
+        .ielts-container { display: grid; grid-template-rows: auto 1fr; height: 100vh; }
+        .content-panes { display: grid; grid-template-columns: 1fr 5px 1fr; overflow: hidden; }
+        .pane { overflow-y: auto; padding: 2rem 3rem; font-size: var(--app-font-size); scroll-behavior: smooth; }
+        #left-pane { background-color: #fdfdfd; }
+        #right-pane { background-color: #faf5ff; }
+        .splitter { background-color: #e9d5ff; cursor: col-resize; z-index: 10; transition: background-color 0.2s; }
+        .splitter:hover, .splitter:active { background-color: #a855f7; }
+        
+        .reading-passage { font-family: 'Merriweather', serif; line-height: 1.95; color: #1e1b4b; text-align: justify; max-width: 800px; margin: 0 auto; }
+        .reading-passage p { margin-bottom: 1.5rem; text-indent: 1.5rem; }
+        .reading-passage h3 { font-family: 'Inter', sans-serif; color: #3b0764; margin-bottom: 0.25rem; font-weight: 700; font-size: 1.5em; text-align: center; text-indent: 0; text-transform: uppercase; letter-spacing: 0.05em; }
+        .reading-passage .subtitle { font-family: 'Inter', sans-serif; color: #7e22ce; font-size: 0.95em; text-align: center; text-indent: 0; margin-bottom: 1.5rem; font-style: italic; }
+        .reading-passage .para-label { font-family: 'Inter', sans-serif; font-weight: 800; color: #581c87; font-size: 0.85em; display: inline-block; margin-right: 0.5rem; background: #f3e8ff; padding: 1px 6px; border-radius: 4px; vertical-align: middle; }
+        
+        .q-item { padding: 1.25rem; border-radius: 0.75rem; transition: all 0.2s; background-color: white; border: 1px solid #e9d5ff; margin-bottom: 1rem; }
+        .text-input { border: 2px solid #e9d5ff; border-radius: 6px; padding: 4px 10px; font-weight: 600; color: #1e1b4b; transition: all 0.2s; text-align: center; background-color: #faf5ff; }
+        .text-input:focus { outline: none; border-color: #a855f7; background-color: #fff; box-shadow: 0 0 0 3px rgba(168,85,247,0.15); }
+        .text-input-word { width: 10rem; text-transform: lowercase; }
+        
+        .select-input { border: 2px solid #e9d5ff; border-radius: 6px; padding: 4px 10px; font-weight: 600; color: #581c87; transition: all 0.2s; background-color: #faf5ff; cursor: pointer; }
+        .select-input:focus { outline: none; border-color: #a855f7; background-color: #fff; box-shadow: 0 0 0 3px rgba(168,85,247,0.15); }
+
+        .custom-radio-group { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem; }
+        .custom-radio-label { display: flex; align-items: center; justify-content: center; padding: 0.5rem 1rem; border: 1.5px solid #e9d5ff; border-radius: 0.5rem; cursor: pointer; background-color: white; flex: 1; min-width: 90px; font-weight: 600; color: #581c87; transition: all 0.2s; }
+        .custom-radio-label input { display: none; }
+        .custom-radio-label:hover { background-color: #faf5ff; border-color: #d8b4fe; }
+        .custom-radio-label:has(input:checked) {
+            background-color: #f3e8ff;
+            border-color: #a855f7;
+            color: #581c87;
+            box-shadow: inset 0 0 0 1px #a855f7;
+        }
+
+        .correct-answer { border-color: #22c55e !important; background-color: #f0fdf4 !important; color: #166534 !important; }
+        .correct-answer span { color: #166534 !important; }
+        .incorrect-answer { border-color: #ef4444 !important; background-color: #fef2f2 !important; color: #991b1b !important; }
+        .incorrect-answer span { color: #991b1b !important; }
+        
+        .explanation-box { animation: fadeIn 0.4s ease-out forwards; margin-top: 0.75rem; padding: 1rem; background-color: #faf5ff; border-left: 4px solid #a855f7; border-radius: 0.5rem; font-size: 0.95rem; color: #581c87; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .explanation-box .correct-badge { display: inline-block; background: #22c55e; color: white; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85em; margin-bottom: 0.5rem; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .vocab-word { color: #7e22ce; font-weight: 600; cursor: pointer; border-bottom: 2px dotted #c084fc; transition: all 0.2s ease-in-out; padding: 0 2px; }
+        .vocab-word:hover { background-color: #f3e8ff; border-bottom-style: solid; border-radius: 2px; }
+        .highlight-tooltip { position: absolute; background-color: #3b0764; color: white; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 500; z-index: 100; cursor: pointer; display: none; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        mark { background-color: #fef08a; border-radius: 3px; padding: 2px 0; cursor: pointer; }
+        mark:hover { background-color: #fca5a5; color: #7f1d1d; }
+        mark:hover::after { content: ' x'; font-weight: bold; font-size: 0.8em; opacity: 0.7; }
+        
+        .notes-block { background: #fdfdfd; border: 1px solid #e9d5ff; border-radius: 0.75rem; padding: 1.5rem; margin-bottom: 1rem; line-height: 2; color: #1e1b4b; }
+        .notes-block h5 { font-family: 'Inter', sans-serif; font-weight: 700; color: #3b0764; font-size: 1em; margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        .notes-block h6 { font-family: 'Inter', sans-serif; font-weight: 700; color: #7e22ce; font-size: 0.92em; margin-top: 0.75rem; margin-bottom: 0.25rem; }
+        .notes-block ul { list-style: disc; padding-left: 1.5rem; }
+        .notes-block li { margin-bottom: 0.25rem; }
+
+        @media (max-width: 768px) {
+            .content-panes { display: flex; flex-direction: column; overflow-y: auto; }
+            .splitter { display: none; }
+            .pane { padding: 1.25rem 1rem; overflow-y: visible; height: auto; }
+            #left-pane { border-bottom: 2px dashed #e9d5ff; padding-bottom: 2rem; }
+            .text-input, .select-input { max-width: 100%; font-size: 0.9em; }
+        }
+    </style>
+</head>
+<body>
+<div id="test-container" class="ielts-container">
+    <header class="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 flex justify-between items-center z-20 shadow-sm flex-wrap gap-3">
+        <div class="flex items-center gap-2 sm:space-x-3">
+            <div class="bg-purple-700 text-white p-1.5 sm:p-2 rounded-lg shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                </svg>
+            </div>
+            <h1 class="text-xl font-bold text-gray-800 hidden sm:block">IELTS Simulator <span class="text-purple-700 font-medium">| Welcome Disorder</span></h1>
+            <h1 class="text-base font-bold text-gray-800 sm:hidden">IELTS <span class="text-purple-700">Disorder Study</span></h1>
+        </div>
+        <div class="flex items-center space-x-4">
+            <div class="hidden sm:flex flex-col items-end">
+                <span class="text-xs text-gray-500 font-bold uppercase tracking-wide">Progress</span>
+                <span id="progress-text" class="text-sm font-semibold text-purple-800 font-mono">0 / 14 Answered</span>
+            </div>
+            <div class="flex items-center bg-gray-100 rounded-lg px-3 py-1.5 border border-gray-200">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span id="timer" class="font-mono font-bold text-gray-700 text-lg">60:00</span>
+            </div>
+        </div>
+        <div class="flex items-center gap-2 sm:space-x-3">
+            <button id="clear-highlights-btn" class="hidden sm:flex items-center justify-center px-3 py-1.5 rounded bg-purple-50 hover:bg-purple-100 text-purple-700 transition-colors focus:outline-none border border-purple-200 text-sm font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                Clear Highlights
+            </button>
+            <div class="flex items-center space-x-1 sm:space-x-2 bg-gray-50 p-1 rounded-lg border border-gray-200">
+                <button id="decrease-font-btn" class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded bg-white shadow-sm hover:bg-gray-100 text-gray-700 transition-colors focus:outline-none font-bold text-sm sm:text-base">A-</button>
+                <button id="increase-font-btn" class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded bg-white shadow-sm hover:bg-gray-100 text-gray-700 transition-colors focus:outline-none font-bold text-sm sm:text-base">A+</button>
+            </div>
+        </div>
+    </header>
+
+    <main id="content-panes" class="content-panes">
+        <!-- Left Pane: Reading Passage -->
+        <div id="left-pane" class="pane relative">
+            <div class="reading-passage text-justify">
+                <h3>Why companies should welcome disorder</h3>
+                <p class="subtitle">An analysis of structured environments, executive perfectionism, and the potential benefits of administrative disorganisation</p>
+
+                <p><span class="para-label">A</span><span class="vocab-word" data-word="organisation">Organisation</span> is big business. Whether it is of our lives – all those inboxes and calendars – or how companies are structured, a multi-billion dollar industry helps to meet this need.</p>
+                <p>We have more strategies for time management, project management and self-organisation than at any other time in human history. We are told that we ought to organize our company, our home life, our week, our day and even our sleep, all as a means to becoming more <span class="vocab-word" data-word="productive">productive</span>. Every week, countless seminars and workshops take place around the world to tell a paying public that they ought to structure their lives in order to achieve this.</p>
+                <p>This <span class="vocab-word" data-word="rhetoric">rhetoric</span> has also crept into the thinking of business leaders and entrepreneurs, much to the delight of self-proclaimed perfectionists with the need to get everything right. The number of business schools and graduates has massively increased over the past 50 years, essentially teaching people how to organise well.</p>
+                
+                <p><span class="para-label">B</span>Ironically, however, the number of businesses that fail has also steadily increased. Work-related stress has increased. A large proportion of workers from all demographics claim to be <span class="vocab-word" data-word="dissatisfied">dissatisfied</span> with the way their work is structured and the way they are managed.</p>
+                <p>This begs the question: what has gone wrong? Why is it that on paper the drive for organisation seems a sure shot for increasing productivity, but in reality falls well short of what is expected?</p>
+                
+                <p><span class="para-label">C</span>This has been a problem for a while now. Frederick Taylor was one of the forefathers of scientific management. Writing in the first half of the 20th century, he designed a number of principles to improve the efficiency of the work process, which have since become widespread in modern companies. So the approach has been around for a while.</p>
+                
+                <p><span class="para-label">D</span>New research suggests that this obsession with efficiency is misguided. The problem is not necessarily the management theories or strategies we use to organise our work; it’s the basic assumptions we hold in approaching how we work. Here it’s the assumption that order is a necessary condition for productivity. This assumption has also fostered the idea that disorder must be <span class="vocab-word" data-word="detrimental">detrimental</span> to organizational productivity. The result is that businesses and people spend time and money organising themselves for the sake of organising, rather than actually looking at the end goal and usefulness of such an effort.</p>
+                
+                <p><span class="para-label">E</span>What’s more, recent studies show that order actually has <span class="vocab-word" data-word="diminishing returns">diminishing returns</span>. Order does increase productivity to a certain extent, but eventually the usefulness of the process of organisation, and the benefit it yields, reduce until the point where any further increase in order reduces productivity. Some argue that in a business, if the cost of formally structuring something outweighs the benefit of doing it, then that thing ought not to be formally structured. Instead, the resources involved can be better used elsewhere.</p>
+                
+                <p><span class="para-label">F</span>In fact, research shows that, when innovating, the best approach is to create an environment <span class="vocab-word" data-word="devoid">devoid</span> of structure and hierarchy and enable everyone involved to engage as one organic group. These environments can lead to new solutions that, under conventionally structured environments (filled with bottlenecks in terms of information flow, power structures, rules, and routines) would never be reached.</p>
+                
+                <p><span class="para-label">G</span>In recent times companies have slowly started to embrace this disorganisation. Many of them embrace it in terms of perception (embracing the idea of disorder, as opposed to fearing it) and in terms of process (putting mechanisms in place to reduce structure).</p>
+                <p>For example, Oticon, a large Danish manufacturer of hearing aids, used what it called a ‘spaghetti’ structure in order to reduce the organisation’s <span class="vocab-word" data-word="rigid">rigid</span> hierarchies. This involved scrapping formal job titles and giving staff huge amounts of ownership over their own time and projects. This approach proved to be highly successful initially, with clear improvements in worker productivity in all facets of the business.</p>
+                <p>In similar fashion, the former chairman of General Electric embraced disorganisation, putting forward the idea of the ‘boundaryless’ organisation. Again, it involves breaking down the barriers between different parts of a company and encouraging virtual collaboration and flexible working. Google and a number of other tech companies have embraced (at least in part) these kinds of flexible structures, facilitated by technology and strong company values which glue people together.</p>
+                
+                <p><span class="para-label">H</span>A word of warning to others thinking of jumping on this <span class="vocab-word" data-word="bandwagon">bandwagon</span>: the evidence so far suggests disorder, much like order, also seems to have diminishing utility, and can also have detrimental effects on performance if overused. Like order, disorder should be embraced only so far as it is useful. But we should not fear it – nor <span class="vocab-word" data-word="venerate">venerate</span> one over the other. This research also shows that we should continually question whether or not our existing assumptions work.</p>
+            </div>
+        </div>
+
+        <!-- Draggable Splitter -->
+        <div id="splitter" class="splitter relative flex items-center justify-center group">
+            <div class="w-1 h-8 bg-purple-200 rounded-full opacity-50 group-hover:bg-purple-600 transition-colors"></div>
+        </div>
+
+        <!-- Right Pane: Questions -->
+        <div id="right-pane" class="pane">
+            <div id="questions-section" class="max-w-3xl mx-auto space-y-8 pb-10">
+
+                <!-- Q27-34: Matching Paragraphs (Headings) -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-purple-200">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-purple-100 text-purple-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 27–34</span>
+                        <h4 class="font-bold text-gray-800">Matching Headings</h4>
+                    </div>
+                    <p class="mb-5 text-gray-700 bg-purple-50/50 p-4 rounded-lg border border-purple-100 text-sm leading-relaxed">
+                        Reading Passage 3 has eight sections, <strong>A–H</strong>.<br>
+                        Choose the correct heading for each section from the list of headings below.<br>
+                        <em>Write the correct Roman numeral, <strong>i–ix</strong>, in the fields below.</em>
+                    </p>
+                    
+                    <div class="mb-6 p-4 bg-purple-50 border border-purple-200 rounded-xl space-y-2 text-sm text-purple-900">
+                        <h5 class="font-bold mb-1 text-purple-950">List of Headings</h5>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1">
+                            <div><strong>i</strong> Complaints about the impact of a certain approach</div>
+                            <div><strong>ii</strong> Fundamental beliefs that are in fact incorrect</div>
+                            <div><strong>iii</strong> Early recommendations concerning business activities</div>
+                            <div><strong>iv</strong> Organisations that put a new approach into practice</div>
+                            <div><strong>v</strong> Companies that have suffered from changing their approach</div>
+                            <div><strong>vi</strong> What people are increasingly expected to do</div>
+                            <div><strong>vii</strong> How to achieve outcomes that are currently impossible</div>
+                            <div><strong>viii</strong> Neither approach guarantees continuous improvement</div>
+                            <div><strong>ix</strong> Evidence that a certain approach can have more disadvantages than advantages</div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div class="q-item" id="container-q27">
+                            <p class="text-gray-800 font-medium flex flex-wrap items-center gap-2">
+                                <span class="font-bold text-purple-700">27</span> Section A:
+                                <select name="q27" class="select-input">
+                                    <option value="">-- Choose Heading --</option>
+                                    <option value="i">i</option><option value="ii">ii</option><option value="iii">iii</option><option value="iv">iv</option><option value="v">v</option><option value="vi">vi</option><option value="vii">vii</option><option value="viii">viii</option><option value="ix">ix</option>
+                                </select>
+                            </p>
+                        </div>
+                        <div class="q-item" id="container-q28">
+                            <p class="text-gray-800 font-medium flex flex-wrap items-center gap-2">
+                                <span class="font-bold text-purple-700">28</span> Section B:
+                                <select name="q28" class="select-input">
+                                    <option value="">-- Choose Heading --</option>
+                                    <option value="i">i</option><option value="ii">ii</option><option value="iii">iii</option><option value="iv">iv</option><option value="v">v</option><option value="vi">vi</option><option value="vii">vii</option><option value="viii">viii</option><option value="ix">ix</option>
+                                </select>
+                            </p>
+                        </div>
+                        <div class="q-item" id="container-q29">
+                            <p class="text-gray-800 font-medium flex flex-wrap items-center gap-2">
+                                <span class="font-bold text-purple-700">29</span> Section C:
+                                <select name="q29" class="select-input">
+                                    <option value="">-- Choose Heading --</option>
+                                    <option value="i">i</option><option value="ii">ii</option><option value="iii">iii</option><option value="iv">iv</option><option value="v">v</option><option value="vi">vi</option><option value="vii">vii</option><option value="viii">viii</option><option value="ix">ix</option>
+                                </select>
+                            </p>
+                        </div>
+                        <div class="q-item" id="container-q30">
+                            <p class="text-gray-800 font-medium flex flex-wrap items-center gap-2">
+                                <span class="font-bold text-purple-700">30</span> Section D:
+                                <select name="q30" class="select-input">
+                                    <option value="">-- Choose Heading --</option>
+                                    <option value="i">i</option><option value="ii">ii</option><option value="iii">iii</option><option value="iv">iv</option><option value="v">v</option><option value="vi">vi</option><option value="vii">vii</option><option value="viii">viii</option><option value="ix">ix</option>
+                                </select>
+                            </p>
+                        </div>
+                        <div class="q-item" id="container-q31">
+                            <p class="text-gray-800 font-medium flex flex-wrap items-center gap-2">
+                                <span class="font-bold text-purple-700">31</span> Section E:
+                                <select name="q31" class="select-input">
+                                    <option value="">-- Choose Heading --</option>
+                                    <option value="i">i</option><option value="ii">ii</option><option value="iii">iii</option><option value="iv">iv</option><option value="v">v</option><option value="vi">vi</option><option value="vii">vii</option><option value="viii">viii</option><option value="ix">ix</option>
+                                </select>
+                            </p>
+                        </div>
+                        <div class="q-item" id="container-q32">
+                            <p class="text-gray-800 font-medium flex flex-wrap items-center gap-2">
+                                <span class="font-bold text-purple-700">32</span> Section F:
+                                <select name="q32" class="select-input">
+                                    <option value="">-- Choose Heading --</option>
+                                    <option value="i">i</option><option value="ii">ii</option><option value="iii">iii</option><option value="iv">iv</option><option value="v">v</option><option value="vi">vi</option><option value="vii">vii</option><option value="viii">viii</option><option value="ix">ix</option>
+                                </select>
+                            </p>
+                        </div>
+                        <div class="q-item" id="container-q33">
+                            <p class="text-gray-800 font-medium flex flex-wrap items-center gap-2">
+                                <span class="font-bold text-purple-700">33</span> Section G:
+                                <select name="q33" class="select-input">
+                                    <option value="">-- Choose Heading --</option>
+                                    <option value="i">i</option><option value="ii">ii</option><option value="iii">iii</option><option value="iv">iv</option><option value="v">v</option><option value="vi">vi</option><option value="vii">vii</option><option value="viii">viii</option><option value="ix">ix</option>
+                                </select>
+                            </p>
+                        </div>
+                        <div class="q-item" id="container-q34">
+                            <p class="text-gray-800 font-medium flex flex-wrap items-center gap-2">
+                                <span class="font-bold text-purple-700">34</span> Section H:
+                                <select name="q34" class="select-input">
+                                    <option value="">-- Choose Heading --</option>
+                                    <option value="i">i</option><option value="ii">ii</option><option value="iii">iii</option><option value="iv">iv</option><option value="v">v</option><option value="vi">vi</option><option value="vii">vii</option><option value="viii">viii</option><option value="ix">ix</option>
+                                </select>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="27-34">Check Answers</button>
+                    </div>
+                </div>
+
+                <!-- Q35-37: Sentence Completion -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-purple-200">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-purple-100 text-purple-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 35–37</span>
+                        <h4 class="font-bold text-gray-800">Sentence Completion</h4>
+                    </div>
+                    <p class="mb-5 text-gray-700 bg-purple-50/50 p-4 rounded-lg border border-purple-100 text-sm leading-relaxed">
+                        Complete the sentences below.<br>
+                        Choose <strong>ONE WORD ONLY</strong> from the passage for each answer.<br>
+                        <em>Write your answers in the input boxes below.</em>
+                    </p>
+
+                    <div class="space-y-4">
+                        <div class="q-item" id="container-q35">
+                            <p class="text-gray-800 font-medium leading-relaxed">
+                                <span class="font-bold text-purple-700 mr-2">35</span> Numerous training sessions are aimed at people who feel they are not
+                                <input type="text" name="q35" class="text-input text-input-word" placeholder="________" autocomplete="off" spellcheck="false"> enough.
+                            </p>
+                        </div>
+                        <div class="q-item" id="container-q36">
+                            <p class="text-gray-800 font-medium leading-relaxed">
+                                <span class="font-bold text-purple-700 mr-2">36</span> Being organised appeals to people who regard themselves as
+                                <input type="text" name="q36" class="text-input text-input-word" placeholder="________" autocomplete="off" spellcheck="false">.
+                            </p>
+                        </div>
+                        <div class="q-item" id="container-q37">
+                            <p class="text-gray-800 font-medium leading-relaxed">
+                                <span class="font-bold text-purple-700 mr-2">37</span> Many people feel
+                                <input type="text" name="q37" class="text-input text-input-word" placeholder="________" autocomplete="off" spellcheck="false"> with aspects of their work.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="35-37">Check Answers</button>
+                    </div>
+                </div>
+
+                <!-- Q38-40: TRUE / FALSE / NOT GIVEN -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-purple-100">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-purple-100 text-purple-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 38–40</span>
+                        <h4 class="font-bold text-gray-800">TRUE / FALSE / NOT GIVEN</h4>
+                    </div>
+                    <p class="mb-5 text-gray-700 bg-purple-50/50 p-4 rounded-lg border border-purple-100 text-sm leading-relaxed">
+                        Do the following statements agree with the claims of the writer in Reading Passage 3?<br>
+                        <strong>TRUE</strong> — if the statement agrees with the information<br>
+                        <strong>FALSE</strong> — if the statement contradicts the information<br>
+                        <strong>NOT GIVEN</strong> — if there is no information on this
+                    </p>
+
+                    <div class="space-y-4">
+                        <!-- Q38 -->
+                        <div class="q-item" id="container-q38">
+                            <p class="mb-3 text-gray-800 font-medium"><span class="font-bold text-purple-700 mr-2">38</span> Both businesses and people aim at order without really considering its value.</p>
+                            <div class="custom-radio-group">
+                                <label class="custom-radio-label"><input type="radio" name="q38" value="true"><span>TRUE</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q38" value="false"><span>FALSE</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q38" value="not given"><span>NOT GIVEN</span></label>
+                            </div>
+                        </div>
+
+                        <!-- Q39 -->
+                        <div class="q-item" id="container-q39">
+                            <p class="mb-3 text-gray-800 font-medium"><span class="font-bold text-purple-700 mr-2">39</span> Innovation is most successful if the people involved have distinct roles.</p>
+                            <div class="custom-radio-group">
+                                <label class="custom-radio-label"><input type="radio" name="q39" value="true"><span>TRUE</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q39" value="false"><span>FALSE</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q39" value="not given"><span>NOT GIVEN</span></label>
+                            </div>
+                        </div>
+
+                        <!-- Q40 -->
+                        <div class="q-item" id="container-q40">
+                            <p class="mb-3 text-gray-800 font-medium"><span class="font-bold text-purple-700 mr-2">40</span> Google was inspired to adopt flexibility by the success of General Electric.</p>
+                            <div class="custom-radio-group">
+                                <label class="custom-radio-label"><input type="radio" name="q40" value="true"><span>TRUE</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q40" value="false"><span>FALSE</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q40" value="not given"><span>NOT GIVEN</span></label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="38-40">Check Answers</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Highlight Selection Tooltip -->
+<div id="highlight-tooltip" class="highlight-tooltip font-semibold">Highlight Text</div>
+
+<!-- Immersive Vocabulary Details Card -->
+<div id="vocab-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
+    <div class="bg-white rounded-2xl shadow-2xl p-5 sm:p-8 w-full max-w-md relative transform transition-all scale-95 opacity-0" id="vocab-modal-content">
+        <button id="close-vocab-modal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-full w-8 h-8 flex items-center justify-center font-bold text-xl">&times;</button>
+        <div class="flex items-center mb-6 border-b pb-4 mt-2">
+            <h3 id="vocab-word" class="text-2xl sm:text-3xl font-extrabold text-purple-950 capitalize tracking-tight"></h3>
+        </div>
+        <div class="flex items-center mb-5">
+            <button id="play-audio-btn" class="flex items-center justify-center h-10 w-10 sm:h-12 sm:w-12 shrink-0 rounded-full bg-purple-50 text-purple-700 hover:bg-purple-600 hover:text-white mr-4 transition-all shadow-sm border border-purple-200">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>
+            </button>
+            <p id="vocab-pronunciation-text" class="text-gray-500 font-mono text-base sm:text-lg bg-gray-50 px-3 py-1 rounded-md border border-gray-100"></p>
+        </div>
+        <p id="vocab-meaning" class="text-gray-700 text-base sm:text-lg leading-relaxed"></p>
+    </div>
+</div>
+
+<!-- Warning / Notice Modal Overlay -->
+<div id="alert-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-[80]">
+    <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm relative transform transition-all scale-95 opacity-0 text-center" id="alert-modal-content">
+        <div id="alert-icon-container" class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 mb-4">
+            <svg class="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        </div>
+        <h3 id="alert-title" class="text-lg font-medium text-gray-900 mb-2">Notice</h3>
+        <p id="alert-message" class="text-sm text-gray-500 mb-6"></p>
+        <button id="close-alert-btn" class="w-full inline-flex justify-center rounded-md px-4 py-2 bg-purple-700 text-white font-medium hover:bg-purple-800 text-sm transition-colors">Got it</button>
+    </div>
+</div>
+
+<script>
+const vocabulary = {
+    'organisation': { meaning: 'The action of organizing something, or the structured state of being systematic and efficient.', phonetic: '/ˌɔː.ɡən.aɪˈzeɪ.ʃən/' },
+    'productive': { meaning: 'Producing or able to produce large amounts of goods, crops, or other helpful outputs efficiently.', phonetic: '/prəˈdʌk.tɪv/' },
+    'rhetoric': { meaning: 'Language designed to have a persuasive or impressive effect, but which is often regarded as lacking in sincerity or meaningful content.', phonetic: '/ˈret.ər.ɪk/' },
+    'dissatisfied': { meaning: 'Not content, happy, or satisfied with a particular state of affairs, management structure, or work layout.', phonetic: '/dɪsˈsæt.ɪs.faɪd/' },
+    'detrimental': { meaning: 'Tending to cause harm, loss, or damage; disadvantageous.', phonetic: '/ˌdet.rɪˈmen.təl/' },
+    'diminishing returns': { meaning: 'A point at which the level of profits or benefits gained is less than the amount of money or energy invested.', phonetic: '/dɪˈmɪn.ɪ.ʃɪŋ rɪˈtɜːnz/' },
+    'devoid': { meaning: 'Entirely lacking, completely free from, or empty of structural forms or rules.', phonetic: '/dɪˈvɔɪd/' },
+    'rigid': { meaning: 'Unable to bend or be forced out of shape; not flexible, adaptive, or compliant.', phonetic: '/ˈrɪd.ʒɪd/' },
+    'bandwagon': { meaning: 'An activity, group, movement, etc., that has become successful or fashionable and so attracts many new people.', phonetic: '/ˈbændˌwæɡ.ən/' },
+    'venerate': { meaning: 'Regard with great respect, awe, or devotion; worship one methodology over another.', phonetic: '/ˈven.ər.eɪt/' }
+};
+
+const ANSWERS = {
+    q27: "vi", q28: "i", q29: "iii", q30: "ii", q31: "ix", q32: "vii", q33: "iv", q34: "viii",
+    q35: "productive",
+    q36: "perfectionists",
+    q37: "dissatisfied",
+    q38: "true", q39: "false", q40: "not given"
+};
+
+const HEADINGS = {
+    i: "i  Complaints about the impact of a certain approach",
+    ii: "ii  Fundamental beliefs that are in fact incorrect",
+    iii: "iii  Early recommendations concerning business activities",
+    iv: "iv  Organisations that put a new approach into practice",
+    v: "v  Companies that have suffered from changing their approach",
+    vi: "vi  What people are increasingly expected to do",
+    vii: "vii  How to achieve outcomes that are currently impossible",
+    viii: "viii  Neither approach guarantees continuous improvement",
+    ix: "ix  Evidence that a certain approach can have more disadvantages than advantages"
+};
+
+const explanations = {
+    q27: "Section A describes the immense pressure and modern expectation on people to structure their time, company, home, day, and even sleep to boost productivity: 'We are told that we ought to organize our company, our home life, our week...'. Answer: vi.",
+    q28: "Section B lists complaints arising from structured business approaches, such as increased work-related stress, higher business failure rates, and demotivation: 'A large proportion of workers... claim to be dissatisfied...'. Answer: i.",
+    q29: "Section C introduces Frederick Taylor, a forefather of scientific management, who designed early efficiency principles in the 20th century: 'he designed a number of principles to improve the efficiency of the work process...'. Answer: iii.",
+    q30: "Section D points out that the core assumptions (beliefs) businesses hold—namely, that order is always necessary for productivity—are misguided and incorrect: 'Here it’s the assumption that order is a necessary condition...'. Answer: ii.",
+    q31: "Section E reviews research showing that order has diminishing returns and eventually reduces productivity: 'eventually the usefulness of the process... reduce until the point where any further increase in order reduces productivity.' Answer: ix.",
+    q32: "Section F argues that avoiding conventional power structures, hierarchy, and bottlenecks enables organic groups to reach solutions that are currently unreachable (impossible) under rigid systems. Answer: vii.",
+    q33: "Section G highlights businesses like Oticon (Danish hearing aid manufacturer), General Electric, and Google that successfully put disorganisation, boundaryless structures, and flexible methods into active practice. Answer: iv.",
+    q34: "Section H presents a warning that disorder, like order, has diminishing utility, and that overusing it damages performance, indicating that neither extreme ensures continuous improvement. Answer: viii.",
+    q35: "Section A states: 'We are told that we ought to organize... all as a means to becoming more productive.' It also mentions workshops telling a paying public how to achieve this. Answer: productive.",
+    q36: "Section A states that the rhetoric of complete organization has crept in 'much to the delight of self-proclaimed perfectionists with the need to get everything right.' Answer: perfectionists.",
+    q37: "Section B states: 'A large proportion of workers from all demographics claim to be dissatisfied with the way their work is structured...'. Answer: dissatisfied.",
+    q38: "TRUE. Section D explicitly states: 'businesses and people spend time and money organising themselves for the sake of organising, rather than actually looking at the end goal and usefulness...'. This agrees with the statement.",
+    q39: "FALSE. Section F counters this directly, stating that when innovating, the best approach is to 'create an environment devoid of structure and hierarchy and enable everyone involved to engage as one organic group' rather than having rigid distinct roles. Answer: FALSE.",
+    q40: "NOT GIVEN. Section G mentions both General Electric and Google as examples of companies embracing disorganisation and flexible structures, but there is no mention or claim that Google was *inspired* by General Electric. Answer: NOT GIVEN."
+};
+
+const TOTAL_QUESTIONS = 14;
+
+document.addEventListener('DOMContentLoaded', () => {
+    const app = {
+        userAnswers: {}, answersChecked: {}, currentFontSize: 17, timeRemaining: 60 * 60,
+        leftPane: document.getElementById('left-pane'),
+        rightPane: document.getElementById('right-pane'),
+        splitter: document.getElementById('splitter'),
+        highlightTooltip: document.getElementById('highlight-tooltip'),
+        vocabModal: document.getElementById('vocab-modal'),
+        vocabModalContent: document.getElementById('vocab-modal-content'),
+        closeVocabModalBtn: document.getElementById('close-vocab-modal'),
+        vocabWordEl: document.getElementById('vocab-word'),
+        vocabMeaningEl: document.getElementById('vocab-meaning'),
+        vocabPronunciationText: document.getElementById('vocab-pronunciation-text'),
+        playAudioBtn: document.getElementById('play-audio-btn'),
+        clearHighlightsBtn: document.getElementById('clear-highlights-btn'),
+        progressText: document.getElementById('progress-text'),
+        timerEl: document.getElementById('timer'),
+        alertModal: document.getElementById('alert-modal'),
+        alertModalContent: document.getElementById('alert-modal-content'),
+        closeAlertBtn: document.getElementById('close-alert-btn'),
+        alertTitleEl: document.getElementById('alert-title'),
+        alertMessageEl: document.getElementById('alert-message'),
+        alertIconContainer: document.getElementById('alert-icon-container'),
+
+        init() { this.setupEventListeners(); this.initSplitter(); this.initHighlighter(); this.updateCheckButtonsState(); this.startTimer(); },
+
+        startTimer() {
+            const interval = setInterval(() => {
+                if (this.timeRemaining <= 0) { clearInterval(interval); this.timerEl.textContent = "00:00"; this.showAlert("Time's Up!", "Your 60 minutes have expired.", "warning"); return; }
+                this.timeRemaining--;
+                const m = Math.floor(this.timeRemaining/60).toString().padStart(2,'0');
+                const s = (this.timeRemaining%60).toString().padStart(2,'0');
+                this.timerEl.textContent = `${m}:${s}`;
+                if (this.timeRemaining <= 300) this.timerEl.classList.add('text-red-500');
+            }, 1000);
+        },
+
+        setupEventListeners() {
+            document.getElementById('increase-font-btn').addEventListener('click', () => this.changeFontSize(1));
+            document.getElementById('decrease-font-btn').addEventListener('click', () => this.changeFontSize(-1));
+            this.clearHighlightsBtn.addEventListener('click', () => this.leftPane.querySelectorAll('mark').forEach(m => m.replaceWith(document.createTextNode(m.textContent))));
+            this.closeVocabModalBtn.addEventListener('click', () => this.closeModal());
+            this.vocabModal.addEventListener('click', (e) => { if (e.target === this.vocabModal) this.closeModal(); });
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') { if (!this.vocabModal.classList.contains('hidden')) this.closeModal(); if (!this.alertModal.classList.contains('hidden')) this.closeAlert(); }
+                if ((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='f') { e.preventDefault(); this.showAlert("Action Disabled","The 'Find' function is disabled to simulate real test conditions.","warning"); }
+            });
+            document.addEventListener('visibilitychange', () => { if (document.hidden && this.timeRemaining > 0) this.showAlert("Warning","Please do not switch tabs during the exam.","warning"); });
+            window.addEventListener('beforeunload', (e) => { if (this.timeRemaining > 0 && this.timeRemaining < 60*60) { e.preventDefault(); e.returnValue=''; } });
+            this.closeAlertBtn.addEventListener('click', () => this.closeAlert());
+            this.alertModal.addEventListener('click', (e) => { if (e.target === this.alertModal) this.closeAlert(); });
+            
+            document.body.addEventListener('input', (e) => {
+                if (e.target.tagName==='INPUT' && e.target.type==='text') {
+                    this.userAnswers[e.target.name] = e.target.value.trim().toLowerCase();
+                    e.target.classList.remove('correct-answer','incorrect-answer');
+                    this.updateCheckButtonsState(); this.updateProgress();
+                }
+            });
+            
+            document.body.addEventListener('change', (e) => {
+                if (e.target.tagName==='SELECT') {
+                    this.userAnswers[e.target.name] = e.target.value;
+                    e.target.classList.remove('correct-answer','incorrect-answer');
+                    this.updateCheckButtonsState(); this.updateProgress();
+                } else if (e.target.type === 'radio') {
+                    this.userAnswers[e.target.name] = e.target.value;
+                    const groupRadios = document.querySelectorAll(`input[name="${e.target.name}"]`);
+                    groupRadios.forEach(radio => {
+                        const label = radio.closest('label');
+                        if (label) label.classList.remove('correct-answer', 'incorrect-answer');
+                    });
+                    this.updateCheckButtonsState(); this.updateProgress();
+                }
+            });
+            this.leftPane.addEventListener('click', (e) => {
+                if (e.target.classList.contains('vocab-word')) this.openVocabModal(e.target.dataset.word);
+                if (e.target.tagName==='MARK') e.target.replaceWith(document.createTextNode(e.target.textContent));
+            });
+            document.querySelectorAll('.check-btn').forEach(btn => btn.addEventListener('click', (e) => this.checkAnswers(e.target.dataset.range, e.target)));
+            this.playAudioBtn.addEventListener('click', () => {
+                const word = this.vocabWordEl.textContent; if (!word) return;
+                if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+                this.playAudioBtn.classList.remove('text-purple-700','bg-purple-50'); this.playAudioBtn.classList.add('bg-purple-600','text-white');
+                if ('speechSynthesis' in window) { const u=new SpeechSynthesisUtterance(word); u.lang='en-GB'; u.rate=0.9; u.onend=()=>this.resetAudioBtn(); u.onerror=()=>this.resetAudioBtn(); window.speechSynthesis.speak(u); }
+                else setTimeout(()=>this.resetAudioBtn(),500);
+            });
+        },
+
+        updateProgress() { let c=0; for (let k in ANSWERS) { if ((this.userAnswers[k]||"").trim()) c++; } this.progressText.textContent=`${Math.min(c,TOTAL_QUESTIONS)} / ${TOTAL_QUESTIONS} Answered`; },
+        resetAudioBtn() { this.playAudioBtn.classList.add('text-purple-700','bg-purple-50'); this.playAudioBtn.classList.remove('bg-purple-600','text-white'); },
+        changeFontSize(d) { this.currentFontSize=Math.max(14,Math.min(26,this.currentFontSize+d)); document.documentElement.style.setProperty('--app-font-size',`${this.currentFontSize}px`); },
+
+        openVocabModal(w) {
+            const d=vocabulary[w]; if(!d) return;
+            this.vocabWordEl.textContent=w; this.vocabMeaningEl.textContent=d.meaning; this.vocabPronunciationText.textContent=d.phonetic||'';
+            this.vocabModal.classList.remove('hidden');
+            setTimeout(()=>{this.vocabModalContent.classList.remove('scale-95','opacity-0'); this.vocabModalContent.classList.add('scale-100','opacity-100');},10);
+        },
+        closeModal() {
+            if('speechSynthesis' in window) window.speechSynthesis.cancel();
+            this.vocabModalContent.classList.remove('scale-100','opacity-100'); this.vocabModalContent.classList.add('scale-95','opacity-0');
+            this.resetAudioBtn(); setTimeout(()=>this.vocabModal.classList.add('hidden'),200);
+        },
+        showAlert(title,message,type='error') {
+            this.alertTitleEl.textContent=title; this.alertMessageEl.textContent=message;
+            const c=type==='warning'?'yellow':'red';
+            this.alertIconContainer.className=`mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-${c}-100 mb-4`;
+            this.alertIconContainer.innerHTML=`<svg class="h-6 w-6 text-${c}-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>`;
+            this.alertModal.classList.remove('hidden');
+            setTimeout(()=>{this.alertModalContent.classList.remove('scale-95','opacity-0'); this.alertModalContent.classList.add('scale-100','opacity-100');},10);
+        },
+        closeAlert() {
+            this.alertModalContent.classList.remove('scale-100','opacity-100'); this.alertModalContent.classList.add('scale-95','opacity-0');
+            setTimeout(()=>this.alertModal.classList.add('hidden'),200);
+        },
+
+        isRangeAnswered(range) {
+            const [s,e]=range.split('-').map(Number);
+            for(let i=s;i<=e;i++){if(!(this.userAnswers[`q${i}`]||"").trim())return false;}
+            return true;
+        },
+
+        updateCheckButtonsState() {
+            document.querySelectorAll('.check-btn').forEach(btn => {
+                const range=btn.dataset.range;
+                if(this.answersChecked[range]){btn.className='check-btn bg-purple-900 hover:bg-purple-950 text-white font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-pointer';btn.textContent='Reset Answers';return;}
+                const allDone=this.isRangeAnswered(range);
+                btn.className=allDone?'check-btn bg-purple-700 hover:bg-purple-800 text-white font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-pointer transform hover:-translate-y-0.5':'check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80';
+                btn.textContent='Check Answers';
+            });
+        },
+
+        checkAnswers(range, btn) {
+            if(this.answersChecked[range]){
+                this.answersChecked[range]=false;
+                const [s,e]=range.split('-').map(Number);
+                for(let i=s;i<=e;i++){
+                    const qId=`q${i}`; this.userAnswers[qId]='';
+                    const sel=document.querySelector(`select[name="${qId}"]`); if(sel){sel.value=''; sel.classList.remove('correct-answer','incorrect-answer');}
+                    const inp=document.querySelector(`input[name="${qId}"][type="text"]`); if(inp){inp.value=''; inp.placeholder='________'; inp.classList.remove('correct-answer','incorrect-answer');}
+                    const groupRadios = document.querySelectorAll(`input[name="${qId}"][type="radio"]`);
+                    if (groupRadios.length > 0) {
+                        groupRadios.forEach(radio => {
+                            radio.checked = false;
+                            const label = radio.closest('label');
+                            if (label) label.classList.remove('correct-answer', 'incorrect-answer');
+                        });
+                    }
+                    document.getElementById(`expl-${qId}`)?.remove();
+                }
+                this.updateCheckButtonsState(); this.updateProgress(); return;
+            }
+            if(!this.isRangeAnswered(range)){this.showAlert("Incomplete Answers","Please answer all questions in this section before checking.","warning");return;}
+            this.answersChecked[range]=true; this.updateCheckButtonsState();
+
+            const [s,e]=range.split('-').map(Number);
+            for(let i=s;i<=e;i++){
+                const qId=`q${i}`;
+                const userAns=(this.userAnswers[qId]||"").toLowerCase().trim();
+                const correctList=ANSWERS[qId].toLowerCase().split('|');
+                const isCorrect=correctList.includes(userAns);
+                let feedbackHTML='';
+                
+                const sel=document.querySelector(`select[name="${qId}"]`);
+                if(sel){
+                    sel.classList.remove('correct-answer','incorrect-answer');
+                    sel.classList.add(isCorrect?'correct-answer':'incorrect-answer');
+                    if(!isCorrect){
+                        feedbackHTML=`<span class="correct-badge">Correct Heading: ${correctList[0].toUpperCase()}</span> — <em>${HEADINGS[correctList[0]]}</em><br>`;
+                    }
+                }
+                
+                const inp=document.querySelector(`input[name="${qId}"][type="text"]`);
+                if(inp){
+                    inp.classList.remove('correct-answer','incorrect-answer');
+                    inp.classList.add(isCorrect?'correct-answer':'incorrect-answer');
+                    if(!isCorrect){
+                        inp.value='';
+                        inp.placeholder=correctList[0];
+                        feedbackHTML=`<span class="correct-badge">Correct Answer: ${correctList[0]}</span><br>`;
+                    }
+                }
+
+                const radios = document.querySelectorAll(`input[name="${qId}"][type="radio"]`);
+                if (radios.length > 0) {
+                    radios.forEach(radio => {
+                        const label = radio.closest('label');
+                        if (label) label.classList.remove('correct-answer', 'incorrect-answer');
+                        if (correctList.includes(radio.value.toLowerCase())) {
+                            if (label) label.classList.add('correct-answer');
+                        } else if (radio.value.toLowerCase() === userAns) {
+                            if (label) label.classList.add('incorrect-answer');
+                        }
+                    });
+                    if (!isCorrect) {
+                        feedbackHTML = `<span class="correct-badge">Correct Answer: ${correctList[0].toUpperCase()}</span><br>`;
+                    }
+                }
+
+                if(explanations[qId]&&!document.getElementById(`expl-${qId}`)){
+                    const div=document.createElement('div'); div.id=`expl-${qId}`; div.className='explanation-box';
+                    div.innerHTML=`${feedbackHTML}<strong>Explanation:</strong> ${explanations[qId]}`;
+                    const container=document.getElementById(`container-${qId}`);
+                    if(container){const wrap=container.closest('.q-item')||container; wrap.insertAdjacentElement('afterend',div);}
+                }
+            }
+        },
+
+        initSplitter() {
+            let isDragging=false; const panes=document.getElementById('content-panes');
+            this.splitter.addEventListener('mousedown',(e)=>{e.preventDefault();isDragging=true;document.body.style.cursor='col-resize';});
+            document.addEventListener('mousemove',(e)=>{
+                if(!isDragging||window.innerWidth<=768) return;
+                const rect=panes.getBoundingClientRect(); const newLeft=e.clientX-rect.left;
+                if(newLeft>200&&newLeft<rect.width-200) panes.style.gridTemplateColumns=`${(newLeft/rect.width)*100}% 5px 1fr`;
+            });
+            document.addEventListener('mouseup',()=>{if(isDragging){isDragging=false;document.body.style.cursor='default';}});
+        },
+
+        initHighlighter() {
+            document.body.addEventListener('mouseup',(e)=>{
+                const sel=window.getSelection(); const text=sel.toString().trim();
+                if(text.length>0){
+                    const range=sel.getRangeAt(0);
+                    if(!this.leftPane.contains(range.commonAncestorContainer)&&!this.rightPane.contains(range.commonAncestorContainer)){this.highlightTooltip.style.display='none';return;}
+                    this.highlightTooltip.style.left=`${e.pageX-30}px`; this.highlightTooltip.style.top=`${e.pageY-40}px`; this.highlightTooltip.style.display='block';
+                    this.highlightTooltip.onclick=()=>{
+                        const mark=document.createElement('mark');
+                        try{range.surroundContents(mark);}catch(ex){this.showAlert("Highlight Error","Please select text within a single element.","warning");}
+                        finally{sel.removeAllRanges();this.highlightTooltip.style.display='none';}
+                    };
+                }else{this.highlightTooltip.style.display='none';}
+            });
+            document.body.addEventListener('mousedown',()=>{if(window.getSelection().toString().length===0)this.highlightTooltip.style.display='none';});
+        }
+    };
+    app.init();
+});
+</script>
+</body>
+</html>

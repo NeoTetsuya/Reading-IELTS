@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IELTS Simulator - The Importance of Children's Play</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --app-font-size: 17px; }
+        body { font-family: 'Inter', sans-serif; overscroll-behavior: none; background-color: #f0fdfa; }
+        .ielts-container { display: grid; grid-template-rows: auto 1fr; height: 100vh; }
+        .content-panes { display: grid; grid-template-columns: 1fr 5px 1fr; overflow: hidden; }
+        .pane { overflow-y: auto; padding: 2rem 3rem; font-size: var(--app-font-size); scroll-behavior: smooth; }
+        #left-pane { background-color: #fdfdfd; }
+        #right-pane { background-color: #f0fdfa; }
+        .splitter { background-color: #99f6e4; cursor: col-resize; z-index: 10; transition: background-color 0.2s; }
+        .splitter:hover, .splitter:active { background-color: #0d9488; }
+        .reading-passage { font-family: 'Merriweather', serif; line-height: 1.9; color: #1f2937; text-align: justify; max-width: 800px; margin: 0 auto; }
+        .reading-passage p { margin-bottom: 1.5rem; text-indent: 1.5rem; }
+        .reading-passage h3 { font-family: 'Inter', sans-serif; color: #0f172a; margin-bottom: 0.25rem; font-weight: 700; font-size: 1.5em; text-align: center; text-indent: 0; text-transform: uppercase; letter-spacing: 0.05em; }
+        .reading-passage .subtitle { font-family: 'Inter', sans-serif; color: #0d9488; font-size: 0.95em; text-align: center; text-indent: 0; margin-bottom: 1.5rem; font-style: italic; }
+        .reading-passage .para-label { font-family: 'Inter', sans-serif; font-weight: 800; color: #115e59; font-size: 0.85em; display: inline-block; margin-right: 0.5rem; background: #ccfbf1; padding: 1px 6px; border-radius: 4px; vertical-align: middle; }
+        
+        .q-item { padding: 1rem; border-radius: 0.5rem; transition: all 0.2s; background-color: white; border: 1px solid #99f6e4; margin-bottom: 0.75rem; }
+        .text-input { border: 2px solid #99f6e4; border-radius: 6px; padding: 4px 8px; font-weight: 600; color: #0f172a; transition: all 0.2s; text-align: center; background-color: #f0fdfa; }
+        .text-input:focus { outline: none; border-color: #0d9488; background-color: #fff; box-shadow: 0 0 0 3px rgba(13,148,136,0.12); }
+        .text-input-word { width: 9rem; text-transform: lowercase; }
+        
+        .custom-radio-group { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem; }
+        .custom-radio-label { display: flex; align-items: center; justify-content: center; padding: 0.5rem 1rem; border: 1.5px solid #99f6e4; border-radius: 0.5rem; cursor: pointer; background-color: white; flex: 1; min-width: 90px; font-weight: 600; color: #115e59; transition: all 0.2s; }
+        .custom-radio-label input { display: none; }
+        .custom-radio-label:hover { background-color: #f0fdfa; border-color: #5eead4; }
+        .custom-radio-label:has(input:checked) {
+            background-color: #ccfbf1;
+            border-color: #0d9488;
+            color: #115e59;
+            box-shadow: inset 0 0 0 1px #0d9488;
+        }
+        
+        .correct-answer { border-color: #22c55e !important; background-color: #f0fdf4 !important; color: #166534 !important; }
+        .correct-answer span { color: #166534 !important; }
+        .incorrect-answer { border-color: #ef4444 !important; background-color: #fef2f2 !important; color: #991b1b !important; }
+        .incorrect-answer span { color: #991b1b !important; }
+        
+        .explanation-box { animation: fadeIn 0.4s ease-out forwards; margin-top: 0.75rem; padding: 1rem; background-color: #f0fdfa; border-left: 4px solid #0d9488; border-radius: 0.5rem; font-size: 0.95rem; color: #115e59; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .explanation-box .correct-badge { display: inline-block; background: #22c55e; color: white; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85em; margin-bottom: 0.5rem; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .vocab-word { color: #0f766e; font-weight: 600; cursor: pointer; border-bottom: 2px dotted #5eead4; transition: all 0.2s ease-in-out; padding: 0 2px; }
+        .vocab-word:hover { background-color: #ccfbf1; border-bottom-style: solid; border-radius: 2px; }
+        .highlight-tooltip { position: absolute; background-color: #0f172a; color: white; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 500; z-index: 100; cursor: pointer; display: none; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        mark { background-color: #fef08a; border-radius: 3px; padding: 2px 0; cursor: pointer; }
+        mark:hover { background-color: #fca5a5; color: #7f1d1d; }
+        mark:hover::after { content: ' x'; font-weight: bold; font-size: 0.8em; opacity: 0.7; }
+        
+        .notes-block { background: #ccfbf1; border: 1px solid #99f6e4; border-radius: 0.75rem; padding: 1.5rem; margin-bottom: 1rem; line-height: 2; color: #115e59; }
+        .notes-block h5 { font-family: 'Inter', sans-serif; font-weight: 700; color: #0f766e; font-size: 1em; margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        .notes-block h6 { font-family: 'Inter', sans-serif; font-weight: 700; color: #115e59; font-size: 0.92em; margin-top: 0.75rem; margin-bottom: 0.25rem; }
+        .notes-block ul { list-style: disc; padding-left: 1.5rem; }
+        .notes-block li { margin-bottom: 0.25rem; }
+
+        @media (max-width: 768px) {
+            .content-panes { display: flex; flex-direction: column; overflow-y: auto; }
+            .splitter { display: none; }
+            .pane { padding: 1.25rem 1rem; overflow-y: visible; height: auto; }
+            #left-pane { border-bottom: 2px dashed #99f6e4; padding-bottom: 2rem; }
+            .text-input, .select-input { max-width: 100%; font-size: 0.9em; }
+        }
+    </style>
+</head>
+<body>
+<div id="test-container" class="ielts-container">
+    <header class="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 flex justify-between items-center z-20 shadow-sm flex-wrap gap-3">
+        <div class="flex items-center gap-2 sm:space-x-3">
+            <div class="bg-teal-700 text-white p-1.5 sm:p-2 rounded-lg shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                </svg>
+            </div>
+            <h1 class="text-xl font-bold text-gray-800 hidden sm:block">IELTS Simulator <span class="text-teal-700 font-medium">| Children's Play</span></h1>
+            <h1 class="text-base font-bold text-gray-800 sm:hidden">IELTS <span class="text-teal-700">Children's Play</span></h1>
+        </div>
+        <div class="flex items-center space-x-4">
+            <div class="hidden sm:flex flex-col items-end">
+                <span class="text-xs text-gray-500 font-bold uppercase tracking-wide">Progress</span>
+                <span id="progress-text" class="text-sm font-semibold text-teal-700">0 / 13 Answered</span>
+            </div>
+            <div class="flex items-center bg-gray-100 rounded-lg px-3 py-1.5 border border-gray-200">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span id="timer" class="font-mono font-bold text-gray-700 text-lg">60:00</span>
+            </div>
+        </div>
+        <div class="flex items-center gap-2 sm:space-x-3">
+            <button id="clear-highlights-btn" class="hidden sm:flex items-center justify-center px-3 py-1.5 rounded bg-teal-50 hover:bg-teal-100 text-teal-700 transition-colors focus:outline-none border border-teal-200 text-sm font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                Clear Highlights
+            </button>
+            <div class="flex items-center space-x-1 sm:space-x-2 bg-gray-50 p-1 rounded-lg border border-gray-200">
+                <button id="decrease-font-btn" class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded bg-white shadow-sm hover:bg-gray-100 text-gray-700 transition-colors focus:outline-none font-bold text-sm sm:text-base">A-</button>
+                <button id="increase-font-btn" class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded bg-white shadow-sm hover:bg-gray-100 text-gray-700 transition-colors focus:outline-none font-bold text-sm sm:text-base">A+</button>
+            </div>
+        </div>
+    </header>
+
+    <main id="content-panes" class="content-panes">
+        <!-- Left Pane: Reading Passage -->
+        <div id="left-pane" class="pane relative">
+            <div class="reading-passage text-justify">
+                <h3>The Importance of Children’s Play</h3>
+                <p class="subtitle">An investigation into the critical role of self-guided play in development</p>
+
+                <p><span class="para-label">1</span>Brick by brick, six-year-old Alice is building a magical kingdom. Imagining fairy-tale turrets and fire-breathing dragons, wicked witches and gallant heroes, she’s creating an enchanting world. Although she isn’t aware of it, this fantasy is helping her take her first steps towards her capacity for creativity and so it will have important <span class="vocab-word" data-word="repercussions">repercussions</span> in her adult life.</p>
+                
+                <p><span class="para-label">2</span>Minutes later, Alice has abandoned the kingdom in favour of playing schools with her younger brother. When she bosses him around as his ‘teacher’, she’s practising how to regulate her emotions through pretence. Later on, when they tire of this and settle down with a board game, she’s learning about the need to follow rules and take turns with a partner.</p>
+                
+                <p><span class="para-label">3</span>‘Play in all its rich variety is one of the highest achievements of the human species,’ says Dr David Whitebread from the Faculty of Education at the University of Cambridge, UK. ‘It underpins how we develop as intellectual, problem-solving adults and is crucial to our success as a highly adaptable species.’</p>
+                
+                <p><span class="para-label">4</span>Recognizing the importance of play is not new: over two millennia ago, the Greek philosopher Plato <span class="vocab-word" data-word="extolled">extolled</span> its virtues as a means of developing skills for adult life, and ideas about play-based learning have been developing since the 19th century.</p>
+                
+                <p><span class="para-label">5</span>But we live in changing times, and Whitebread is mindful of a worldwide decline in play, pointing out that over half the people in the world now live in cities. ‘The opportunities for free play, which I experienced almost every day of my childhood, are becoming increasingly <span class="vocab-word" data-word="scarce">scarce</span>,’ he says. Outdoor play is <span class="vocab-word" data-word="curtailed">curtailed</span> by perceptions of risk to do with traffic, as well as parents’ increased wish to protect their children from being the victims of crime, and by the emphasis on ‘earlier is better’ which is leading to greater competition in academic learning and schools.</p>
+                
+                <p><span class="para-label">6</span>International bodies like the United Nations and the European Union have begun to develop policies concerned with children’s right to play, and to consider implications for leisure facilities and educational programmes. But what they often lack is the evidence to base policies on.</p>
+                
+                <p><span class="para-label">7</span>‘The type of play we are interested in is child-initiated, <span class="vocab-word" data-word="spontaneous">spontaneous</span> and unpredictable – but, as soon as you ask a five-year-old “to play”, then you as the researcher have <span class="vocab-word" data-word="intervened">intervened</span>,’ explains Dr Sara Baker. ‘And we want to know what the long-term impact of play is. It’s a real challenge.’</p>
+                
+                <p><span class="para-label">8</span>Dr Jenny Gibson agrees, pointing out that although some of the steps in the puzzle of how and why play is important have been looked at, there is very little data on the impact it has on the child’s later life.</p>
+                
+                <p><span class="para-label">9</span>Now, thanks to the university’s new Centre for Research on Play in Education, Development and Learning (PEDAL), Whitebread, Baker, Gibson and a team of researchers hope to provide evidence on the role played by play in how a child develops.</p>
+                
+                <p><span class="para-label">10</span>‘A strong possibility is that play supports the early development of children’s <span class="vocab-word" data-word="self-control">self-control</span>,’ explains Baker. ‘This is our ability to develop awareness of our own thinking progresses – it influences how effectively we go about undertaking challenging activities.’</p>
+                
+                <p><span class="para-label">11</span>In a study carried out by Baker with toddlers and young pre-schoolers, she found that children with greater self-control solved problems more quickly when exploring an unfamiliar set-up requiring scientific reasoning. ‘This sort of evidence makes us think that giving children the chance to play will make them more successful problem-solvers in the long run.’</p>
+                
+                <p><span class="para-label">12</span>If playful experiences do facilitate this aspect of development, say the researchers, it could be extremely significant for educational practices, because the ability to self-regulate has been shown to be a key <span class="vocab-word" data-word="predictor">predictor</span> of academic performance.</p>
+                
+                <p><span class="para-label">13</span>Gibson adds: ‘Playful behavior is also an important indicator of healthy social and emotional development. In my previous research, I investigated how observing children at play can give us important clues about their well-being and can even be useful in the diagnosis of <span class="vocab-word" data-word="neurodevelopmental">neurodevelopmental</span> disorders like autism.’</p>
+                
+                <p><span class="para-label">14</span>Whitebread’s recent research has involved developing a play-based approach to supporting children’s writing. ‘Many primary school children find writing difficult, but we showed in a previous study that a playful stimulus was far more effective than an instructional one.’ Children wrote longer and better-structured stories when they first played with dolls representing characters in the story. In the latest study, children first created their story with Lego*, with similar results. ‘Many teachers commented that they had always previously had children saying they didn’t know what to write about. With the Lego building, however, not a single child said this through the whole year of the project.’</p>
+                
+                <p><span class="para-label">15</span>Whitebread, who directs PEDAL, trained as a primary school teacher in the early 1970s, when, as he describes, ‘the teaching of young children was largely a quiet backwater, untroubled by any serious intellectual debate or controversy.’ Now, the landscape is very different, with hotly debated topics such as school starting age.</p>
+                
+                <p><span class="para-label">16</span>‘Somehow the importance of play has been lost in recent decades. It’s regarded as something <span class="vocab-word" data-word="trivial">trivial</span>, or even as something negative that contrasts with “work”. Let’s not lose sight of its benefits, and the fundamental contributions it makes to human achievements in the arts, sciences and technology. Let’s make sure children have a rich diet of play experiences.’</p>
+                
+                <p class="text-xs text-gray-500 italic mt-6">* Lego: coloured plastic building blocks and other pieces that can be joined together</p>
+            </div>
+        </div>
+
+        <!-- Draggable Splitter -->
+        <div id="splitter" class="splitter relative flex items-center justify-center group">
+            <div class="w-1 h-8 bg-teal-300 rounded-full opacity-50 group-hover:bg-teal-600 transition-colors"></div>
+        </div>
+
+        <!-- Right Pane: Questions -->
+        <div id="right-pane" class="pane">
+            <div id="questions-section" class="max-w-3xl mx-auto space-y-8 pb-10">
+
+                <!-- Q1-8: Notes Completion -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-teal-100">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-teal-100 text-teal-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 1–8</span>
+                        <h4 class="font-bold text-gray-800">Notes Completion</h4>
+                    </div>
+                    <p class="mb-5 text-gray-700 bg-teal-50/50 p-4 rounded-lg border border-teal-100 text-sm leading-relaxed">
+                        Complete the notes below.<br>
+                        Choose <strong>ONE WORD ONLY</strong> from the passage for each answer.<br>
+                        <em>Write your answers in the corresponding fields below.</em>
+                    </p>
+                    
+                    <div class="notes-block">
+                        <h5>Children's play</h5>
+                        
+                        <h6>Uses of children's play</h6>
+                        <ul class="mb-4">
+                            <li>
+                                building a 'magical kingdom' may help develop 
+                                <span id="container-q1" class="inline-block mx-1">
+                                    <strong class="text-teal-700 text-sm mr-1">1</strong>
+                                    <input type="text" name="q1" class="text-input text-input-word" placeholder="________" autocomplete="off" spellcheck="false">
+                                </span>
+                            </li>
+                            <li>
+                                board games involve 
+                                <span id="container-q2" class="inline-block mx-1">
+                                    <strong class="text-teal-700 text-sm mr-1">2</strong>
+                                    <input type="text" name="q2" class="text-input text-input-word" placeholder="________" autocomplete="off" spellcheck="false">
+                                </span> 
+                                and turn-taking
+                            </li>
+                        </ul>
+
+                        <h6>Recent changes affecting children's play</h6>
+                        <ul class="mb-4">
+                            <li>
+                                population of 
+                                <span id="container-q3" class="inline-block mx-1">
+                                    <strong class="text-teal-700 text-sm mr-1">3</strong>
+                                    <input type="text" name="q3" class="text-input text-input-word" placeholder="________" autocomplete="off" spellcheck="false">
+                                </span>
+                                have grown
+                            </li>
+                            <li>
+                                opportunities for free play are limited due to:
+                                <ul class="list-none pl-4 mt-1">
+                                    <li>
+                                        – fear of 
+                                        <span id="container-q4" class="inline-block mx-1">
+                                            <strong class="text-teal-700 text-sm mr-1">4</strong>
+                                            <input type="text" name="q4" class="text-input text-input-word" placeholder="________" autocomplete="off" spellcheck="false">
+                                        </span>
+                                    </li>
+                                    <li>
+                                        – fear of 
+                                        <span id="container-q5" class="inline-block mx-1">
+                                            <strong class="text-teal-700 text-sm mr-1">5</strong>
+                                            <input type="text" name="q5" class="text-input text-input-word" placeholder="________" autocomplete="off" spellcheck="false">
+                                        </span>
+                                    </li>
+                                    <li>
+                                        – increased 
+                                        <span id="container-q6" class="inline-block mx-1">
+                                            <strong class="text-teal-700 text-sm mr-1">6</strong>
+                                            <input type="text" name="q6" class="text-input text-input-word" placeholder="________" autocomplete="off" spellcheck="false">
+                                        </span>
+                                        in schools
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+
+                        <h6>International policies on children's play</h6>
+                        <ul>
+                            <li>
+                                it is difficult to find 
+                                <span id="container-q7" class="inline-block mx-1">
+                                    <strong class="text-teal-700 text-sm mr-1">7</strong>
+                                    <input type="text" name="q7" class="text-input text-input-word" placeholder="________" autocomplete="off" spellcheck="false">
+                                </span>
+                                to support new policies
+                            </li>
+                            <li>
+                                research needs to study the impact of play on the rest of the child’s 
+                                <span id="container-q8" class="inline-block mx-1">
+                                    <strong class="text-teal-700 text-sm mr-1">8</strong>
+                                    <input type="text" name="q8" class="text-input text-input-word" placeholder="________" autocomplete="off" spellcheck="false">
+                                </span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="mt-4 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="1-8">Check Answers</button>
+                    </div>
+                </div>
+
+                <!-- Q9-13: TRUE/FALSE/NOT GIVEN -->
+                <div class="p-6 bg-white rounded-2xl shadow-sm border border-teal-100">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-teal-100 text-teal-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 9–13</span>
+                        <h4 class="font-bold text-gray-800">TRUE / FALSE / NOT GIVEN</h4>
+                    </div>
+                    <p class="mb-5 text-gray-700 bg-teal-50/50 p-4 rounded-lg border border-teal-100 text-sm leading-relaxed">
+                        Do the following statements agree with the information given in the Reading Passage?<br>
+                        <strong>TRUE</strong> — if the statement agrees with the information<br>
+                        <strong>FALSE</strong> — if the statement contradicts the information<br>
+                        <strong>NOT GIVEN</strong> — if there is no information on this
+                    </p>
+
+                    <div class="space-y-4">
+                        <!-- Q9 -->
+                        <div class="q-item" id="container-q9">
+                            <p class="mb-3 text-gray-800 font-medium"><span class="font-bold text-teal-700 mr-2">9</span> Children with good self-control are known to be likely to do well at school later on.</p>
+                            <div class="custom-radio-group">
+                                <label class="custom-radio-label"><input type="radio" name="q9" value="true"><span>TRUE</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q9" value="false"><span>FALSE</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q9" value="not given"><span>NOT GIVEN</span></label>
+                            </div>
+                        </div>
+
+                        <!-- Q10 -->
+                        <div class="q-item" id="container-q10">
+                            <p class="mb-3 text-gray-800 font-medium"><span class="font-bold text-teal-700 mr-2">10</span> The way a child plays may provide information about possible medical problems.</p>
+                            <div class="custom-radio-group">
+                                <label class="custom-radio-label"><input type="radio" name="q10" value="true"><span>TRUE</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q10" value="false"><span>FALSE</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q10" value="not given"><span>NOT GIVEN</span></label>
+                            </div>
+                        </div>
+
+                        <!-- Q11 -->
+                        <div class="q-item" id="container-q11">
+                            <p class="mb-3 text-gray-800 font-medium"><span class="font-bold text-teal-700 mr-2">11</span> Playing with dolls was found to benefit girls’ writing more than boys’ writing.</p>
+                            <div class="custom-radio-group">
+                                <label class="custom-radio-label"><input type="radio" name="q11" value="true"><span>TRUE</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q11" value="false"><span>FALSE</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q11" value="not given"><span>NOT GIVEN</span></label>
+                            </div>
+                        </div>
+
+                        <!-- Q12 -->
+                        <div class="q-item" id="container-q12">
+                            <p class="mb-3 text-gray-800 font-medium"><span class="font-bold text-teal-700 mr-2">12</span> Children had problems thinking up ideas when they first created the story with Lego.</p>
+                            <div class="custom-radio-group">
+                                <label class="custom-radio-label"><input type="radio" name="q12" value="true"><span>TRUE</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q12" value="false"><span>FALSE</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q12" value="not given"><span>NOT GIVEN</span></label>
+                            </div>
+                        </div>
+
+                        <!-- Q13 -->
+                        <div class="q-item" id="container-q13">
+                            <p class="mb-3 text-gray-800 font-medium"><span class="font-bold text-teal-700 mr-2">13</span> People nowadays regard children’s play as less significant than they did in the past.</p>
+                            <div class="custom-radio-group">
+                                <label class="custom-radio-label"><input type="radio" name="q13" value="true"><span>TRUE</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q13" value="false"><span>FALSE</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q13" value="not given"><span>NOT GIVEN</span></label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 flex justify-end">
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="9-13">Check Answers</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Highlight Selection Tooltip -->
+<div id="highlight-tooltip" class="highlight-tooltip">Highlight Text</div>
+
+<!-- Immersive Vocabulary Details Card -->
+<div id="vocab-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
+    <div class="bg-white rounded-2xl shadow-2xl p-5 sm:p-8 w-full max-w-md relative transform transition-all scale-95 opacity-0" id="vocab-modal-content">
+        <button id="close-vocab-modal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-full w-8 h-8 flex items-center justify-center">&times;</button>
+        <div class="flex items-center mb-6 border-b pb-4 mt-2">
+            <h3 id="vocab-word" class="text-2xl sm:text-3xl font-extrabold text-teal-950 capitalize tracking-tight"></h3>
+        </div>
+        <div class="flex items-center mb-5">
+            <button id="play-audio-btn" class="flex items-center justify-center h-10 w-10 sm:h-12 sm:w-12 shrink-0 rounded-full bg-teal-50 text-teal-700 hover:bg-teal-600 hover:text-white mr-4 transition-all shadow-sm border border-teal-200">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>
+            </button>
+            <p id="vocab-pronunciation-text" class="text-gray-500 font-mono text-base sm:text-lg bg-gray-50 px-3 py-1 rounded-md border border-gray-100"></p>
+        </div>
+        <p id="vocab-meaning" class="text-gray-700 text-base sm:text-lg leading-relaxed"></p>
+    </div>
+</div>
+
+<!-- Warning / Notice Modal Overlay -->
+<div id="alert-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-[80]">
+    <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm relative transform transition-all scale-95 opacity-0 text-center" id="alert-modal-content">
+        <div id="alert-icon-container" class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 mb-4">
+            <svg class="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        </div>
+        <h3 id="alert-title" class="text-lg font-medium text-gray-900 mb-2">Notice</h3>
+        <p id="alert-message" class="text-sm text-gray-500 mb-6"></p>
+        <button id="close-alert-btn" class="w-full inline-flex justify-center rounded-md px-4 py-2 bg-teal-700 text-white font-medium hover:bg-teal-800 text-sm transition-colors">Got it</button>
+    </div>
+</div>
+
+<script>
+const vocabulary = {
+    'repercussions': { meaning: 'Unintended or far-reaching consequences of an event or action, especially unwelcome ones.', phonetic: '/ˌriː.pəˈkʌʃ.ənz/' },
+    'extolled': { meaning: 'Praised enthusiastically or highly.', phonetic: '/ɪkˈstəʊld/' },
+    'scarce': { meaning: 'Insufficient for the demand; occurring in limited quantities or hard to find.', phonetic: '/skeəs/' },
+    'curtailed': { meaning: 'Reduced in extent or quantity; imposed a restriction on.', phonetic: '/kɜːˈteɪld/' },
+    'spontaneous': { meaning: 'Performed or occurring as a result of a sudden inner impulse or inclination and without premeditation.', phonetic: '/spɒnˈteɪ.ni.əs/' },
+    'intervened': { meaning: 'Took part in something so as to prevent or alter a result or course of events.', phonetic: '/ˌɪn.təˈviːnd/' },
+    'self-control': { meaning: 'The ability to control oneself, in particular one\'s emotions and desires or the expression of them in one\'s behavior, especially in difficult situations.', phonetic: '/ˌself.kənˈtrəʊl/' },
+    'predictor': { meaning: 'A person or thing that predicts that something will happen; a variable that can be used to forecast an outcome.', phonetic: '/prɪˈdɪk.tər/' },
+    'neurodevelopmental': { meaning: 'Relating to the development of the nervous system and brain.', phonetic: '/ˌnjʊə.rəʊ.dɪˌvel.əpˈmen.təl/' },
+    'trivial': { meaning: 'Of little value or importance.', phonetic: '/ˈtrɪv.i.əl/' }
+};
+
+const ANSWERS = {
+    q1: "creativity", 
+    q2: "rules", 
+    q3: "cities", 
+    q4: "traffic|crime", 
+    q5: "traffic|crime", 
+    q6: "competition", 
+    q7: "evidence", 
+    q8: "life",
+    q9: "true", 
+    q10: "true", 
+    q11: "not given", 
+    q12: "false", 
+    q13: "true"
+};
+
+const explanations = {
+    q1: "Paragraph 1 states: 'Although she isn’t aware of it, this fantasy is helping her take her first steps towards her capacity for creativity...' Therefore, Alice's magical kingdom helps build creativity. Answer: creativity.",
+    q2: "Paragraph 2 states: 'When they tire of this and settle down with a board game, she’s learning about the need to follow rules and take turns with a partner.' Rules is the core concept learned along with turn-taking. Answer: rules.",
+    q3: "Paragraph 5 mentions that Whitebread is mindful of a worldwide decline in play, pointing out that 'over half the people in the world now live in cities.' This indicates that the populations of cities have grown significantly. Answer: cities.",
+    q4: "Paragraph 5 mentions that 'Outdoor play is curtailed by perceptions of risk to do with traffic, as well as parents’ increased wish to protect their children from being the victims of crime.' Therefore, the two factors limiting free play are traffic and crime. Answer: traffic (or crime).",
+    q5: "Paragraph 5 mentions that 'Outdoor play is curtailed by perceptions of risk to do with traffic, as well as parents’ increased wish to protect their children from being the victims of crime.' Therefore, the two factors limiting free play are traffic and crime. Answer: crime (or traffic).",
+    q6: "Paragraph 5 concludes that the emphasis on 'earlier is better' is leading to 'greater competition in academic learning and schools.' Answer: competition.",
+    q7: "Paragraph 6 explains: 'International bodies like the United Nations... have begun to develop policies... But what they often lack is the evidence to base policies on.' It is therefore difficult to find evidence. Answer: evidence.",
+    q8: "Paragraph 8 explains that Jenny Gibson notes 'there is very little data on the impact it [play] has on the child’s later life.' Thus, research focuses on its impact on the rest of the child's life. Answer: life.",
+    q9: "TRUE. Paragraph 12 states that Baker's research linked greater self-control to solving scientific reasoning problems faster, and Paragraph 13 explicitly states 'the ability to self-regulate [self-control] has been shown to be a key predictor of academic performance.' This matches the statement.",
+    q10: "TRUE. Paragraph 14 notes that Gibson investigated how 'observing children at play can give us important clues about their well-being and can even be useful in the diagnosis of neurodevelopmental disorders like autism.' Observing play acts as a diagnostic tool.",
+    q11: "NOT GIVEN. Paragraph 15 highlights a study on writing with dolls and Lego bricks, stating children wrote longer and better stories, but it makes no comparison or mention of girls writing better than boys.",
+    q12: "FALSE. Paragraph 15 states: 'With the Lego building, however, not a single child said this [that they didn't know what to write about] through the whole year of the project.' This directly contradicts the claim that they had problems.",
+    q13: "TRUE. Paragraph 17 quotes Whitebread: 'Somehow the importance of play has been lost in recent decades. It's regarded as something trivial...' This indicates that play is regarded as less significant today than it was in previous decades."
+};
+
+const TOTAL_QUESTIONS = 13;
+
+document.addEventListener('DOMContentLoaded', () => {
+    const app = {
+        userAnswers: {}, answersChecked: {}, currentFontSize: 17, timeRemaining: 60 * 60,
+        leftPane: document.getElementById('left-pane'),
+        rightPane: document.getElementById('right-pane'),
+        splitter: document.getElementById('splitter'),
+        highlightTooltip: document.getElementById('highlight-tooltip'),
+        vocabModal: document.getElementById('vocab-modal'),
+        vocabModalContent: document.getElementById('vocab-modal-content'),
+        closeVocabModalBtn: document.getElementById('close-vocab-modal'),
+        vocabWordEl: document.getElementById('vocab-word'),
+        vocabMeaningEl: document.getElementById('vocab-meaning'),
+        vocabPronunciationText: document.getElementById('vocab-pronunciation-text'),
+        playAudioBtn: document.getElementById('play-audio-btn'),
+        clearHighlightsBtn: document.getElementById('clear-highlights-btn'),
+        progressText: document.getElementById('progress-text'),
+        timerEl: document.getElementById('timer'),
+        alertModal: document.getElementById('alert-modal'),
+        alertModalContent: document.getElementById('alert-modal-content'),
+        closeAlertBtn: document.getElementById('close-alert-btn'),
+        alertTitleEl: document.getElementById('alert-title'),
+        alertMessageEl: document.getElementById('alert-message'),
+        alertIconContainer: document.getElementById('alert-icon-container'),
+
+        init() { 
+            this.setupEventListeners(); 
+            this.initSplitter(); 
+            this.initHighlighter(); 
+            this.updateCheckButtonsState(); 
+            this.startTimer(); 
+        },
+
+        startTimer() {
+            const interval = setInterval(() => {
+                if (this.timeRemaining <= 0) { 
+                    clearInterval(interval); 
+                    this.timerEl.textContent = "00:00"; 
+                    this.showAlert("Time's Up!", "Your 60 minutes have expired.", "warning"); 
+                    return; 
+                }
+                this.timeRemaining--;
+                const m = Math.floor(this.timeRemaining/60).toString().padStart(2,'0');
+                const s = (this.timeRemaining%60).toString().padStart(2,'0');
+                this.timerEl.textContent = `${m}:${s}`;
+                if (this.timeRemaining <= 300) this.timerEl.classList.add('text-red-500');
+            }, 1000);
+        },
+
+        setupEventListeners() {
+            document.getElementById('increase-font-btn').addEventListener('click', () => this.changeFontSize(1));
+            document.getElementById('decrease-font-btn').addEventListener('click', () => this.changeFontSize(-1));
+            this.clearHighlightsBtn.addEventListener('click', () => this.leftPane.querySelectorAll('mark').forEach(m => m.replaceWith(document.createTextNode(m.textContent))));
+            this.closeVocabModalBtn.addEventListener('click', () => this.closeModal());
+            this.vocabModal.addEventListener('click', (e) => { if (e.target === this.vocabModal) this.closeModal(); });
+            
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') { 
+                    if (!this.vocabModal.classList.contains('hidden')) this.closeModal(); 
+                    if (!this.alertModal.classList.contains('hidden')) this.closeAlert(); 
+                }
+                if ((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='f') { 
+                    e.preventDefault(); 
+                    this.showAlert("Action Disabled","The 'Find' function is disabled to simulate real test conditions.","warning"); 
+                }
+            });
+            
+            document.addEventListener('visibilitychange', () => { 
+                if (document.hidden && this.timeRemaining > 0) {
+                    this.showAlert("Warning","Please do not switch tabs during the exam.","warning"); 
+                }
+            });
+            
+            window.addEventListener('beforeunload', (e) => { 
+                if (this.timeRemaining > 0 && this.timeRemaining < 60*60) { 
+                    e.preventDefault(); 
+                    e.returnValue=''; 
+                } 
+            });
+            
+            this.closeAlertBtn.addEventListener('click', () => this.closeAlert());
+            this.alertModal.addEventListener('click', (e) => { if (e.target === this.alertModal) this.closeAlert(); });
+            
+            document.body.addEventListener('input', (e) => {
+                if (e.target.tagName==='INPUT' && e.target.type==='text') {
+                    this.userAnswers[e.target.name] = e.target.value.trim().toLowerCase();
+                    e.target.classList.remove('correct-answer','incorrect-answer');
+                    this.updateCheckButtonsState(); 
+                    this.updateProgress();
+                }
+            });
+            
+            document.body.addEventListener('change', (e) => {
+                if (e.target.type === 'radio') {
+                    this.userAnswers[e.target.name] = e.target.value;
+                    const groupRadios = document.querySelectorAll(`input[name="${e.target.name}"]`);
+                    groupRadios.forEach(radio => {
+                        const label = radio.closest('label');
+                        if (label) label.classList.remove('correct-answer', 'incorrect-answer');
+                    });
+                    this.updateCheckButtonsState(); 
+                    this.updateProgress();
+                }
+            });
+            
+            this.leftPane.addEventListener('click', (e) => {
+                if (e.target.classList.contains('vocab-word')) this.openVocabModal(e.target.dataset.word);
+                if (e.target.tagName==='MARK') e.target.replaceWith(document.createTextNode(e.target.textContent));
+            });
+            
+            document.querySelectorAll('.check-btn').forEach(btn => btn.addEventListener('click', (e) => this.checkAnswers(e.target.dataset.range, e.target)));
+            
+            this.playAudioBtn.addEventListener('click', () => {
+                const word = this.vocabWordEl.textContent; if (!word) return;
+                if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+                this.playAudioBtn.classList.remove('text-teal-700','bg-teal-50'); 
+                this.playAudioBtn.classList.add('bg-teal-600','text-white');
+                if ('speechSynthesis' in window) { 
+                    const u = new SpeechSynthesisUtterance(word); 
+                    u.lang = 'en-GB'; 
+                    u.rate = 0.9; 
+                    u.onend = () => this.resetAudioBtn(); 
+                    u.onerror = () => this.resetAudioBtn(); 
+                    window.speechSynthesis.speak(u); 
+                } else {
+                    setTimeout(() => this.resetAudioBtn(), 500);
+                }
+            });
+        },
+
+        updateProgress() { 
+            let count = 0; 
+            for (let k in ANSWERS) { 
+                if ((this.userAnswers[k]||"").trim()) count++; 
+            } 
+            this.progressText.textContent = `${Math.min(count, TOTAL_QUESTIONS)} / ${TOTAL_QUESTIONS} Answered`; 
+        },
+        
+        resetAudioBtn() { 
+            this.playAudioBtn.classList.add('text-teal-700','bg-teal-50'); 
+            this.playAudioBtn.classList.remove('bg-teal-600','text-white'); 
+        },
+        
+        changeFontSize(d) { 
+            this.currentFontSize = Math.max(14, Math.min(26, this.currentFontSize+d)); 
+            document.documentElement.style.setProperty('--app-font-size', `${this.currentFontSize}px`); 
+        },
+
+        openVocabModal(w) {
+            const d = vocabulary[w]; if(!d) return;
+            this.vocabWordEl.textContent = w; 
+            this.vocabMeaningEl.textContent = d.meaning; 
+            this.vocabPronunciationText.textContent = d.phonetic || '';
+            this.vocabModal.classList.remove('hidden');
+            setTimeout(() => {
+                this.vocabModalContent.classList.remove('scale-95','opacity-0'); 
+                this.vocabModalContent.classList.add('scale-100','opacity-100');
+            }, 10);
+        },
+        
+        closeModal() {
+            if('speechSynthesis' in window) window.speechSynthesis.cancel();
+            this.vocabModalContent.classList.remove('scale-100','opacity-100'); 
+            this.vocabModalContent.classList.add('scale-95','opacity-0');
+            this.resetAudioBtn(); 
+            setTimeout(() => this.vocabModal.classList.add('hidden'), 200);
+        },
+        
+        showAlert(title, message, type='error') {
+            this.alertTitleEl.textContent = title; 
+            this.alertMessageEl.textContent = message;
+            const c = type === 'warning' ? 'yellow' : 'red';
+            this.alertIconContainer.className = `mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-${c}-100 mb-4`;
+            this.alertIconContainer.innerHTML = `<svg class="h-6 w-6 text-${c}-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>`;
+            this.alertModal.classList.remove('hidden');
+            setTimeout(() => {
+                this.alertModalContent.classList.remove('scale-95','opacity-0'); 
+                this.alertModalContent.classList.add('scale-100','opacity-100');
+            }, 10);
+        },
+        
+        closeAlert() {
+            this.alertModalContent.classList.remove('scale-100','opacity-100'); 
+            this.alertModalContent.classList.add('scale-95','opacity-0');
+            setTimeout(() => this.alertModal.classList.add('hidden'), 200);
+        },
+
+        isRangeAnswered(range) {
+            const [s,e] = range.split('-').map(Number);
+            for (let i = s; i <= e; i++) {
+                if (!(this.userAnswers[`q${i}`]||"").trim()) return false;
+            }
+            return true;
+        },
+
+        updateCheckButtonsState() {
+            document.querySelectorAll('.check-btn').forEach(btn => {
+                const range = btn.dataset.range;
+                if (this.answersChecked[range]) {
+                    btn.className = 'check-btn bg-teal-900 hover:bg-teal-950 text-white font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-pointer';
+                    btn.textContent = 'Reset Answers';
+                    return;
+                }
+                const allDone = this.isRangeAnswered(range);
+                btn.className = allDone ? 'check-btn bg-teal-700 hover:bg-teal-800 text-white font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-pointer transform hover:-translate-y-0.5' : 'check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80';
+                btn.textContent = 'Check Answers';
+            });
+        },
+
+        checkAnswers(range, btn) {
+            if (this.answersChecked[range]) {
+                this.answersChecked[range] = false;
+                const [s,e] = range.split('-').map(Number);
+                for (let i = s; i <= e; i++) {
+                    const qId = `q${i}`; 
+                    this.userAnswers[qId] = '';
+                    const inputEl = document.querySelector(`input[name="${qId}"][type="text"]`);
+                    if (inputEl) {
+                        inputEl.value = '';
+                        inputEl.placeholder = '________';
+                        inputEl.classList.remove('correct-answer','incorrect-answer');
+                    }
+                    const groupRadios = document.querySelectorAll(`input[name="${qId}"][type="radio"]`);
+                    if (groupRadios.length > 0) {
+                        groupRadios.forEach(radio => {
+                            radio.checked = false;
+                            const label = radio.closest('label');
+                            if (label) label.classList.remove('correct-answer', 'incorrect-answer');
+                        });
+                    }
+                    document.getElementById(`expl-${qId}`)?.remove();
+                }
+                this.updateCheckButtonsState(); 
+                this.updateProgress(); 
+                return;
+            }
+            if (!this.isRangeAnswered(range)) {
+                this.showAlert("Incomplete Answers","Please answer all questions in this section before checking.","warning");
+                return;
+            }
+            this.answersChecked[range] = true; 
+            this.updateCheckButtonsState();
+
+            const [s,e] = range.split('-').map(Number);
+            for (let i = s; i <= e; i++) {
+                const qId = `q${i}`;
+                const userAns = (this.userAnswers[qId]||"").toLowerCase().trim();
+                const correctList = ANSWERS[qId].toLowerCase().split('|');
+                const isCorrect = correctList.includes(userAns);
+                let feedbackHTML = '';
+                
+                const inputEl = document.querySelector(`input[name="${qId}"][type="text"]`);
+                if (inputEl) {
+                    inputEl.classList.remove('correct-answer','incorrect-answer');
+                    inputEl.classList.add(isCorrect ? 'correct-answer' : 'incorrect-answer');
+                    if (!isCorrect) {
+                        inputEl.value = '';
+                        inputEl.placeholder = correctList[0];
+                        feedbackHTML = `<span class="correct-badge">Correct Answer: ${correctList[0]}</span><br>`;
+                    }
+                }
+                
+                const radios = document.querySelectorAll(`input[name="${qId}"][type="radio"]`);
+                if (radios.length > 0) {
+                    radios.forEach(radio => {
+                        const label = radio.closest('label');
+                        if (label) label.classList.remove('correct-answer', 'incorrect-answer');
+                        if (correctList.includes(radio.value.toLowerCase())) {
+                            if (label) label.classList.add('correct-answer');
+                        } else if (radio.value.toLowerCase() === userAns) {
+                            if (label) label.classList.add('incorrect-answer');
+                        }
+                    });
+                    if (!isCorrect) {
+                        feedbackHTML = `<span class="correct-badge">Correct Answer: ${correctList[0].toUpperCase()}</span><br>`;
+                    }
+                }
+
+                if (explanations[qId] && !document.getElementById(`expl-${qId}`)) {
+                    const div = document.createElement('div'); 
+                    div.id = `expl-${qId}`; 
+                    div.className = 'explanation-box';
+                    div.innerHTML = `${feedbackHTML}<strong>Explanation:</strong> ${explanations[qId]}`;
+                    const container = document.getElementById(`container-${qId}`);
+                    if (container) {
+                        const wrap = container.closest('.q-item') || container.closest('li') || container; 
+                        wrap.insertAdjacentElement('afterend', div);
+                    }
+                }
+            }
+        },
+
+        initSplitter() {
+            let isDragging = false; 
+            const panes = document.getElementById('content-panes');
+            this.splitter.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                isDragging = true;
+                document.body.style.cursor = 'col-resize';
+            });
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging || window.innerWidth <= 768) return;
+                const rect = panes.getBoundingClientRect(); 
+                const newLeft = e.clientX - rect.left;
+                if (newLeft > 200 && newLeft < rect.width - 200) {
+                    panes.style.gridTemplateColumns = `${(newLeft/rect.width)*100}% 5px 1fr`;
+                }
+            });
+            document.addEventListener('mouseup', () => {
+                if (isDragging) {
+                    isDragging = false;
+                    document.body.style.cursor = 'default';
+                }
+            });
+        },
+
+        initHighlighter() {
+            document.body.addEventListener('mouseup', (e) => {
+                const sel = window.getSelection(); 
+                const text = sel.toString().trim();
+                if (text.length > 0) {
+                    const range = sel.getRangeAt(0);
+                    if (!this.leftPane.contains(range.commonAncestorContainer) && !this.rightPane.contains(range.commonAncestorContainer)) {
+                        this.highlightTooltip.style.display = 'none';
+                        return;
+                    }
+                    this.highlightTooltip.style.left = `${e.pageX-30}px`; 
+                    this.highlightTooltip.style.top = `${e.pageY-40}px`; 
+                    this.highlightTooltip.style.display = 'block';
+                    this.highlightTooltip.onclick = () => {
+                        const mark = document.createElement('mark');
+                        try { 
+                            range.surroundContents(mark); 
+                        } catch (ex) {
+                            this.showAlert("Highlight Error", "Please select text within a single element.", "warning");
+                        } finally {
+                            sel.removeAllRanges();
+                            this.highlightTooltip.style.display = 'none';
+                        }
+                    };
+                } else {
+                    this.highlightTooltip.style.display = 'none';
+                }
+            });
+            document.body.addEventListener('mousedown', () => {
+                if (window.getSelection().toString().length === 0) this.highlightTooltip.style.display = 'none';
+            });
+        }
+    };
+    app.init();
+});
+</script>
+</body>
+</html>

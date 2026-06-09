@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IELTS Academic Simulator - Harappan Civilisation</title>
+    <title>IELTS Academic Simulator - Changes in reading habits</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
@@ -81,24 +81,6 @@
             text-align: center;
             text-indent: 0;
         }
-        .paragraph-label {
-            float: left;
-            font-family: 'Inter', sans-serif;
-            font-weight: 700;
-            font-size: 1.1em;
-            margin-right: 0.5rem;
-            color: #1e40af;
-            text-indent: 0;
-            background-color: #eff6ff;
-            width: 24px;
-            height: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 4px;
-            border: 1px solid #bfdbfe;
-            margin-top: 5px;
-        }
 
         /* Question Styles */
         .q-item {
@@ -125,11 +107,6 @@
             border-color: #3b82f6;
             background-color: #ffffff;
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
-        }
-
-        .text-input-short {
-            width: 3rem;
-            text-transform: uppercase;
         }
 
         /* Custom Radio Button Styles */
@@ -173,7 +150,6 @@
             padding-left: 0.5rem;
             cursor: pointer;
         }
-
         select.text-input-short {
             width: 4.5rem; 
         }
@@ -297,7 +273,7 @@
                 padding-bottom: 2rem;
             }
             .text-input {
-                max-width: 130px;
+                max-width: 140px;
                 padding: 2px 6px;
             }
         }
@@ -314,15 +290,15 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                 </svg>
             </div>
-            <h1 class="text-xl font-bold text-gray-800 hidden sm:block">IELTS Simulator <span class="text-blue-600 font-medium">| Harappan Civilisation</span></h1>
-            <h1 class="text-base font-bold text-gray-800 sm:hidden">IELTS <span class="text-blue-600">Harappan Civ.</span></h1>
+            <h1 class="text-xl font-bold text-gray-800 hidden sm:block">IELTS Simulator <span class="text-blue-600 font-medium">| Changes in reading habits</span></h1>
+            <h1 class="text-base font-bold text-gray-800 sm:hidden">IELTS <span class="text-blue-600">Reading Habits</span></h1>
         </div>
         
         <!-- Timer & Progress -->
         <div class="flex items-center space-x-4">
             <div class="hidden sm:flex flex-col items-end">
                 <span class="text-xs text-gray-500 font-bold uppercase tracking-wide">Progress</span>
-                <span id="progress-text" class="text-sm font-semibold text-blue-600">0 / 14 Answered</span>
+                <span id="progress-text" class="text-sm font-semibold text-blue-600">0 / 13 Answered</span>
             </div>
             <div class="flex items-center bg-gray-100 rounded-lg px-3 py-1.5 border border-gray-200">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -349,24 +325,26 @@
         <!-- Left Pane: Passages -->
         <div id="left-pane" class="pane relative">
             <div class="reading-passage">
-                <h3>Whatever happened to the Harappan Civilisation?</h3>
-                <h4>New research sheds light on the disappearance of an ancient society</h4>
+                <h3>Changes in reading habits</h3>
+                <h4>What are the implications of the way we read today?</h4>
                 
-                <p><span class="paragraph-label">A</span> The Harappan Civilisation of ancient Pakistan and India <span class="vocab-word" data-word="flourished">flourished</span> 5,000 years ago, but a thousand years later their cities were abandoned. The Harappan Civilisation was a sophisticated Bronze Age society who built ‘megacities’ and traded internationally in luxury craft products, and yet seemed to have left almost no depictions of themselves. But their lack of self-imagery – at a time when the Egyptians were carving and painting representations of themselves all over their temples – is only part of the mystery.</p>
+                <p>Look around on your next plane trip. The iPad is the new pacifier for babies and toddlers. Younger school-aged children read stories on smartphones; older kids don’t read at all, but hunch over video games. Parents and other passengers read on tablets or skim a flotilla of email and news feeds. <span class="vocab-word" data-word="Unbeknown">Unbeknown</span> to most of us, an invisible, game-changing transformation links everyone in this picture: the neuronal circuit that underlies the brain’s ability to read is subtly, rapidly changing and this has implications for everyone from the pre-reading toddler to the expert adult.</p>
 
-                <p><span class="paragraph-label">B</span> ‘There is plenty of archaeological evidence to tell us about the rise of the Harappan Civilisation, but relatively little about its fall,’ explains archaeologist Dr Cameron Petrie of the University of Cambridge. ‘As populations increased, cities were built that had great baths, craft workshops, palaces and halls laid out in distinct sectors. Houses were arranged in blocks, with wide main streets and narrow alleyways, and many had their own wells and drainage systems. It was very much a “thriving” civilisation.’ Then around 2100 BC, a transformation began. Streets went uncleaned, buildings started to be abandoned, and ritual structures fell out of use. After their final <span class="vocab-word" data-word="demise">demise</span>, a millennium passed before really large-scale cities appeared once more in South Asia.</p>
+                <p>As work in neurosciences indicates, the acquisition of literacy necessitated a new circuit in our species’ brain more than 6,000 years ago. That circuit evolved from a very simple mechanism for decoding basic information, like the number of goats in one’s herd, to the present, highly elaborated reading brain. My research depicts how the present reading brain enables the development of some of our most important intellectual and affective processes: internalized knowledge, <span class="vocab-word" data-word="analogical">analogical</span> reasoning, and inference; perspective-taking and empathy; critical analysis and the generation of insight. Research surfacing in many parts of the world now cautions that each of these essential ‘deep reading’ processes may be under threat as we move into digital-based modes of reading.</p>
 
-                <p><span class="paragraph-label">C</span> Some have claimed that major glacier-fed rivers changed their course, dramatically affecting the water supply and agriculture; or that the cities could not cope with an increasing population, they exhausted their resource base, the trading economy broke down or they <span class="vocab-word" data-word="succumbed">succumbed</span> to invasion and conflict; and yet others that climate change caused an environmental change that affected food and water provision. ‘It is unlikely that there was a single cause for the decline of the civilisation. But the fact is, until now, we have had little solid evidence from the area for most of the key elements,’ said Petrie. ‘A lot of the archaeological debate has really only been well-argued speculation.’</p>
+                <p>This is not a simple, <span class="vocab-word" data-word="binary">binary</span> issue of print versus digital reading and technological innovations. As MIT scholar Sherry Turkle has written, we do not err as a society when we innovate but when we ignore what we disrupt or <span class="vocab-word" data-word="diminish">diminish</span> while innovating. In this hinge moment between print and digital cultures, society needs to confront what is diminishing in the expert reading circuit, what our children and older students are not developing, and what we can do about it.</p>
 
-                <p><span class="paragraph-label">D</span> A research team led by Petrie, together with Dr Ravindanath Singh of Banaras Hindu University in India, found early in their investigations that many of the archaeological sites were not where they were supposed to be, completely altering understanding of the way that this region was inhabited in the past. When they carried out a survey of how the larger area was settled in relation to sources of water, they found <span class="vocab-word" data-word="inaccuracies">inaccuracies</span> in the published geographic locations of ancient settlements ranging from several hundred metres to many kilometres. They realised that any attempts to use the existing data were likely to be fundamentally flawed. Over the course of several seasons of fieldwork they carried out new surveys, finding an astonishing 198 settlement sites that were previously unknown.</p>
+                <p>We know from research that the reading circuit is not given to human beings through a genetic blueprint like vision or language; it needs an environment to develop. Further, it will adapt to that environment’s requirements – from different writing systems to the characteristics of whatever medium is used. If the dominant medium advantages processes that are fast, multi-task oriented and well-suited for large volumes of information, like the current digital medium, so will the reading circuit. As UCLA psychologist Patricia Greenfield writes, the result is that less attention and time will be allocated to slower, time-demanding deep reading processes.</p>
 
-                <p><span class="paragraph-label">E</span> Now, research published by Dr Yama Dixit and Professor David Hodell, both from Cambridge’s Department of Earth Sciences, has provided the first <span class="vocab-word" data-word="definitive">definitive</span> evidence for climate change affecting the plains of north-western India, where hundreds of Harappan sites are known to have been situated. The researchers gathered shells of Melanoides tuberculate snails from the sediments of an ancient lake and used geochemical analysis as a means of tracing the climate history of the region. ‘As today, the major source of water into the lake is likely to have been the summer monsoon,’ says Dixit. ‘But we have observed that there was an abrupt change about 4,100 years ago, when the amount of <span class="vocab-word" data-word="evaporation">evaporation</span> from the lake exceeded the rainfall – indicative of a drought.’ Hodell adds: ‘We estimate that the weakening of the Indian summer monsoon climate lasted about 200 years before recovering to the previous conditions, which we still see today.’</p>
+                <p>Increasing reports from educators and from researchers in psychology and the humanities bear this out. English literature scholar and teacher Mark Edmundson describes how many college students actively avoid the classic literature of the 19th and 20th centuries in favour of something simpler as they no longer have the patience to read longer, denser, more difficult texts. We should be less concerned with students’ ‘cognitive impatience’, however, than by what may underlie it: the potential inability of large numbers of students to read with a level of critical analysis sufficient to comprehend the complexity of thought and argument found in more demanding texts.</p>
 
-                <p><span class="paragraph-label">F</span> It has long been thought that other great Bronze Age civilisations also declined at a similar time, with a global-scale climate event being seen as the cause. While it is possible that these local-scale processes were linked, the real archaeological interest lies in understanding the impact of these larger-scale events on different environments and different populations. ‘Considering the vast area of the Harappan Civilisation with its variable weather systems,’ explains Singh, ‘it is essential that we obtain more climate data from areas close to the two great cities at Mohenjodaro and Harappa and also from the Indian Punjab.’</p>
+                <p>Multiple studies show that digital screen use may be causing a variety of troubling downstream effects on reading comprehension in older high school and college students. In Stavanger, Norway, psychologist Anne Mangen and colleagues studied how high school students comprehend the same material in different mediums. Mangen’s group asked subjects questions about a short story whose plot had universal student appeal; half of the students read the story on a tablet, the other half in paperback. Results indicated that students who read on print were superior in their comprehension to screen-reading peers, particularly in their ability to sequence detail and reconstruct the plot in <span class="vocab-word" data-word="chronological">chronological</span> order.</p>
 
-                <p><span class="paragraph-label">G</span> Petrie and Singh’s team is now examining archaeological records and trying to understand details of how people led their lives in the region five millennia ago. They are analysing grains cultivated at the time, and trying to work out whether they were grown under extreme conditions of water stress, and whether they were adjusting the combinations of crops they were growing for different weather systems. They are also looking at whether the types of pottery used, and other aspects of their material culture, were distinctive to specific regions or were more similar across larger areas. This gives us insight into the types of <span class="vocab-word" data-word="interactive networks">interactive networks</span> that the population was involved in, and whether those changed.</p>
+                <p>Ziming Liu from San Jose State University has conducted a series of studies which indicate that the ‘new norm’ in reading is skimming, involving word-spotting and browsing through the text. Many readers now use a pattern when reading in which they sample the first line and then word-spot through the rest of the text. When the reading brain skims like this, it reduces time allocated to deep reading processes. In other words, we don’t have time to grasp complexity, to understand another’s feelings, to perceive beauty, and to create thoughts of the reader’s own.</p>
 
-                <p><span class="paragraph-label">H</span> Petrie believes that archaeologists are in a unique position to investigate how past societies responded to environmental and climatic change. ‘By investigating responses to environmental pressures and threats, we can learn from the past to engage with the public, and the relevant governmental and administrative bodies, to be more <span class="vocab-word" data-word="proactive">proactive</span> in issues such as the management and administration of water supply, the balance of urban and rural development, and the importance of preserving cultural heritage in the future.’</p>
+                <p>The possibility that critical analysis, empathy and other deep reading processes could become the unintended ‘collateral damage’ of our digital culture is not a straightforward binary issue about print versus digital reading. It is about how we all have begun to read on various mediums and how that changes not only what we read, but also the purposes for which we read. Nor is it only about the young. The subtle <span class="vocab-word" data-word="atrophy">atrophy</span> of critical analysis and empathy affects us all equally. It affects our ability to navigate a constant bombardment of information. It incentivizes a retreat to the most familiar stores of unchecked information, which require and receive no analysis, leaving us susceptible to false information and irrational ideas.</p>
+
+                <p>There’s an old rule in neuroscience that does not alter with age: use it or lose it. It is a very hopeful principle when applied to critical thought in the reading brain because it implies choice. The story of the changing reading brain is hardly finished. We possess both the science and the technology to identify and redress the changes in how we read before they become <span class="vocab-word" data-word="entrenched">entrenched</span>. If we work to understand exactly what we will lose, alongside the extraordinary new capacities that the digital world has brought us, there is as much reason for excitement as caution.</p>
             </div>
         </div>
 
@@ -379,152 +357,193 @@
         <div id="right-pane" class="pane">
             <div id="questions-section" class="max-w-3xl mx-auto space-y-8 pb-10">
                 
-                <!-- Matching Information (Paragraphs) -->
+                <!-- Multiple Choice -->
                 <div class="p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
                     <div class="flex items-center mb-4">
-                        <span class="bg-blue-100 text-blue-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 27-31</span>
-                        <h4 class="font-bold text-gray-800">Matching Information</h4>
+                        <span class="bg-blue-100 text-blue-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 14-17</span>
+                        <h4 class="font-bold text-gray-800">Multiple Choice</h4>
                     </div>
                     <p class="mb-5 text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100 text-sm">
-                        Reading Passage 3 has eight paragraphs, <strong>A-H</strong>.<br>
-                        Which paragraph contains the following information?<br>
-                        Choose the correct letter, <strong>A-H</strong>, for each answer.<br>
-                        <span class="italic text-gray-500">NB You may use any letter more than once.</span>
+                        Choose the correct letter, <strong>A, B, C,</strong> or <strong>D</strong>.
                     </p>
-
-                    <div class="space-y-4">
-                        <div class="flex items-start justify-between q-item border border-gray-100 p-4" id="container-q27">
-                            <p class="text-gray-800 font-medium leading-snug mr-4"><span class="font-bold text-blue-600 mr-2">27</span> proposed explanations for the decline of the Harappan Civilisation</p>
-                            <select name="q27" class="text-input text-input-short shrink-0">
-                                <option value=""></option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option><option value="E">E</option><option value="F">F</option><option value="G">G</option><option value="H">H</option>
-                            </select>
+                    
+                    <div class="space-y-6">
+                        <div class="q-item border border-gray-100 p-4" id="container-q14">
+                            <p class="mb-3 text-gray-800 font-medium leading-snug"><span class="font-bold text-blue-600 mr-2">14</span> What is the writer’s main point in the first paragraph?</p>
+                            <div class="flex flex-col gap-2">
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q14" value="a" class="mr-3 hidden"><span class="text-gray-700"><strong class="mr-2">A</strong> Our use of technology is having a hidden effect on us.</span></label>
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q14" value="b" class="mr-3 hidden"><span class="text-gray-700"><strong class="mr-2">B</strong> Technology can be used to help youngsters to read.</span></label>
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q14" value="c" class="mr-3 hidden"><span class="text-gray-700"><strong class="mr-2">C</strong> Travellers should be encouraged to use technology on planes.</span></label>
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q14" value="d" class="mr-3 hidden"><span class="text-gray-700"><strong class="mr-2">D</strong> Playing games is a more popular use of technology than reading.</span></label>
+                            </div>
                         </div>
 
-                        <div class="flex items-start justify-between q-item border border-gray-100 p-4" id="container-q28">
-                            <p class="text-gray-800 font-medium leading-snug mr-4"><span class="font-bold text-blue-600 mr-2">28</span> reference to a present-day application of some archaeological research findings</p>
-                            <select name="q28" class="text-input text-input-short shrink-0">
-                                <option value=""></option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option><option value="E">E</option><option value="F">F</option><option value="G">G</option><option value="H">H</option>
-                            </select>
+                        <div class="q-item border border-gray-100 p-4" id="container-q15">
+                            <p class="mb-3 text-gray-800 font-medium leading-snug"><span class="font-bold text-blue-600 mr-2">15</span> What main point does Sherry Turkle make about innovation?</p>
+                            <div class="flex flex-col gap-2">
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q15" value="a" class="mr-3 hidden"><span class="text-gray-700"><strong class="mr-2">A</strong> Technological innovation has led to a reduction in print reading.</span></label>
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q15" value="b" class="mr-3 hidden"><span class="text-gray-700"><strong class="mr-2">B</strong> We should pay attention to what might be lost when innovation occurs.</span></label>
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q15" value="c" class="mr-3 hidden"><span class="text-gray-700"><strong class="mr-2">C</strong> We should encourage more young people to become involved in innovation.</span></label>
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q15" value="d" class="mr-3 hidden"><span class="text-gray-700"><strong class="mr-2">D</strong> There is a difference between developing products and developing ideas.</span></label>
+                            </div>
                         </div>
 
-                        <div class="flex items-start justify-between q-item border border-gray-100 p-4" id="container-q29">
-                            <p class="text-gray-800 font-medium leading-snug mr-4"><span class="font-bold text-blue-600 mr-2">29</span> a difference between the Harappan Civilisation and another culture of the same period</p>
-                            <select name="q29" class="text-input text-input-short shrink-0">
-                                <option value=""></option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option><option value="E">E</option><option value="F">F</option><option value="G">G</option><option value="H">H</option>
-                            </select>
+                        <div class="q-item border border-gray-100 p-4" id="container-q16">
+                            <p class="mb-3 text-gray-800 font-medium leading-snug"><span class="font-bold text-blue-600 mr-2">16</span> What point is the writer making in the fourth paragraph?</p>
+                            <div class="flex flex-col gap-2">
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q16" value="a" class="mr-3 hidden"><span class="text-gray-700"><strong class="mr-2">A</strong> Humans have an inborn ability to read and write.</span></label>
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q16" value="b" class="mr-3 hidden"><span class="text-gray-700"><strong class="mr-2">B</strong> Reading can be done using many different mediums.</span></label>
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q16" value="c" class="mr-3 hidden"><span class="text-gray-700"><strong class="mr-2">C</strong> Writing systems make unexpected demands on the brain.</span></label>
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q16" value="d" class="mr-3 hidden"><span class="text-gray-700"><strong class="mr-2">D</strong> Some brain circuits adjust to whatever is required of them.</span></label>
+                            </div>
                         </div>
 
-                        <div class="flex items-start justify-between q-item border border-gray-100 p-4" id="container-q30">
-                            <p class="text-gray-800 font-medium leading-snug mr-4"><span class="font-bold text-blue-600 mr-2">30</span> a description of some features of Harappan urban design</p>
-                            <select name="q30" class="text-input text-input-short shrink-0">
-                                <option value=""></option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option><option value="E">E</option><option value="F">F</option><option value="G">G</option><option value="H">H</option>
-                            </select>
-                        </div>
-                        
-                        <div class="flex items-start justify-between q-item border border-gray-100 p-4" id="container-q31">
-                            <p class="text-gray-800 font-medium leading-snug mr-4"><span class="font-bold text-blue-600 mr-2">31</span> reference to the discovery of errors made by previous archaeologists</p>
-                            <select name="q31" class="text-input text-input-short shrink-0">
-                                <option value=""></option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option><option value="E">E</option><option value="F">F</option><option value="G">G</option><option value="H">H</option>
-                            </select>
+                        <div class="q-item border border-gray-100 p-4" id="container-q17">
+                            <p class="mb-3 text-gray-800 font-medium leading-snug"><span class="font-bold text-blue-600 mr-2">17</span> According to Mark Edmundson, the attitude of college students</p>
+                            <div class="flex flex-col gap-2">
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q17" value="a" class="mr-3 hidden"><span class="text-gray-700"><strong class="mr-2">A</strong> has changed the way he teaches.</span></label>
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q17" value="b" class="mr-3 hidden"><span class="text-gray-700"><strong class="mr-2">B</strong> has influenced what they select to read.</span></label>
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q17" value="c" class="mr-3 hidden"><span class="text-gray-700"><strong class="mr-2">C</strong> does not worry him as much as it does others.</span></label>
+                                <label class="custom-radio-label mcq-label"><input type="radio" name="q17" value="d" class="mr-3 hidden"><span class="text-gray-700"><strong class="mr-2">D</strong> does not match the views of the general public.</span></label>
+                            </div>
                         </div>
                     </div>
 
                     <div class="mt-6 flex justify-end">
-                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="27-31">Check Answers</button>
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="14-17">Check Answers</button>
                     </div>
                 </div>
 
-                <!-- Summary Completion (No List) -->
+                <!-- Summary Completion with List -->
                 <div class="p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
                     <div class="flex items-center mb-4">
-                        <span class="bg-blue-100 text-blue-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 32-36</span>
+                        <span class="bg-blue-100 text-blue-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 18-22</span>
                         <h4 class="font-bold text-gray-800">Summary Completion</h4>
                     </div>
                     <p class="mb-5 text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100 text-sm">
-                        Complete the summary below.<br>
-                        Choose <strong>ONE WORD ONLY</strong> from the passage for each answer.
+                        Complete the summary using the list of words, <strong>A-H</strong>, below.<br>
+                        Choose the correct letter, <strong>A-H</strong>, for each answer.
                     </p>
+
+                    <div class="mb-6 p-5 border border-blue-200 bg-blue-50/50 rounded-xl w-full mx-auto shadow-sm grid grid-cols-2 gap-y-3 gap-x-4">
+                        <div class="text-gray-800 text-sm"><strong class="text-blue-700 mr-2">A</strong> fast</div>
+                        <div class="text-gray-800 text-sm"><strong class="text-blue-700 mr-2">B</strong> isolated</div>
+                        <div class="text-gray-800 text-sm"><strong class="text-blue-700 mr-2">C</strong> emotional</div>
+                        <div class="text-gray-800 text-sm"><strong class="text-blue-700 mr-2">D</strong> worrying</div>
+                        <div class="text-gray-800 text-sm"><strong class="text-blue-700 mr-2">E</strong> many</div>
+                        <div class="text-gray-800 text-sm"><strong class="text-blue-700 mr-2">F</strong> hard</div>
+                        <div class="text-gray-800 text-sm"><strong class="text-blue-700 mr-2">G</strong> combined</div>
+                        <div class="text-gray-800 text-sm"><strong class="text-blue-700 mr-2">H</strong> thorough</div>
+                    </div>
                     
-                    <div class="leading-loose text-gray-800 text-[0.95em] bg-gray-50 p-5 rounded-lg border border-gray-100">
-                        <h5 class="font-bold text-gray-900 text-center mb-4 text-lg">Looking at evidence of climate change</h5>
+                    <div class="leading-loose text-gray-800 text-[0.95em] bg-gray-50 p-6 rounded-lg border border-gray-100">
+                        <h5 class="font-bold text-lg text-center mb-4 text-gray-900 uppercase tracking-wide">Studies on digital screen use</h5>
                         
-                        <p class="mb-4">
-                            Yama Dixit and David Hodell have found the first definitive evidence of climate change affecting the plains of north-western India thousands of years ago. By collecting the 
-                            <span id="container-q32" class="inline-block mx-1"><strong class="text-blue-600 mx-1">32</strong><input type="text" name="q32" class="text-input w-28"></span> 
-                            of snails and analysing them, they discovered evidence of a change in water levels in a 
-                            <span id="container-q33" class="inline-block mx-1"><strong class="text-blue-600 mx-1">33</strong><input type="text" name="q33" class="text-input w-28"></span> 
-                            in the region. This occurred when there was less 
-                            <span id="container-q34" class="inline-block mx-1"><strong class="text-blue-600 mx-1">34</strong><input type="text" name="q34" class="text-input w-32"></span> 
-                            than evaporation, and suggests that there was an extended period of drought.
+                        <p class="mb-4" id="container-q18" style="display:inline;">
+                            There have been many studies on digital screen use, showing some 
+                            <span class="inline-block mx-1"><strong class="text-blue-600 mx-1">18</strong>
+                                <select name="q18" class="text-input text-input-short">
+                                    <option value=""></option><option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option><option value="e">E</option><option value="f">F</option><option value="g">G</option><option value="h">H</option>
+                                </select>
+                            </span> 
+                            trends. Psychologist Anne Mangen gave high-school students a short story to read, half using digital and half using print mediums. 
                         </p>
-                        
-                        <p>
-                            Petrie and Singh’s team are using archaeological records to look at 
-                            <span id="container-q35" class="inline-block mx-1"><strong class="text-blue-600 mx-1">35</strong><input type="text" name="q35" class="text-input w-32"></span> 
-                            from five millennia ago, in order to know whether people had adapted their agricultural practices to changing climatic conditions. They are also examining objects including 
-                            <span id="container-q36" class="inline-block mx-1"><strong class="text-blue-600 mx-1">36</strong><input type="text" name="q36" class="text-input w-32"></span>, 
-                            so as to find out about links between inhabitants of different parts of the region and whether these changed over time.
+                        <p class="mb-4" id="container-q19" style="display:inline;">
+                            Her team then used a question-and-answer technique to find out how 
+                            <span class="inline-block mx-1"><strong class="text-blue-600 mx-1">19</strong>
+                                <select name="q19" class="text-input text-input-short">
+                                    <option value=""></option><option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option><option value="e">E</option><option value="f">F</option><option value="g">G</option><option value="h">H</option>
+                                </select>
+                            </span> 
+                            each group’s understanding of the plot was. 
+                        </p>
+                        <p class="mb-4" id="container-q20" style="display:inline;">
+                            The findings showed a clear pattern in the responses, with those who read screens finding the order of information 
+                            <span class="inline-block mx-1"><strong class="text-blue-600 mx-1">20</strong>
+                                <select name="q20" class="text-input text-input-short">
+                                    <option value=""></option><option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option><option value="e">E</option><option value="f">F</option><option value="g">G</option><option value="h">H</option>
+                                </select>
+                            </span> 
+                            to recall.
+                        </p>
+                        <p class="mt-4 mb-4" id="container-q21" style="display:inline;">
+                            Studies by Ziming Liu show that students are tending to read 
+                            <span class="inline-block mx-1"><strong class="text-blue-600 mx-1">21</strong>
+                                <select name="q21" class="text-input text-input-short">
+                                    <option value=""></option><option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option><option value="e">E</option><option value="f">F</option><option value="g">G</option><option value="h">H</option>
+                                </select>
+                            </span> 
+                            words and phrases in a text to save time. 
+                        </p>
+                        <p class="mb-4" id="container-q22" style="display:inline;">
+                            This approach, she says, gives the reader a superficial understanding of the 
+                            <span class="inline-block mx-1"><strong class="text-blue-600 mx-1">22</strong>
+                                <select name="q22" class="text-input text-input-short">
+                                    <option value=""></option><option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option><option value="e">E</option><option value="f">F</option><option value="g">G</option><option value="h">H</option>
+                                </select>
+                            </span> 
+                            content of material, leaving no time for thought.
                         </p>
                     </div>
                     <div class="mt-6 flex justify-end">
-                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="32-36">Check Answers</button>
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="18-22">Check Answers</button>
                     </div>
                 </div>
 
-                <!-- Matching Researchers -->
+                <!-- TRUE / FALSE / NOT GIVEN -->
                 <div class="p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
                     <div class="flex items-center mb-4">
-                        <span class="bg-blue-100 text-blue-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 37-40</span>
-                        <h4 class="font-bold text-gray-800">Matching Features</h4>
+                        <span class="bg-blue-100 text-blue-800 text-sm font-bold px-3 py-1 rounded-full mr-3">Questions 23-26</span>
+                        <h4 class="font-bold text-gray-800">TRUE / FALSE / NOT GIVEN</h4>
                     </div>
                     <p class="mb-5 text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100 text-sm">
-                        Look at the following statements (Questions 37-40) and the list of researchers below.<br>
-                        Match each statement with the correct researcher, <strong>A, B, C</strong> or <strong>D</strong>.<br>
-                        <span class="italic text-gray-500">NB You may use any letter more than once.</span>
+                        Do the following statements agree with the views of the writer in Reading Passage 2?<br><br>
+                        Select the correct option below:<br>
+                        <strong class="text-blue-700">TRUE</strong> if the statement agrees with the views of the writer<br>
+                        <strong class="text-blue-700">FALSE</strong> if the statement contradicts the views of the writer<br>
+                        <strong class="text-blue-700">NOT GIVEN</strong> if it is impossible to say what the writer thinks about this
                     </p>
-
-                    <div class="mb-6 p-5 border border-blue-200 bg-blue-50/50 rounded-xl w-64 mx-auto shadow-sm">
-                        <h5 class="font-bold text-blue-900 text-center mb-3 border-b border-blue-200 pb-2">List of Researchers</h5>
-                        <ul class="space-y-2 text-gray-800 font-medium">
-                            <li><strong class="text-blue-700 mr-2">A</strong> Cameron Petrie</li>
-                            <li><strong class="text-blue-700 mr-2">B</strong> Ravindanath Singh</li>
-                            <li><strong class="text-blue-700 mr-2">C</strong> Yama Dixit</li>
-                            <li><strong class="text-blue-700 mr-2">D</strong> David Hodell</li>
-                        </ul>
-                    </div>
                     
-                    <div class="space-y-4">
-                        <div class="flex items-start justify-between q-item border border-gray-100 p-4" id="container-q37">
-                            <p class="text-gray-800 font-medium leading-snug mr-4"><span class="font-bold text-blue-600 mr-2">37</span> Finding further information about changes to environmental conditions in the region is vital.</p>
-                            <select name="q37" class="text-input text-input-short shrink-0">
-                                <option value=""></option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option>
-                            </select>
+                    <div class="space-y-6">
+                        <div class="q-item border border-gray-100 p-4" id="container-q23">
+                            <p class="mb-3 text-gray-800 font-medium leading-snug"><span class="font-bold text-blue-600 mr-2">23</span> The medium we use to read can affect our choice of reading content.</p>
+                            <div class="flex flex-wrap gap-3">
+                                <label class="custom-radio-label"><input type="radio" name="q23" value="true" class="mr-2 hidden"><span class="font-semibold text-gray-600">True</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q23" value="false" class="mr-2 hidden"><span class="font-semibold text-gray-600">False</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q23" value="not given" class="mr-2 hidden"><span class="font-semibold text-gray-600">Not Given</span></label>
+                            </div>
                         </div>
 
-                        <div class="flex items-start justify-between q-item border border-gray-100 p-4" id="container-q38">
-                            <p class="text-gray-800 font-medium leading-snug mr-4"><span class="font-bold text-blue-600 mr-2">38</span> Examining previous patterns of behaviour may have long-term benefits.</p>
-                            <select name="q38" class="text-input text-input-short shrink-0">
-                                <option value=""></option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option>
-                            </select>
+                        <div class="q-item border border-gray-100 p-4" id="container-q24">
+                            <p class="mb-3 text-gray-800 font-medium leading-snug"><span class="font-bold text-blue-600 mr-2">24</span> Some age groups are more likely to lose their complex reading skills than others.</p>
+                            <div class="flex flex-wrap gap-3">
+                                <label class="custom-radio-label"><input type="radio" name="q24" value="true" class="mr-2 hidden"><span class="font-semibold text-gray-600">True</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q24" value="false" class="mr-2 hidden"><span class="font-semibold text-gray-600">False</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q24" value="not given" class="mr-2 hidden"><span class="font-semibold text-gray-600">Not Given</span></label>
+                            </div>
                         </div>
 
-                        <div class="flex items-start justify-between q-item border border-gray-100 p-4" id="container-q39">
-                            <p class="text-gray-800 font-medium leading-snug mr-4"><span class="font-bold text-blue-600 mr-2">39</span> Rough calculations indicate the approximate length of a period of water shortage.</p>
-                            <select name="q39" class="text-input text-input-short shrink-0">
-                                <option value=""></option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option>
-                            </select>
+                        <div class="q-item border border-gray-100 p-4" id="container-q25">
+                            <p class="mb-3 text-gray-800 font-medium leading-snug"><span class="font-bold text-blue-600 mr-2">25</span> False information has become more widespread in today’s digital era.</p>
+                            <div class="flex flex-wrap gap-3">
+                                <label class="custom-radio-label"><input type="radio" name="q25" value="true" class="mr-2 hidden"><span class="font-semibold text-gray-600">True</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q25" value="false" class="mr-2 hidden"><span class="font-semibold text-gray-600">False</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q25" value="not given" class="mr-2 hidden"><span class="font-semibold text-gray-600">Not Given</span></label>
+                            </div>
                         </div>
 
-                        <div class="flex items-start justify-between q-item border border-gray-100 p-4" id="container-q40">
-                            <p class="text-gray-800 font-medium leading-snug mr-4"><span class="font-bold text-blue-600 mr-2">40</span> Information about the decline of the Harappan Civilisation has been lacking.</p>
-                            <select name="q40" class="text-input text-input-short shrink-0">
-                                <option value=""></option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option>
-                            </select>
+                        <div class="q-item border border-gray-100 p-4" id="container-q26">
+                            <p class="mb-3 text-gray-800 font-medium leading-snug"><span class="font-bold text-blue-600 mr-2">26</span> We still have opportunities to rectify the problems that technology is presenting.</p>
+                            <div class="flex flex-wrap gap-3">
+                                <label class="custom-radio-label"><input type="radio" name="q26" value="true" class="mr-2 hidden"><span class="font-semibold text-gray-600">True</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q26" value="false" class="mr-2 hidden"><span class="font-semibold text-gray-600">False</span></label>
+                                <label class="custom-radio-label"><input type="radio" name="q26" value="not given" class="mr-2 hidden"><span class="font-semibold text-gray-600">Not Given</span></label>
+                            </div>
                         </div>
                     </div>
 
                     <div class="mt-6 flex justify-end">
-                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="37-40">Check Answers</button>
+                        <button class="check-btn bg-gray-300 text-gray-500 font-semibold py-2 px-6 rounded-lg shadow-sm transition-all duration-200 cursor-not-allowed opacity-80" data-range="23-26">Check Answers</button>
                     </div>
                 </div>
 
@@ -572,37 +591,45 @@
 <script>
     // --- DATA ---
     const vocabulary = {
-        'flourished': { meaning: 'Grew or developed in a healthy or vigorous way, especially as the result of a particularly favorable environment.', phonetic: '/ˈflʌr.ɪʃt/' },
-        'demise': { meaning: 'The end or failure of an enterprise or institution; death.', phonetic: '/dɪˈmaɪz/' },
-        'succumbed': { meaning: 'Failed to resist pressure, temptation, or some other negative force.', phonetic: '/səˈkʌmd/' },
-        'inaccuracies': { meaning: 'Things that are not accurate or correct; errors.', phonetic: '/ɪnˈæk.jə.rə.siz/' },
-        'definitive': { meaning: 'Considered to be the best of its kind and almost impossible to improve; conclusive.', phonetic: '/dɪˈfɪn.ɪ.tɪv/' },
-        'evaporation': { meaning: 'The process of turning from liquid into vapor.', phonetic: '/ɪˌvæp.əˈreɪ.ʃən/' },
-        'interactive networks': { meaning: 'Systems of interconnected people or things that influence or communicate with each other.', phonetic: '/ˌɪn.təˈræk.tɪv ˈnet.wɜːks/' },
-        'proactive': { meaning: 'Creating or controlling a situation by causing something to happen rather than responding to it after it has happened.', phonetic: '/ˌprəʊˈæk.tɪv/' }
+        'unbeknown': { meaning: 'Without the knowledge of (someone).', phonetic: '/ˌʌnbɪˈnəʊn/' },
+        'analogical': { meaning: 'Relating to or using an analogy.', phonetic: '/ˌænəˈlɒdʒɪkəl/' },
+        'binary': { meaning: 'Relating to, composed of, or involving two things.', phonetic: '/ˈbaɪnəri/' },
+        'diminish': { meaning: 'Make or become less.', phonetic: '/dɪˈmɪnɪʃ/' },
+        'chronological': { meaning: '(Of a record of events) starting with the earliest and following the order in which they occurred.', phonetic: '/ˌkrɒnəˈlɒdʒɪkəl/' },
+        'atrophy': { meaning: 'Gradually decline in effectiveness or vigor due to underuse or neglect.', phonetic: '/ˈætrəfi/' },
+        'entrenched': { meaning: '(Of an attitude, habit, or belief) firmly established and difficult or unlikely to change.', phonetic: '/ɪnˈtrɛntʃt/' }
     };
 
     const answers = {
-        q27: "c", q28: "h", q29: "a", q30: "b", q31: "d",
-        q32: "shells", q33: "lake", q34: "rainfall", q35: "grains", q36: "pottery",
-        q37: "b", q38: "a", q39: "d", q40: "a"
+        q14: "a",
+        q15: "b",
+        q16: "d",
+        q17: "b",
+        q18: "d",
+        q19: "h",
+        q20: "f",
+        q21: "b",
+        q22: "c",
+        q23: "true",
+        q24: "false",
+        q25: "not given",
+        q26: "true"
     };
 
     const explanations = {
-        q27: "Paragraph C lists several claims about the decline: 'Some have claimed that major glacier-fed rivers changed their course... or that the cities could not cope with an increasing population... or they succumbed to invasion and conflict; and yet others that climate change...'",
-        q28: "Paragraph H describes present-day applications: 'we can learn from the past to engage with the public, and the relevant governmental and administrative bodies, to be more proactive in issues such as the management and administration of water supply...'",
-        q29: "Paragraph A highlights a difference with Egyptians: '...their lack of self-imagery – at a time when the Egyptians were carving and painting representations of themselves all over their temples...'",
-        q30: "Paragraph B describes features of their urban design: 'cities were built that had great baths, craft workshops, palaces and halls laid out in distinct sectors. Houses were arranged in blocks, with wide main streets and narrow alleyways...'",
-        q31: "Paragraph D states that archaeologists 'found inaccuracies in the published geographic locations of ancient settlements ranging from several hundred metres to many kilometres. They realised that any attempts to use the existing data were likely to be fundamentally flawed.'",
-        q32: "Paragraph E: 'The researchers gathered shells of Melanoides tuberculate snails...'",
-        q33: "Paragraph E: '...from the sediments of an ancient lake and used geochemical analysis as a means of tracing the climate history...'",
-        q34: "Paragraph E: '...when the amount of evaporation from the lake exceeded the rainfall – indicative of a drought.'",
-        q35: "Paragraph G: 'They are analysing grains cultivated at the time, and trying to work out whether they were grown under extreme conditions...'",
-        q36: "Paragraph G: 'They are also looking at whether the types of pottery used, and other aspects of their material culture, were distinctive to specific regions...'",
-        q37: "Paragraph F attributes this to Singh: '...explains Singh, ‘it is essential that we obtain more climate data from areas close to the two great cities...’'",
-        q38: "Paragraph H attributes this to Petrie: 'Petrie believes that archaeologists are in a unique position to investigate how past societies responded... ‘By investigating responses to environmental pressures and threats, we can learn from the past to engage with the public...’'",
-        q39: "Paragraph E attributes this to Hodell: 'Hodell adds: ‘We estimate that the weakening of the Indian summer monsoon climate lasted about 200 years...’'",
-        q40: "Paragraph B attributes this to Petrie: '‘There is plenty of archaeological evidence to tell us about the rise of the Harappan Civilisation, but relatively little about its fall,’ explains archaeologist Dr Cameron Petrie...'"
+        q14: "<b>Giải thích:</b> Đoạn 1, câu cuối đưa ra viễn cảnh ở trên máy bay, nơi mà mọi người ở mọi lứa tuổi đều xài thiết bị điện tử. Câu cuối cùng ở đoạn 1 chỉ ra rằng có một điều không biết rằng, một sự biến đổi vô hình liên kết tất cả mọi người lại: mạch tế bào thần kinh làm cơ sở cho khả năng đọc của não thay đổi một cách tinh vi, nhanh chóng và điều này ảnh hưởng đối với tất cả mọi người từ trẻ mới biết đi tập đọc đến người lớn thành thạo. Thông tin này được xác nhận ở đáp án A: Việc sử dụng công nghệ đang có một tác động tiềm ẩn đối với chúng ta.",
+        q15: "<b>Giải thích:</b> Đoạn 3, câu 2 chỉ ra rằng học giả Sherry Turkle của MIT đã viết, xã hội không sai lầm khi chúng ta đổi mới mà là khi chúng ta bỏ qua những gì chúng ta phá vỡ hoặc giảm bớt trong khi đổi mới. Điều này khớp với đáp án B: Chúng ta nên chú ý đến những gì có thể bị mất đi khi đổi mới diễn ra.",
+        q16: "<b>Giải thích:</b> Đoạn 4 chỉ ra rằng qua nghiên cứu cho biết rằng mạch đọc không được cung cấp cho con người thông qua di truyền; nó cần một môi trường để phát triển. Hơn nữa, nó sẽ thích ứng với các yêu cầu của môi trường đó - từ các hệ thống chữ viết khác nhau đến các đặc điểm của bất kỳ phương tiện nào được sử dụng. Thông tin này xác nhận đáp án D: Một số mạch não điều chỉnh theo bất cứ điều gì được yêu cầu.",
+        q17: "<b>Giải thích:</b> Đoạn 5, câu 2 chỉ ra rằng học giả và giáo viên văn học Anh Mark Edmundson mô tả nhiều sinh viên đại học chủ động tránh những tác phẩm văn học cổ điển của thế kỷ 19 và 20 để ủng hộ những thứ đơn giản hơn vì họ không còn đủ kiên nhẫn để đọc những văn bản khó hơn, dày đặc hơn. Thông tin này xác nhận đáp án B: thái độ của sinh viên đã ảnh hưởng đến cái mà họ lựa chọn đọc.",
+        q18: "<b>Giải thích:</b> Đoạn 6, câu đầu tiên chỉ ra rằng nhiều nghiên cứu cho thấy rằng việc sử dụng màn hình kỹ thuật số có thể gây ra nhiều tác động khó khăn/đáng lo ngại ('troubling') đối với khả năng đọc hiểu. 'Troubling' khớp với 'worrying' (D).",
+        q19: "<b>Giải thích:</b> Đoạn 6, câu 3 chỉ ra rằng nhóm của Mangen đặt câu hỏi cho các đối tượng về một câu chuyện ngắn có cốt truyện thu hút toàn bộ học sinh ('universal student appeal'). Tính từ 'thorough' (xuyên suốt/toàn diện) được dùng để mô tả sự hiểu biết của nhóm. Khớp với (H).",
+        q20: "<b>Giải thích:</b> Đoạn 6, câu cuối chỉ ra kết quả: những học sinh đọc trên bản in có khả năng hiểu cao hơn so với các bạn đọc trên màn hình, đặc biệt là ở khả năng sắp xếp trình tự chi tiết. Vì vậy, những người đọc trên màn hình cảm thấy việc ghi nhớ trình tự này khó khăn ('hard'). Khớp với (F).",
+        q21: "<b>Giải thích:</b> Đoạn 7, câu đầu tiên chỉ ra rằng Ziming Liu đã thực hiện một loạt nghiên cứu chỉ ra 'tiêu chuẩn mới' trong việc đọc là đọc lướt, liên quan đến việc dò từ (word-spotting). Việc chỉ chọn một vài từ tiết kiệm thời gian tương ứng với từ 'isolated' (cô lập/rời rạc). Khớp với (B).",
+        q22: "<b>Giải thích:</b> Đoạn 7, 2 câu cuối chỉ ra rằng chúng ta không có thời gian để nắm bắt sự phức tạp, để hiểu cảm xúc của người khác ('understand another's feelings'). Cảm xúc ở đây tương đương với 'emotional'. Khớp với (C).",
+        q23: "<b>Giải thích:</b> Đoạn 8, câu 2 chỉ ra rằng tất cả chúng ta bắt đầu đọc trên nhiều phương tiện khác nhau và điều đó thay đổi không chỉ những gì chúng ta đọc mà còn cả mục đích chúng ta đọc. Phương tiện chúng ta sử dụng có thể ảnh hưởng đến lựa chọn nội dung đọc. Vì vậy đáp án là TRUE.",
+        q24: "<b>Giải thích:</b> Đoạn 8, câu 3-4 chỉ ra rằng: Sự suy yếu tinh vi của phân tích phê bình và sự đồng cảm ảnh hưởng đến tất cả chúng ta như nhau ('affects us all equally'). Thông tin này trái ngược với ý cho rằng một số nhóm tuổi có nhiều khả năng bị mất kỹ năng hơn. Vì vậy đáp án là FALSE.",
+        q25: "<b>Giải thích:</b> Đoạn 8, câu cuối nhắc đến việc chúng ta dễ bị ảnh hưởng bởi những thông tin sai lệch ('false information'). Tuy nhiên, không có thông tin so sánh liệu nó có trở nên phổ biến hơn ('more widespread') trong kỷ nguyên số hiện nay so với trước đây hay không. Vì vậy đáp án là NOT GIVEN.",
+        q26: "<b>Giải thích:</b> Đoạn 9, 2 câu cuối chỉ ra rằng chúng ta sở hữu cả khoa học và công nghệ để xác định và khắc phục ('redress') những thay đổi trong cách đọc trước khi chúng trở nên cố thủ. Chúng ta vẫn có cơ hội để khắc phục những vấn đề mà công nghệ đang trình bày. Vì vậy đáp án là TRUE."
     };
 
     // --- APPLICATION LOGIC ---
@@ -644,7 +671,6 @@
                 this.initHighlighter();
                 this.updateCheckButtonsState();
                 this.startTimer();
-                this.updateProgress();
             },
 
             startTimer() {
@@ -693,7 +719,7 @@
                     
                     // Disable Ctrl+F / Cmd+F (Find function)
                     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
-                        e.preventDefault(); // Stop the browser's find box from opening
+                        e.preventDefault(); 
                         this.showAlert("Action Disabled", "The 'Find' function is disabled to simulate real computer-delivered test conditions.", "warning");
                     }
 
@@ -707,17 +733,14 @@
                 // Detect Tab Switching or Window minimizing
                 document.addEventListener('visibilitychange', () => {
                     if (document.hidden && this.timeRemaining > 0) {
-                        // Triggers a warning modal when they navigate away
                         this.showAlert("Warning: Tab Switch Detected", "Please do not switch tabs or leave the test window during the exam. Continued tab switching may result in your test being invalidated.", "warning");
                     }
                 });
 
-                // Warn user if they try to close or refresh the tab via browser buttons
                 window.addEventListener('beforeunload', (e) => {
-                    // Only warn if the test is currently active (timer hasn't run out, and hasn't just started)
                     if (this.timeRemaining > 0 && this.timeRemaining < 60 * 60) {
                         e.preventDefault();
-                        e.returnValue = ''; // Standard requirement to trigger the browser's "Leave Site?" prompt
+                        e.returnValue = ''; 
                     }
                 });
 
@@ -741,6 +764,22 @@
                     }
                 });
 
+                // Track Radio button changes
+                document.body.addEventListener('change', (e) => {
+                    if (e.target.tagName === 'INPUT' && e.target.type === 'radio') {
+                        this.userAnswers[e.target.name] = e.target.value;
+                        
+                        const groupRadios = document.querySelectorAll(`input[name="${e.target.name}"]`);
+                        groupRadios.forEach(radio => {
+                            const label = radio.closest('label');
+                            if(label) label.classList.remove('correct-answer', 'incorrect-answer');
+                        });
+                        
+                        this.updateCheckButtonsState();
+                        this.updateProgress();
+                    }
+                });
+
                 // Vocab Words & Removable Highlights Event Delegation
                 this.leftPane.addEventListener('click', (e) => {
                     if (e.target.classList.contains('vocab-word')) {
@@ -748,7 +787,6 @@
                         this.openVocabModal(wordKey);
                     }
                     
-                    // Allow clicking to remove highlight
                     if (e.target.tagName === 'MARK') {
                         const textNode = document.createTextNode(e.target.textContent);
                         e.target.replaceWith(textNode);
@@ -774,7 +812,7 @@
                    
                    if ('speechSynthesis' in window) {
                        const utterance = new SpeechSynthesisUtterance(word);
-                       utterance.lang = 'en-GB'; 
+                       utterance.lang = 'en-US'; 
                        utterance.rate = 0.9; 
                        utterance.onend = () => this.resetAudioBtn();
                        utterance.onerror = () => this.resetAudioBtn();
@@ -895,6 +933,16 @@
                         const qId = `q${i}`;
                         this.userAnswers[qId] = '';
 
+                        // Handle Radios
+                        const radios = document.querySelectorAll(`input[name="${qId}"][type="radio"]`);
+                        if (radios.length > 0) {
+                            radios.forEach(radio => {
+                                radio.checked = false;
+                                const label = radio.closest('label');
+                                if (label) label.classList.remove('correct-answer', 'incorrect-answer');
+                            });
+                        }
+
                         // Handle Inputs and Selects
                         const input = document.querySelector(`input[name="${qId}"][type="text"], select[name="${qId}"]`);
                         if (input) {
@@ -925,7 +973,7 @@
                 }
 
                 if (!allAnswered) {
-                    this.showAlert("Incomplete Answers", "Please fill in an answer for all questions in this section before checking.", "warning");
+                    this.showAlert("Incomplete Answers", "Please fill in or select an answer for all questions in this section before checking.", "warning");
                     return;
                 }
                 // -----------------------------------------------------
@@ -942,6 +990,29 @@
                     let isCorrect = correctAnswersList.includes(userAnswer);
 
                     let correctFeedbackHTML = '';
+
+                    // Check Radios
+                    const radios = document.querySelectorAll(`input[name="${qId}"][type="radio"]`);
+                    if (radios.length > 0) {
+                        radios.forEach(radio => {
+                            const label = radio.closest('label');
+                            if (label) label.classList.remove('correct-answer', 'incorrect-answer');
+                            
+                            if (correctAnswersList.includes(radio.value.toLowerCase())) {
+                                if (label) label.classList.add('correct-answer');
+                            } else if (radio.value.toLowerCase() === userAnswer) {
+                                if (label) label.classList.add('incorrect-answer');
+                            }
+                        });
+                        
+                        if (!isCorrect) {
+                            const correctAnsFormatted = correctAnswersList[0]
+                                .split(' ')
+                                .map(w => w.length === 1 ? w.toUpperCase() : w.charAt(0).toUpperCase() + w.slice(1))
+                                .join(' ');
+                            correctFeedbackHTML = `<span class="correct-badge">Correct Answer: ${correctAnsFormatted}</span><br>`;
+                        }
+                    }
 
                     // Check Inputs and Selects
                     const input = document.querySelector(`input[name="${qId}"][type="text"], select[name="${qId}"]`);
@@ -973,14 +1044,13 @@
                             const explDiv = document.createElement('div');
                             explDiv.id = `expl-${qId}`;
                             explDiv.className = 'explanation-box';
-                            explDiv.innerHTML = `${correctFeedbackHTML}${explanations[qId]}`;
+                            explDiv.innerHTML = `${correctFeedbackHTML}<strong>Explanation:</strong> ${explanations[qId]}`;
                             
                             const container = document.getElementById(`container-${qId}`);
                             if (container) {
                                 // For select elements in a text flow, append below the parent block
                                 if(container.tagName === "SPAN" || container.tagName === "P" && container.style.display === "inline") {
-                                    // Need to find the wrapper to prevent breaking inline flow badly
-                                    const wrap = container.closest('div.leading-loose') || container.parentElement;
+                                    const wrap = container.closest('div.leading-loose') || container.closest('p.leading-relaxed') || container.parentElement;
                                     wrap.insertAdjacentElement('afterend', explDiv);
                                 } else {
                                     container.insertAdjacentElement('afterend', explDiv);

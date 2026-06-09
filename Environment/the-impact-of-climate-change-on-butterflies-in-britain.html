@@ -395,7 +395,7 @@
             answersChecked: {},
             currentFontSize: 17,
             totalQuestions: Object.keys(answers).length,
-            timeRemaining: 20 * 60,
+            timeRemaining: 60 * 60,
 
             leftPane: document.getElementById('left-pane'),
             rightPane: document.getElementById('right-pane'),
@@ -432,7 +432,7 @@
                         clearInterval(interval);
                         this.timerEl.textContent = "00:00";
                         this.timerEl.classList.add('text-red-600');
-                        this.showAlert("Time's Up!", "Your 20 minutes for this reading passage have expired.", "warning");
+                        this.showAlert("Time's Up!", "Your 60 minutes for this reading passage have expired.", "warning");
                         return;
                     }
                     this.timeRemaining--;
@@ -466,7 +466,7 @@
                         this.showAlert("Warning: Tab Switch Detected", "Please do not switch tabs during the exam.", "warning");
                 });
                 window.addEventListener('beforeunload', (e) => {
-                    if (this.timeRemaining > 0 && this.timeRemaining < 20 * 60) { e.preventDefault(); e.returnValue = ''; }
+                    if (this.timeRemaining > 0 && this.timeRemaining < 60 * 60) { e.preventDefault(); e.returnValue = ''; }
                 });
                 this.closeAlertBtn.addEventListener('click', () => this.closeAlert());
                 this.alertModal.addEventListener('click', (e) => { if (e.target === this.alertModal) this.closeAlert(); });

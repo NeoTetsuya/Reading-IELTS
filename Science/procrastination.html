@@ -72,7 +72,7 @@
             </div>
             <div class="flex items-center bg-gray-100 rounded-lg px-3 py-1.5 border border-gray-200">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                <span id="timer" class="font-mono font-bold text-gray-700 text-lg">20:00</span>
+                <span id="timer" class="font-mono font-bold text-gray-700 text-lg">60:00</span>
             </div>
         </div>
         <div class="flex items-center gap-2 sm:space-x-3">
@@ -326,7 +326,7 @@ const explanations = {
 
 document.addEventListener('DOMContentLoaded', () => {
     const app = {
-        userAnswers: {}, answersChecked: {}, currentFontSize: 17, timeRemaining: 20 * 60,
+        userAnswers: {}, answersChecked: {}, currentFontSize: 17, timeRemaining: 60 * 60,
         checkboxSelections: { q2324: [], q2526: [] },
         leftPane: document.getElementById('left-pane'),
         rightPane: document.getElementById('right-pane'),
@@ -352,7 +352,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         startTimer() {
             const interval = setInterval(() => {
-                if (this.timeRemaining <= 0) { clearInterval(interval); this.timerEl.textContent = "00:00"; this.timerEl.classList.add('text-red-600'); this.showAlert("Time's Up!", "Your 20 minutes have expired.", "warning"); return; }
+                if (this.timeRemaining <= 0) { clearInterval(interval); this.timerEl.textContent = "00:00"; this.timerEl.classList.add('text-red-600'); this.showAlert("Time's Up!", "Your 60 minutes have expired.", "warning"); return; }
                 this.timeRemaining--;
                 const m = Math.floor(this.timeRemaining/60).toString().padStart(2,'0');
                 const s = (this.timeRemaining%60).toString().padStart(2,'0');
@@ -372,7 +372,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if ((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='f') { e.preventDefault(); this.showAlert("Action Disabled","The 'Find' function is disabled to simulate real test conditions.","warning"); }
             });
             document.addEventListener('visibilitychange', () => { if (document.hidden && this.timeRemaining > 0) this.showAlert("Warning","Please do not switch tabs during the exam.","warning"); });
-            window.addEventListener('beforeunload', (e) => { if (this.timeRemaining > 0 && this.timeRemaining < 20*60) { e.preventDefault(); e.returnValue=''; } });
+            window.addEventListener('beforeunload', (e) => { if (this.timeRemaining > 0 && this.timeRemaining < 60 * 60) { e.preventDefault(); e.returnValue=''; } });
             this.closeAlertBtn.addEventListener('click', () => this.closeAlert());
             this.alertModal.addEventListener('click', (e) => { if (e.target === this.alertModal) this.closeAlert(); });
 

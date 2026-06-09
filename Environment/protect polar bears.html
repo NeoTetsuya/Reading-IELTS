@@ -629,7 +629,7 @@
                 // Warn user if they try to close or refresh the tab via browser buttons
                 window.addEventListener('beforeunload', (e) => {
                     // Only warn if the test is currently active (timer hasn't run out, and hasn't just started)
-                    if (this.timeRemaining > 0 && this.timeRemaining < 20 * 60) {
+                    if (this.timeRemaining > 0 && this.timeRemaining < 60 * 60) {
                         e.preventDefault();
                         e.returnValue = ''; // Standard requirement to trigger the browser's "Leave Site?" prompt
                     }
